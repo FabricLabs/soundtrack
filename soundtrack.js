@@ -73,11 +73,12 @@ function getYoutubeVideo(videoID, callback) {
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
 /* this will be in MongoDB soon...*/
 var topTracks = ['KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs']
+  , backupTracks = [];
 async.series(topTracks.map(function(videoID) {
   return function(done) {
     getYoutubeVideo(videoID, function(video) {
 
-      app.room.playlist.push({
+      backupTracks.push({
         source: 'youtube',
         id: video.id,
         duration: video.duration
@@ -93,6 +94,10 @@ async.series(topTracks.map(function(videoID) {
     var lastTrack = app.room.playlist.shift();
     // temporary (until playlist management is done)
     //app.room.playlist.push(lastTrack);
+
+    if (app.room.playlist.length == 0) {
+      app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
+    }
 
     app.room.playlist[0].startTime = Date.now();
 

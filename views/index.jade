@@ -71,7 +71,7 @@ block content
         break;
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
-          $('#messages').animate({ scrollTop: $('#messages').height() }, "fast");
+          $('#messages').animate({ scrollTop: $('#messages').outerHeight() }, "fast");
         break;
       }
     };
