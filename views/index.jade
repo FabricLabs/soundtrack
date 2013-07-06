@@ -1,0 +1,98 @@
+extends layout
+
+block content
+
+  #stage.hero-unit
+    .row-fluid
+      .span3
+        #current-track
+          span#time
+
+        a.btn(href="#", onclick="ytplayer.pauseVideo(); return false;") pause
+        a.btn(href="#", onclick="ytplayer.playVideo(); return false;") play
+        a.btn(href="#", onclick="ytplayer.setVolume(0); return false;") mute
+        a.btn(href="#", onclick="ytplayer.setVolume(80); return false;") unmute
+
+        h3 Playlist
+        ul#playlist
+
+        h3 Add Track
+        form#search-form
+          input(type="text")#search-query
+          #search-results
+
+      .span6
+        #screen-one
+          .screen-inner#screen-inner
+
+      #decks
+        #slot-1
+        #slot-2
+        #slot-3
+        #slot-4
+        #slot-5
+
+      .span3
+        h3 Chat
+        #messages
+        form#chat-form
+          input(type="text", autocomplete="off")#chat-input
+        h3 Users
+        #userlist
+
+  #audience
+
+  script.
+
+    var sockjs = new SockJS('stream');
+
+    sockjs.onopen    = function()  {  };
+    sockjs.onmessage = function(e) {
+      var msg = JSON.parse(e.data);
+
+      console.log(msg);
+
+      switch (msg.type) {
+        default: console.log('unhandled message: ' + msg); break;
+        case 'track':
+          ytplayer.cueVideoById( msg.data.id );
+          ytplayer.seekTo( msg.seekTo );
+          ytplayer.playVideo();
+          updatePlaylist();
+        break;
+        case 'playlist:add':
+          updatePlaylist();
+        break;
+        case 'join':
+          $('<li data-user-id="' + msg.data.id + '">'+msg.data.id+'</li>').appendTo('#userlist');
+        break;
+        case 'part':
+          $('#userlist li[data-user-id='+msg.data.id+']').remove();
+        break;
+        case 'chat':
+          $( msg.data.formatted ).appendTo('#messages');
+          $('#messages').animate({ scrollTop: $('#messages').height() }, "fast");
+        break;
+      }
+    };
+    sockjs.onclose   = function() { 
+      // TODO: reconnect
+    };
+    function updatePlaylist() {
+      $.get('/playlist.json', function(data) {
+        $('#playlist').html('');
+        data.forEach(function(track) {
+          $('<li>'+track.id+'</li>').appendTo('#playlist');
+        });
+      });
+    }
+    function updateUserlist() {
+      $.get('/listeners.json', function(data) {
+        $('#userlist').html('');
+        data.forEach(function(user) {
+           $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
+        });
+      });
+    }
+    updatePlaylist();
+    updateUserlist();

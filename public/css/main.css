@@ -1,0 +1,21 @@
+body {
+  padding-top: 60px;
+  padding-bottom: 40px;
+}
+
+#screen-one {
+  margin-left: auto;
+  margin-right: auto;
+  width: 480px;
+}
+
+#search-results li {
+  cursor: pointer;
+}
+#search-results li:hover {
+  background: #ccc;
+}
+#messages {
+  height: 210px;
+  overflow-y: scroll;
+}

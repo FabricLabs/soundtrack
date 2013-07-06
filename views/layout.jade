@@ -1,0 +1,45 @@
+!!! 5
+html(lang="en-US")
+  head
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/css/bootstrap-responsive.min.css')
+    link(rel='stylesheet', href='/css/main.css')
+
+    script(src='/js/jquery.min.js')
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/angular.min.js')
+    script(src="//www.google.com/jsapi")
+    script(src='/js/swfobject.js')
+    script(src="http://cdn.sockjs.org/sockjs-0.3.min.js")
+    script(src='/js/app.js')
+
+  body(ng-controller="AppController")
+
+    .navbar.navbar-inverse.navbar-fixed-top
+      .navbar-inner
+        .container
+          button.btn.btn-navbar(type="button", data-toggle="collapse", data-target=".nav-collapse")
+          a.brand(href="/") soundtrack.io
+          .nav-collapse.collapse
+            ul.nav
+              li.active
+                a(href="/", ng-class="{active: slug == ''}") Home
+              li
+                a(href="/page/about", ng-class="{active: slug == 'about'}") About
+
+            ul.nav.pull-right
+              if (user)
+                li
+                  a(href="/#{user.slug}")
+                    img.user-avatar-small(src="#{user.avatar}")
+                    | #{user.username}
+              else
+                form.navbar-form(action="/login", method="post")
+                  input.span2(type="text", placeholder="Email", name="email")
+                  input.span2(type="password", placeholder="Password", name="password")
+                  button.btn.btn-primary(type="submit") Sign In &raquo;
+
+    .container
+      block content
+
+      ng-view

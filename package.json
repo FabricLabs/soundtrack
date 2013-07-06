@@ -1,0 +1,26 @@
+{
+  "name": "soundtrack.io",
+  "version": "0.0.0",
+  "description": "ERROR: No README.md file found!",
+  "main": "soundtrack.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "passport": "~0.1.17",
+    "passport-local-mongoose": "~0.2.4",
+    "express": "~3.3.3",
+    "jade": "~0.32.0",
+    "mongoose": "~3.6.14",
+    "async": "~0.2.9",
+    "underscore": "~1.4.4",
+    "mongoose-redis-cache": "0.0.3",
+    "connect-redis": "~1.4.5",
+    "mongoose-slug": "~1.1.1",
+    "sockjs": "~0.3.7",
+    "restler": "~2.0.1"
+  }
+}
