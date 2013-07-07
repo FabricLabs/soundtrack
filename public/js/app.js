@@ -17,6 +17,15 @@ function onYouTubePlayerReady(playerId) {
 
 };
 
+function mutePlayer() {
+  ytplayer.setVolume(0);
+  volume.slider('setValue', 0).val(0);
+}
+function unmutePlayer() {
+  ytplayer.setVolume(80);
+  volume.slider('setValue', 80).val(80);
+}
+
 String.prototype.toHHMMSS = function () {
   var sec_num = parseInt(this, 10); // don't forget the second parm
   var hours   = Math.floor(sec_num / 3600);
@@ -43,6 +52,30 @@ $(window).on('load', function() {
 
   // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
   swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "480", "295", "9", null, null, params, atts);
+
+  $('*[data-action=toggle-volume]').click(function(e) {
+    e.preventDefault();
+    var self = this;
+    var currentVolume = parseInt(volume.slider('getValue').val());
+
+    console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
+
+    if (currentVolume) {
+      mutePlayer();
+      $(self).children('i').replaceWith('<i class="icon-volume-off" />');
+    } else {
+      unmutePlayer();
+      $(self).children('i').replaceWith('<i class="icon-volume-up" />');
+    }
+
+    return false;
+  });
+
+
+  volume = $('.slider').slider().on('slide', function(e) {
+    var self = this;
+    ytplayer.setVolume( $(self).val() );
+  });
 
   $('#chat-form').on('submit', function(e) {
     e.preventDefault();

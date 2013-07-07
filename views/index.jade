@@ -8,10 +8,12 @@ block content
         #current-track
           span#time
 
-        a.btn(href="#", onclick="ytplayer.pauseVideo(); return false;") pause
-        a.btn(href="#", onclick="ytplayer.playVideo(); return false;") play
-        a.btn(href="#", onclick="ytplayer.setVolume(0); return false;") mute
-        a.btn(href="#", onclick="ytplayer.setVolume(80); return false;") unmute
+        .row-fluid
+          .span3
+            a.btn(href="#", data-action="toggle-volume")
+              i.icon-volume-up
+          .span9
+            input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
         h3 Playlist
         ul#playlist
