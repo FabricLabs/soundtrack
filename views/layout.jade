@@ -35,7 +35,7 @@ html(lang="en-US")
               if (user)
                 li
                   a(href="/#{user.slug}")
-                    img.user-avatar-small(src="#{user.avatar}")
+                    img.user-avatar-small(src="#{user.avatar.url}")
                     | #{user.username}
                 li
                   a(href="/logout") Logout

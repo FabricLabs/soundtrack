@@ -19,3 +19,8 @@ body {
   height: 210px;
   overflow-y: scroll;
 }
+
+.user-avatar-small {
+  max-height: 1.2em;
+  margin-right: 0.2em;
+}

@@ -7,7 +7,10 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var PersonSchema = new Schema({
-  email: { type: String, unique: true, sparse: true }
+    email: { type: String, unique: true, sparse: true }
+  , avatar: {
+      url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
+    }
 });
 
 PersonSchema.plugin(passportLocalMongoose);
