@@ -15,14 +15,18 @@ block content
           .span9
             input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
-        a.btn(href="#", onclick="$.post('/skip'); return false;") skip
+        if (user)
+          a.btn(href="#", onclick="$.post('/skip'); return false;") skip
 
         h3 Playlist
         ul#playlist(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3")
 
         h3 Add Track
         form#search-form
-          input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2")#search-query
+          if (user)
+            input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2")#search-query
+          else
+            input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2")#search-query
           #search-results
 
       .span6
@@ -40,7 +44,10 @@ block content
         h3 Chat
         #messages
         form#chat-form
-          input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
+          if (user)
+            input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
+          else
+            input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
         h3 Users
         #userlist
 

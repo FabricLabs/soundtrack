@@ -204,10 +204,10 @@ app.get('/listeners.json', function(req, res) {
   }));
 });
 
-app.post('/chat', function(req, res) {
+app.post('/chat', requireLogin, function(req, res) {
   res.render('partials/message', {
     message: {
-        _author: { username: 'foooo' }
+        _author: req.user
       , message: req.param('message')
     }
   }, function(err, html) {
@@ -221,7 +221,7 @@ app.post('/chat', function(req, res) {
   });
 });
 
-app.post('/playlist', function(req, res) {
+app.post('/playlist', requireLogin, function(req, res) {
   switch(req.param('source')) {
     default:
       console.log('unrecognized source: ' + req.param('source'));
