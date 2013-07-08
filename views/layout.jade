@@ -30,6 +30,9 @@ html(lang="en-US")
                 a(href="/", ng-class="{active: slug == ''}") Home
               li
                 a(href="/about", ng-class="{active: slug == 'about'}") About
+              if (user)
+                li
+                  a(href="/people") People
 
             ul.nav.pull-right
               if (user)

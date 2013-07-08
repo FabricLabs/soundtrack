@@ -43,6 +43,8 @@ block content
       .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4")
         h3 Chat
         #messages
+          each message in messages
+            include partials/message
         form#chat-form
           if (user)
             input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
@@ -87,7 +89,7 @@ block content
         break;
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
-          $('#messages').animate({ scrollTop: $('#messages').outerHeight() }, "fast");
+          $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
         break;
       }
     };

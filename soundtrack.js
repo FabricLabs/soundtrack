@@ -36,6 +36,7 @@ app.use(passport.session());
 Person       = require('./models/Person').Person;
 Track        = require('./models/Track').Track;
 Play         = require('./models/Play').Play;
+Chat         = require('./models/Chat').Chat;
 
 passport.use(Person.createStrategy());
 
@@ -187,7 +188,11 @@ sock.on('connection', function(conn) {
 sock.installHandlers(server, {prefix:'/stream'});
 
 app.get('/', function(req, res, next) {
-  res.render('index', { });
+  Chat.find({}).limit(10).populate('_author').exec(function(err, messages) {
+    res.render('index', {
+      messages: messages
+    });
+  });
 });
 
 app.get('/about', function(req, res, next) {
@@ -205,19 +210,25 @@ app.get('/listeners.json', function(req, res) {
 });
 
 app.post('/chat', requireLogin, function(req, res) {
-  res.render('partials/message', {
-    message: {
-        _author: req.user
-      , message: req.param('message')
-    }
-  }, function(err, html) {
-    app.broadcast({
-        type: 'chat'
-      , data: {
-          formatted: html
-        }
+  var chat = new Chat({
+      _author: req.user._id
+    , message: req.param('message')
+  });
+  chat.save(function(err) {
+    res.render('partials/message', {
+      message: {
+          _author: req.user
+        , message: req.param('message')
+      }
+    }, function(err, html) {
+      app.broadcast({
+          type: 'chat'
+        , data: {
+            formatted: html
+          }
+      });
+      res.send({ status: 'success' });
     });
-    res.send({ status: 'success' });
   });
 });
 
@@ -297,6 +308,25 @@ app.get('/logout', function(req, res) {
   req.logout();
   req.flash('info', 'You\'ve been logged out.');
   res.redirect('/');
+});
+
+app.get('/people', function(req, res) {
+  Person.find({}).exec(function(err, people) {
+    res.render('people', {
+      people: people
+    });
+  });
+});
+
+app.get('/:usernameSlug', function(req, res, next) {
+  Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    if (!person) { return next(); }
+
+    res.render('person', {
+      person: person
+    });
+
+  });
 });
 
 server.listen(13000);

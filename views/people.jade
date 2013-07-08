@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1 People on soundtrack.io
+
+  ul
+    each person in people
+      li
+        a(href="/#{person.slug}")
+          img.user-avatar-small(src="#{person.avatar.url}")
+          | #{person.username}
