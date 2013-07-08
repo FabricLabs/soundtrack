@@ -58,6 +58,7 @@ app.use( flashify );
 
 app.locals.pretty   = true;
 //app.locals.moment   = require('moment');
+app.locals.marked = require('marked');
 
 function requireLogin(req, res, next) {
   if (req.user) {

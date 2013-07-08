@@ -24,6 +24,7 @@
     "restler": "~2.0.1",
     "flashify": "~0.1.2",
     "pkgcloud": "~0.8.2",
-    "passport-local": "~0.1.6"
+    "passport-local": "~0.1.6",
+    "marked": "~0.2.9"
   }
 }
