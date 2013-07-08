@@ -50,10 +50,16 @@ block content
             input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
           else
             input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
-        h3 Users
-        #userlist
 
   #audience
+    h3 Users
+    #userlist
+
+  #backup
+    h3 #{backup.length} Current "Backup" Tracks (in case the playlist hits bottom)
+    each track in backup
+      span #{track.title}
+      |  
 
   if (!user)
     script.
@@ -97,6 +103,9 @@ block content
     };
     sockjs.onclose   = function() { 
       // TODO: reconnect
+      if (confirm('Lost connection.  Reconnect?')) {
+        location.reload();
+      }
     };
     function updatePlaylist() {
       $.get('/playlist.json', function(data) {
@@ -118,3 +127,4 @@ block content
     }
     updatePlaylist();
     updateUserlist();
+    $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");

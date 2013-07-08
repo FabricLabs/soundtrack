@@ -222,9 +222,10 @@ sock.on('connection', function(conn) {
 sock.installHandlers(server, {prefix:'/stream'});
 
 app.get('/', function(req, res, next) {
-  Chat.find({}).limit(10).populate('_author').exec(function(err, messages) {
+  Chat.find({}).limit(10).sort('-created').populate('_author').exec(function(err, messages) {
     res.render('index', {
-      messages: messages
+        messages: messages.reverse()
+      , backup: backupTracks
     });
   });
 });

@@ -15,10 +15,20 @@ body {
 #search-results li:hover {
   background: #ccc;
 }
-#messages {
-  height: 210px;
+#messages, #playlist {
+  height: 420px;
   overflow-y: scroll;
   overflow-x: hidden;
+}
+#playlist {
+  height: 280px;
+}
+
+.message {
+  clear: both;
+}
+.message abbr.timestamp {
+  font-size: 0.75em;
 }
 
 .user-avatar-small {
