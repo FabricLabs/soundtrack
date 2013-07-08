@@ -21,6 +21,9 @@
     "connect-redis": "~1.4.5",
     "mongoose-slug": "~1.1.1",
     "sockjs": "~0.3.7",
-    "restler": "~2.0.1"
+    "restler": "~2.0.1",
+    "flashify": "~0.1.2",
+    "pkgcloud": "~0.8.2",
+    "passport-local": "~0.1.6"
   }
 }

@@ -37,13 +37,25 @@ html(lang="en-US")
                   a(href="/#{user.slug}")
                     img.user-avatar-small(src="#{user.avatar}")
                     | #{user.username}
+                li
+                  a(href="/logout") Logout
               else
                 form.navbar-form(action="/login", method="post")
-                  input.span2(type="text", placeholder="Email", name="email")
+                  input.span2(type="text", placeholder="Username", name="username")
                   input.span2(type="password", placeholder="Password", name="password")
                   button.btn.btn-primary(type="submit") Sign In &raquo;
+                  a.btn(href="/register") Register &raquo;
 
     .container
+      if (typeof(flash) != 'undefined')
+        .messages
+          if (typeof(flash.error) != 'undefined')
+            for error in flash.error
+              .alert.alert-error !{error}
+          if (typeof(flash.info) != 'undefined')
+            for info in flash.info
+              .alert.alert-info !{info}
+
       block content
       ng-view
 

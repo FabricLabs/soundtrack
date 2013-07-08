@@ -8,7 +8,10 @@ var config = require('./config')
   , sockjs = require('sockjs')
   , _ = require('underscore')
   , mongoose = require('mongoose')
+  , flashify = require('flashify')
   , passport = require('passport')
+  , pkgcloud = require('pkgcloud')
+  , LocalStrategy = require('passport-local').Strategy
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client });
@@ -30,12 +33,41 @@ app.use(express.session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.locals.pretty   = true;
-//app.locals.moment   = require('moment');
-
 Person       = require('./models/Person').Person;
 Track        = require('./models/Track').Track;
 Play         = require('./models/Play').Play;
+
+passport.use(Person.createStrategy());
+
+passport.serializeUser(function(user, done) {
+  done(null, user._id);
+});
+
+passport.deserializeUser(function(userID, done) {
+  Person.findOne({ _id: userID }).exec(function(err, user) {
+    done(null, user);
+  });
+});
+app.use(function(req, res, next) {
+  res.setHeader("X-Powered-By", 'beer.');
+  app.locals.user = req.user;
+  next();
+});
+app.use( flashify );
+
+app.locals.pretty   = true;
+//app.locals.moment   = require('moment');
+
+function requireLogin(req, res, next) {
+  if (req.user) {
+    next(); // allow the next route to run
+  } else {
+    // require the user to log in
+    res.status(401).render('login', {
+      next: req.path
+    })
+  }
+}
 
 var sock = sockjs.createServer();
 var server = http.createServer(app);
@@ -70,6 +102,31 @@ function getYoutubeVideo(videoID, callback) {
   });
 };
 
+
+function nextSong() {
+  var lastTrack = app.room.playlist.shift();
+  // temporary (until playlist management is done)
+  //app.room.playlist.push(lastTrack);
+
+  if (app.room.playlist.length == 0) {
+    app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
+  }
+
+  app.room.playlist[0].startTime = Date.now();
+
+  app.broadcast({
+      type: 'track'
+    , data: app.room.playlist[0]
+  });
+
+  setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+}
+
+app.post('/skip', function(req, res) {
+  nextSong();
+  res.send({ status: 'success' });
+});
+
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
 /* this will be in MongoDB soon...*/
 var topTracks = ['KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs']
@@ -89,25 +146,6 @@ async.series(topTracks.map(function(videoID) {
     });
   };
 }), function(err, results) {
-
-  function nextSong() {
-    var lastTrack = app.room.playlist.shift();
-    // temporary (until playlist management is done)
-    //app.room.playlist.push(lastTrack);
-
-    if (app.room.playlist.length == 0) {
-      app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
-    }
-
-    app.room.playlist[0].startTime = Date.now();
-
-    app.broadcast({
-        type: 'track'
-      , data: app.room.playlist[0]
-    });
-
-    setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
-  }
 
   // temporary
   app.room.playlist = _.shuffle( app.room.playlist );
@@ -220,6 +258,45 @@ app.get('/pages.json', function(req, res) {
       "content": "This is the about page. Welcome"
     }
   });
+});
+
+app.get('/register', function(req, res) {
+  res.render('register');
+});
+
+app.post('/register', function(req, res) {
+  Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
+    if (err) {
+      console.log(err);
+      req.flash('error', 'Something went wrong: ' + err);
+      return res.render('register', { user : user });
+    } else {
+      req.logIn(user, function(err) {
+        req.flash('info', 'Welcome to soundtrack.io!');
+        res.redirect('/');
+      });
+    }
+  });
+});
+
+app.get('/login', function(req, res) {
+  res.render('login', {
+    next: req.param('next')
+  });
+});
+
+app.post('/login', passport.authenticate('local', {
+    failureRedirect: '/login'
+  , failureFlash: true
+}), function(req, res) {
+  req.flash('info', 'Welcome to soundtrack.io!');
+  res.redirect('/');
+});
+
+app.get('/logout', function(req, res) {
+  req.logout();
+  req.flash('info', 'You\'ve been logged out.');
+  res.redirect('/');
 });
 
 server.listen(13000);

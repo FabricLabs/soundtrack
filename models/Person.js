@@ -7,7 +7,7 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var PersonSchema = new Schema({
-
+  email: { type: String, unique: true, sparse: true }
 });
 
 PersonSchema.plugin(passportLocalMongoose);

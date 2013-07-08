@@ -1,0 +1,16 @@
+extends layout
+
+block content
+
+  h1 Login
+
+  form(action="/login", method="post")
+    label(for="username") Username
+    input(type="text", name="username", placeholder="Username")
+
+    label(for="password") Password
+    input(type="password", name="password")
+
+    p
+      input.btn.btn-primary(type="submit")
+      a(href="/forgot-password", style="margin-left: 2em") Forgot Password?

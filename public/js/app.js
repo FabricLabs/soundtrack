@@ -5,10 +5,9 @@ function onYouTubePlayerReady(playerId) {
   ytplayer.addEventListener("onError", "onPlayerError");
 
   if (!registered) {
-    mutePlayer();
     introJs().start();
-
   }
+  mutePlayer();
 
   ytplayer.playVideo();
 
