@@ -93,12 +93,13 @@ $(window).on('load', function() {
   });
   $('#search-form').on('submit', function(e) {
     e.preventDefault();
+    $('#search-results').html('');
 
     $.getJSON('http://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
       console.log(data.data.items);
 
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'">' +item.title+'</li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 

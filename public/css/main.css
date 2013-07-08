@@ -24,3 +24,8 @@ body {
   max-height: 1.2em;
   margin-right: 0.2em;
 }
+
+.thumbnail-medium {
+  max-height: 2.4em;
+  margin-right: 0.2em;
+}

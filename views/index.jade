@@ -106,7 +106,9 @@ block content
       $.get('/listeners.json', function(data) {
         $('#userlist').html('');
         data.forEach(function(user) {
-           $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
+          if (user) {
+            $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
+          }
         });
       });
     }
