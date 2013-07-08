@@ -8,10 +8,15 @@ var mongoose = require('mongoose')
 var TrackSchema = new Schema({
     title: { type: String, required: true }
   , _artist: { type: ObjectId, ref: 'Artist' }
+  , duration: { type: Number }
+  , images: {
+      thumbnail: { url: { type: String } }
+    }
   , sources: {
       youtube: [ new Schema({
           id: { type: String, required: true }
         , start: { type: Number, default: 0 }
+        , duration: { type: Number }
       })],
       soundcloud: [ new Schema({
         id: { type: String, required: true }

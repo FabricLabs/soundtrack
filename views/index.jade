@@ -70,10 +70,12 @@ block content
     sockjs.onmessage = function(e) {
       var msg = JSON.parse(e.data);
 
+      console.log(msg);
+
       switch (msg.type) {
         default: console.log('unhandled message: ' + msg); break;
         case 'track':
-          ytplayer.cueVideoById( msg.data.id );
+          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
           ytplayer.playVideo();
           updatePlaylist();
@@ -100,7 +102,7 @@ block content
       $.get('/playlist.json', function(data) {
         $('#playlist').html('');
         data.forEach(function(track) {
-          $('<li>'+track.id+'</li>').appendTo('#playlist');
+          $('<li><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist');
         });
       });
     }

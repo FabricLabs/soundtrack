@@ -93,12 +93,31 @@ function getYoutubeVideo(videoID, callback) {
       Track.findOne({
         'sources.youtube.id': video.id
       }).exec(function(err, track) {
+        if (!track) { var track = new Track({}); }
 
-        //if (!track) { var track = new Track({}); }
-        //track.
-        callback(video);
+        var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
+        var index = youtubeVideoIDs.indexOf( video.id );
+        if (index == -1) {
+          track.sources.youtube.push({
+            id: video.id
+          });
+        }
+
+        // temporary, while only youtube:
+        track.title = video.title;
+        track.duration = video.duration;
+        track.images.thumbnail.url = video.thumbnail.hqDefault;
+
+        track.save(function(err) {
+          if (err) { console.log(err); }
+          callback(track);
+        });
+
       });
     } else {
+      console.log('waaaaaaaaaaat');
+      console.log(data);
+
       callback();
     }
   });
@@ -114,6 +133,7 @@ function nextSong() {
     app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
   }
 
+  app.room.playlist[0] = app.room.playlist[0];
   app.room.playlist[0].startTime = Date.now();
 
   app.broadcast({
@@ -121,38 +141,51 @@ function nextSong() {
     , data: app.room.playlist[0]
   });
 
-  setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+  clearTimeout( app.timeout );
+  app.timeout = setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+
 }
 
-app.post('/skip', function(req, res) {
+app.post('/skip', /*/requireLogin,/**/ function(req, res) {
+  console.log('skip received:');
+  console.log(req.user);
+  console.log(req.headers);
+
   nextSong();
   res.send({ status: 'success' });
 });
 
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
 /* this will be in MongoDB soon...*/
-var topTracks = ['KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs']
-  , backupTracks = [];
-async.series(topTracks.map(function(videoID) {
-  return function(done) {
-    getYoutubeVideo(videoID, function(video) {
+var backupTracks = [];
+async.parallel([
+  function(done) {
+    var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
+    async.series(tracks.map(function(videoID) {
+      return function(callback) {
+        getYoutubeVideo(videoID, function(track) {
+          backupTracks.push( track.toObject() );
 
-      backupTracks.push({
-        source: 'youtube',
-        id: video.id,
-        duration: video.duration
+          // go ahead and start...
+          // TODO: move elsewhere...
+          nextSong();
+
+          callback();
+        });
+      };
+    }), done);
+  },
+  function(done) {
+    Track.find({}).limit(100).exec(function(err, tracks) {
+      tracks.forEach(function(track) {
+        backupTracks.push( track.toObject() );
       });
-
       done();
-
     });
-  };
-}), function(err, results) {
-
-  // temporary
-  app.room.playlist = _.shuffle( app.room.playlist );
-
-  nextSong();
+    
+  }
+], function(err, trackLists) {
+  //nextSong();
 });
 
 
@@ -239,14 +272,15 @@ app.post('/playlist', requireLogin, function(req, res) {
       console.log('unrecognized source: ' + req.param('source'));
     break;
     case 'youtube':
-      getYoutubeVideo(req.param('id'), function(video) {
-        var track = {
-          source: 'youtube',
-          id: video.id,
-          duration: video.duration
-        };
+      getYoutubeVideo(req.param('id'), function(track) {
 
-        app.room.playlist.push(track);
+        app.room.playlist.push( _.extend( track.toObject() , {
+          curator: {
+              _id: req.user._id
+            , username: req.user.username
+            , slug: req.user.slug
+          }
+        } ) );
 
         app.broadcast({
             type: 'playlist:add'
@@ -329,5 +363,27 @@ app.get('/:usernameSlug', function(req, res, next) {
 
   });
 });
+
+function getTop100FromCodingSoundtrack(done) {
+  rest.get('http://codingsoundtrack.org/songs/100.json').on('complete', function(data) {
+    async.parallel(data.map(function(song) {
+      return function(callback) {
+        if (song.format == '1') {
+          getYoutubeVideo( song.cid , function(track) {
+            if (track) {
+              callback( track.toObject() );
+            } else {
+              callback('not a youtube video');
+            }
+          });
+        } else {
+          callback();
+        }
+      }
+    }), function(err, songs) {
+      done();
+    });
+  });
+}
 
 server.listen(13000);
