@@ -1,10 +1,14 @@
 function onYouTubePlayerReady(playerId) {
   ytplayer = document.getElementById("ytPlayer");
 
-  var videoID = "KrVC5dm5fFc"
-
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
+
+  if (!registered) {
+    mutePlayer();
+    introJs().start();
+
+  }
 
   ytplayer.playVideo();
 

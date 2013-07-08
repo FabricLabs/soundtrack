@@ -152,6 +152,10 @@ app.get('/', function(req, res, next) {
   res.render('index', { });
 });
 
+app.get('/about', function(req, res, next) {
+  res.render('about', { });
+});
+
 app.get('/playlist.json', function(req, res) {
   res.send(app.room.playlist);
 });

@@ -4,6 +4,7 @@ html(lang="en-US")
     link(rel='stylesheet', href='/css/bootstrap.min.css')
     link(rel='stylesheet', href='/css/bootstrap-responsive.min.css')
     link(rel='stylesheet', href='/css/slider.css')
+    link(rel='stylesheet', href='/css/introjs.css')
     link(rel='stylesheet', href='/css/main.css')
 
     script(src='/js/jquery.min.js')
@@ -12,6 +13,7 @@ html(lang="en-US")
     script(src='/js/bootstrap.slider.js')
     script(src="//www.google.com/jsapi")
     script(src='/js/swfobject.js')
+    script(src='/js/intro.js')
     script(src="http://cdn.sockjs.org/sockjs-0.3.min.js")
     script(src='/js/app.js')
 
@@ -27,7 +29,7 @@ html(lang="en-US")
               li.active
                 a(href="/", ng-class="{active: slug == ''}") Home
               li
-                a(href="/page/about", ng-class="{active: slug == 'about'}") About
+                a(href="/about", ng-class="{active: slug == 'about'}") About
 
             ul.nav.pull-right
               if (user)
@@ -45,6 +47,7 @@ html(lang="en-US")
       block content
       ng-view
 
-
     footer
       .container
+        h5 About
+        p Soundtrack.io is a collaborative online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>.
