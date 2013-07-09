@@ -1,6 +1,44 @@
 function onYouTubePlayerReady(playerId) {
   ytplayer = document.getElementById("ytPlayer");
 
+  var sockjs = new SockJS('stream');
+
+  sockjs.onopen    = function()  {  };
+  sockjs.onmessage = function(e) {
+    var msg = JSON.parse(e.data);
+
+    console.log(msg);
+
+    switch (msg.type) {
+      default: console.log('unhandled message: ' + msg); break;
+      case 'track':
+        ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
+        ytplayer.seekTo( msg.seekTo );
+        ytplayer.playVideo();
+        updatePlaylist();
+      break;
+      case 'playlist:add':
+        updatePlaylist();
+      break;
+      case 'join':
+        $('<li data-user-id="' + msg.data.id + '">'+msg.data.id+'</li>').appendTo('#userlist');
+      break;
+      case 'part':
+        $('#userlist li[data-user-id='+msg.data.id+']').remove();
+      break;
+      case 'chat':
+        $( msg.data.formatted ).appendTo('#messages');
+        $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+      break;
+    }
+  };
+  sockjs.onclose   = function() { 
+    // TODO: reconnect
+    if (confirm('Lost connection.  Reconnect?')) {
+      location.reload();
+    }
+  };
+
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
 
@@ -46,8 +84,30 @@ String.prototype.toHHMMSS = function () {
   }
   return time;
 }
+function updatePlaylist() {
+  $.get('/playlist.json', function(data) {
+    $('#playlist').html('');
+    data.forEach(function(track) {
+      $('<li><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist');
+    });
+  });
+}
+function updateUserlist() {
+  $.get('/listeners.json', function(data) {
+    $('#userlist').html('');
+    data.forEach(function(user) {
+      if (user) {
+        $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
+      }
+    });
+  });
+}
 
 $(window).on('load', function() {
+  updatePlaylist();
+  updateUserlist();
+  $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+
   // Lets Flash from another domain call JavaScript
   var params = { allowScriptAccess: "always" };
   // The element id of the Flash embed
@@ -86,8 +146,8 @@ $(window).on('load', function() {
     $.post('/chat', {
       message: $('#chat-input').val()
     }, function(data) {
-      $('#chat-input').val('');
     });
+    $('#chat-input').val('');
 
     return false;
   });

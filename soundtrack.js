@@ -57,7 +57,7 @@ app.use(function(req, res, next) {
 app.use( flashify );
 
 app.locals.pretty   = true;
-//app.locals.moment   = require('moment');
+app.locals.moment   = require('moment');
 app.locals.marked = require('marked');
 
 function requireLogin(req, res, next) {
@@ -254,12 +254,14 @@ app.post('/chat', requireLogin, function(req, res) {
       message: {
           _author: req.user
         , message: req.param('message')
+        , created: chat.created
       }
     }, function(err, html) {
       app.broadcast({
           type: 'chat'
         , data: {
-            formatted: html
+              formatted: html
+            , created: new Date()
           }
       });
       res.send({ status: 'success' });
@@ -274,19 +276,20 @@ app.post('/playlist', requireLogin, function(req, res) {
     break;
     case 'youtube':
       getYoutubeVideo(req.param('id'), function(track) {
+        if (track) {
+          app.room.playlist.push( _.extend( track.toObject() , {
+            curator: {
+                _id: req.user._id
+              , username: req.user.username
+              , slug: req.user.slug
+            }
+          } ) );
 
-        app.room.playlist.push( _.extend( track.toObject() , {
-          curator: {
-              _id: req.user._id
-            , username: req.user.username
-            , slug: req.user.slug
-          }
-        } ) );
-
-        app.broadcast({
-            type: 'playlist:add'
-          , data: track
-        });
+          app.broadcast({
+              type: 'playlist:add'
+            , data: track
+          });
+        }
 
         res.send({ status: 'success' });
       });
