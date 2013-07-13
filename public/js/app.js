@@ -1,43 +1,67 @@
+$(document).ready(function(){
+  var sockjs = null;
+  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
+  var retryIdx = 0;
+
+  var startSockJs = function(){
+    sockjs = new SockJS('/stream');
+
+    sockjs.onmessage = function(e) {
+      retryIdx = 0; //reset our retry timeouts
+
+      var msg = JSON.parse(e.data);
+
+      console.log(msg);
+
+      switch (msg.type) {
+        default: console.log('unhandled message: ' + msg); break;
+        case 'track':
+          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
+          ytplayer.seekTo( msg.seekTo );
+          ytplayer.playVideo();
+          updatePlaylist();
+        break;
+        case 'playlist:add':
+          updatePlaylist();
+        break;
+        case 'join':
+          $('<li data-user-id="' + msg.data.id + '">'+msg.data.id+'</li>').appendTo('#userlist');
+        break;
+        case 'part':
+          $('#userlist li[data-user-id='+msg.data.id+']').remove();
+        break;
+        case 'chat':
+          $( msg.data.formatted ).appendTo('#messages');
+          $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+        break;
+        case 'ping':
+          sockjs.send(JSON.stringify({type: 'pong'}));
+          console.log("Ping Pong\'d");
+        break;
+      }
+    };
+
+    sockjs.onclose   = function() { 
+      console.log('Lost our connection, lets retry!');
+      if (retryIdx < retryTimes.length) {
+        console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
+        setTimeout(restartSockJs, retryTimes[retryIdx++]);
+      } else {
+        alert('Bummer. We lost connection.');
+      }
+    };
+  }
+
+  var restartSockJs = function(){
+    sockjs = null;
+    startSockJs();
+  }
+
+  restartSockJs();
+});
+
 function onYouTubePlayerReady(playerId) {
   ytplayer = document.getElementById("ytPlayer");
-
-  var sockjs = new SockJS('stream');
-
-  sockjs.onopen    = function()  {  };
-  sockjs.onmessage = function(e) {
-    var msg = JSON.parse(e.data);
-
-    console.log(msg);
-
-    switch (msg.type) {
-      default: console.log('unhandled message: ' + msg); break;
-      case 'track':
-        ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-        ytplayer.seekTo( msg.seekTo );
-        ytplayer.playVideo();
-        updatePlaylist();
-      break;
-      case 'playlist:add':
-        updatePlaylist();
-      break;
-      case 'join':
-        $('<li data-user-id="' + msg.data.id + '">'+msg.data.id+'</li>').appendTo('#userlist');
-      break;
-      case 'part':
-        $('#userlist li[data-user-id='+msg.data.id+']').remove();
-      break;
-      case 'chat':
-        $( msg.data.formatted ).appendTo('#messages');
-        $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
-      break;
-    }
-  };
-  sockjs.onclose   = function() { 
-    // TODO: reconnect
-    if (confirm('Lost connection.  Reconnect?')) {
-      location.reload();
-    }
-  };
 
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
@@ -52,8 +76,8 @@ function onYouTubePlayerReady(playerId) {
   setInterval(function() {
     // TODO: use angularJS for this
     var time = ytplayer.getCurrentTime().toString().toHHMMSS();
-
-    $('#current-track #time').html( time );
+    var total = ytplayer.getDuration().toString().toHHMMSS();
+    $('#current-track #time').html( time + '/' + total);
   }, 1000);
 
 };
@@ -95,11 +119,10 @@ function updatePlaylist() {
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
-    data.forEach(function(user) {
-      if (user) {
-        $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
-      }
-    });
+    for (var id in data) {
+      var user = {id: k};
+      $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
+    }
   });
 }
 
