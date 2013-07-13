@@ -4,6 +4,10 @@ module.exports = {
     , host: 'localhost'
   },
   sessions: {
-    key: 'put yourself a fancy little key here'
+      key: 'put yourself a fancy little key here'
+  },
+  connection: {
+  	  clientTimeout: 2 * 60 * 1000
+  	, checkInterval: 30 * 1000
   }
 }
