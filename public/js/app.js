@@ -12,6 +12,7 @@ function onYouTubePlayerReady(playerId) {
     switch (msg.type) {
       default: console.log('unhandled message: ' + msg); break;
       case 'track':
+        $('#current-track #track-title').html( msg.data.title );
         ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
         ytplayer.seekTo( msg.seekTo );
         ytplayer.playVideo();
@@ -143,11 +144,15 @@ $(window).on('load', function() {
   $('#chat-form').on('submit', function(e) {
     e.preventDefault();
 
-    $.post('/chat', {
-      message: $('#chat-input').val()
-    }, function(data) {
-    });
-    $('#chat-input').val('');
+    var msg = $('#chat-input').val();
+    if (msg.length > 0) {
+      $('#chat-input').val('');
+      $.post('/chat', {
+        message: msg
+      }, function(data) {
+
+      });
+    }
 
     return false;
   });
@@ -167,10 +172,11 @@ $(window).on('load', function() {
               source: $(self).data('source')
             , id: $(self).data('id')
           }, function(response) {
-            $('#search-results').html('');
-            $('#search-query').val('');
             console.log(response);
           });
+
+          $('#search-results').html('');
+          $('#search-query').val('');
 
           return false;
         }).appendTo('#search-results');

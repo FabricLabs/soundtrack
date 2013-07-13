@@ -9,6 +9,10 @@ body {
   width: 480px;
 }
 
+#current-track #track-title {
+  height: 100px;
+}
+
 #search-results li {
   cursor: pointer;
 }

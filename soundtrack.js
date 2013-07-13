@@ -226,6 +226,7 @@ app.get('/', function(req, res, next) {
     res.render('index', {
         messages: messages.reverse()
       , backup: backupTracks
+      , room: app.room
     });
   });
 });
