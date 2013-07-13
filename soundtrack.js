@@ -21,8 +21,8 @@ app.set('view engine', 'jade');
 app.set('strict routing', true);
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.methodOverride())
-app.use(express.cookieParser( config.sessions.key ));
+app.use(express.methodOverride());
+app.use(express.cookieParser(config.sessions.key));
 app.use(express.bodyParser());
 app.use(express.errorHandler());
 app.use(express.session({
@@ -78,13 +78,38 @@ app.room = {
     track: undefined
   , playlist: []
 };
-app.clients = [];
+
+app.clients = {};
 
 app.broadcast = function(msg) {
-  app.clients.forEach(function(conn) {
-    conn.write(JSON.stringify( msg ));
-  });
+  var json = JSON.stringify(msg);
+  for (var id in app.clients) {
+    app.clients[id].write(json);
+  }
 };
+
+app.whisper = function(id, msg) {
+  var json = JSON.stringify(msg);
+  app.clients[id].write(json);
+}
+
+app.markAndSweep = function(){
+  app.broadcast({type: 'ping'});
+  var time = (new Date()).getTime();
+  app.forEachClient(function(client, id){
+    if (client.pongTime < time - config.connection.clientTimeout) {
+      client.close('', 'Timeout');
+    }
+  });
+}
+
+setInterval(app.markAndSweep, config.connection.checkInterval);
+
+app.forEachClient = function(fn) {
+  for (var id in app.clients) {
+    fn(app.clients[id], id)
+  }
+}
 
 function getYoutubeVideo(videoID, callback) {
   rest.get('http://gdata.youtube.com/feeds/api/videos?max-results=1&v=2&alt=jsonc&q='+videoID).on('complete', function(data) {
@@ -190,10 +215,22 @@ async.parallel([
 
 
 sock.on('connection', function(conn) {
-  var index = app.clients.push(conn);
+  app.clients[conn.id] = conn;
+  conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
-    conn.write(message);
+    var data = JSON.parse(message);
+    switch (data.type) {
+      //respond to pings
+      case 'pong':
+        conn.pongTime = (new Date()).getTime();
+        break;
+
+      //echo anything else
+      default:
+        conn.write(message);
+        break;
+    }
   });
 
   app.broadcast({
@@ -216,7 +253,7 @@ sock.on('connection', function(conn) {
           id: conn.id
         }
     });
-    delete app.clients[index];
+    delete app.clients[conn.id];
   });
 });
 sock.installHandlers(server, {prefix:'/stream'});
@@ -240,9 +277,7 @@ app.get('/playlist.json', function(req, res) {
 });
 
 app.get('/listeners.json', function(req, res) {
-  res.send(app.clients.map(function(client) {
-    return { id: client.id };
-  }));
+  res.send(app.clients);
 });
 
 app.post('/chat', requireLogin, function(req, res) {
@@ -258,6 +293,7 @@ app.post('/chat', requireLogin, function(req, res) {
         , created: chat.created
       }
     }, function(err, html) {
+      console.log('got chat', html);
       app.broadcast({
           type: 'chat'
         , data: {
@@ -392,3 +428,6 @@ function getTop100FromCodingSoundtrack(done) {
 }
 
 server.listen(13000);
+console.log('Listening on port 13000 for HTTP');
+console.log('Must have redis listening on port 6379');
+console.log('Must have mongodb listening on port 27017');
