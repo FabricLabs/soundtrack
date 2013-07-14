@@ -14,7 +14,8 @@ var config = require('./config')
   , LocalStrategy = require('passport-local').Strategy
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
-  , sessionStore = new RedisStore({ client: database.client });
+  , sessionStore = new RedisStore({ client: database.client })
+  , crypto = require('crypto');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -213,6 +214,7 @@ async.parallel([
   //nextSong();
 });
 
+var socketAuthTokens = [];
 
 sock.on('connection', function(conn) {
   app.clients[conn.id] = conn;
@@ -224,6 +226,26 @@ sock.on('connection', function(conn) {
       //respond to pings
       case 'pong':
         conn.pongTime = (new Date()).getTime();
+        break;
+
+      //user is trying to authenticate their socket...
+      //so we go ahead and look up the token they've sent us.
+      //if they get it wrong, we just hang up :).
+      case 'auth':
+        var authData = data.authData;
+        var matches = socketAuthTokens.filter(function(o){
+          return o.token == authData;
+        });
+
+        if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
+          console.log("Connection auth success!", conn.id, matches[0].user.username);
+          //TODO: I don't know where we want to store this information
+          matches[0].user.connId = conn.id;
+          matches[0].time = 0; //prohibit reuse
+        } else {
+          console.log("Connection auth failure!");
+          conn.close();
+        }
         break;
 
       //echo anything else
@@ -277,6 +299,19 @@ app.get('/playlist.json', function(req, res) {
 
 app.get('/listeners.json', function(req, res) {
   res.send(app.clients);
+});
+
+//client requests that we give them a token to auth their socket
+//we generate a 32 byte (256bit) token and send that back.
+//But first we record the token's authData, user and time.
+//We use the recorded time to make sure we issued the token recently
+app.post('/socket-auth', requireLogin, function(req, res){
+  crypto.randomBytes(32, function(ex, buf){
+    var authData = buf.toString('hex');
+    var token = {token: authData, user: req.user, time: (new Date()).getTime()};
+    socketAuthTokens.push(token);
+    res.send({authData: authData});
+  });
 });
 
 app.post('/chat', requireLogin, function(req, res) {

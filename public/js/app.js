@@ -6,6 +6,13 @@ $(document).ready(function(){
   var startSockJs = function(){
     sockjs = new SockJS('/stream');
 
+    sockjs.onopen = function(){
+      //sockjs connection has been opened!
+      $.post('/socket-auth', {}, function(data){
+        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+      });
+    }
+
     sockjs.onmessage = function(e) {
       retryIdx = 0; //reset our retry timeouts
 
