@@ -14,7 +14,7 @@ block content
 
         .row-fluid
           .span3
-            a.btn(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1")
+            a.btn(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
               i.icon-volume-up
           .span9
             input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
@@ -24,14 +24,14 @@ block content
 
         #playlist
           h3#playlist-summary Playlist
-          ul#playlist-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3")
+          ul#playlist-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
 
         h3 Add Track
         form#search-form
           if (user)
-            input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2")#search-query
+            input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
           else
-            input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2")#search-query
+            input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
           #search-results
 
       .span6
@@ -40,7 +40,7 @@ block content
 
         #audience
           h3 Users
-          #userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.", data-step="5")
+          #userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="top")
 
       #decks
         #slot-1
@@ -49,7 +49,7 @@ block content
         #slot-4
         #slot-5
 
-      .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4")
+      .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
         h3
           small.pull-right.user-count
           | Chat
