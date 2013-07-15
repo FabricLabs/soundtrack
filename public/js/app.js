@@ -127,9 +127,10 @@ String.prototype.toHHMMSS = function () {
 }
 function updatePlaylist() {
   $.get('/playlist.json', function(data) {
-    $('#playlist').html('');
+    $('#playlist-summary').html('Playlist (' + data.length + ')');
+    $('#playlist-list').html('');
     data.forEach(function(track) {
-      $('<li><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist');
+      $('<li><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist-list');
     });
   });
 }
