@@ -129,7 +129,7 @@ function updatePlaylist() {
   $.get('/playlist.json', function(data) {
     $('#playlist').html('');
     data.forEach(function(track) {
-      $('<li><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist');
+      $('<li><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist');
     });
   });
 }
