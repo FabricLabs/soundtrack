@@ -77,8 +77,15 @@ function onYouTubePlayerReady(playerId) {
 
   if (!registered) {
     introJs().start();
+    mutePlayer();
+  } else {
+    if ($.cookie('lastVolume')) {
+      ytplayer.setVolume( $.cookie('lastVolume') );
+      volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+    } else {
+      mutePlayer();
+    }
   }
-  mutePlayer();
 
   ytplayer.playVideo();
 
@@ -98,6 +105,7 @@ function mutePlayer() {
 function unmutePlayer() {
   ytplayer.setVolume(80);
   volume.slider('setValue', 80).val(80);
+  $.cookie('lastVolume', '80');
 }
 
 String.prototype.toHHMMSS = function () {
@@ -171,6 +179,7 @@ $(window).on('load', function() {
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;
     ytplayer.setVolume( $(self).val() );
+    $.cookie('lastVolume', $(self).val() );
   });
 
   $('#chat-form').on('submit', function(e) {
