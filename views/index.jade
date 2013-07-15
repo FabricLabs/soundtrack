@@ -20,7 +20,7 @@ block content
         if (user)
           a.btn(href="#", onclick="$.post('/skip'); return false;") skip
 
-        h3 Playlist
+        h3 Playlist (#{room.playlist.length})
         ul#playlist(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3")
 
         h3 Add Track
