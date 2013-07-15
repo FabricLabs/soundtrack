@@ -43,7 +43,9 @@ block content
         #slot-5
 
       .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4")
-        h3 Chat
+        h3
+          small.pull-right.user-count
+          | Chat
         #messages
           each message in messages
             include partials/message

@@ -126,6 +126,7 @@ function updatePlaylist() {
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
+    $('.user-count').html('<strong>'+data.length+'</strong> online');
     data.forEach(function(user) {
       // TODO: use template (Blade?)
       $('<li data-user-id="' + user.id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
