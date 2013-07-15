@@ -20,5 +20,12 @@ module.exports = {
       });
 
     });
+  },
+  list: function(req, res) {
+    Person.find({}).exec(function(err, people) {
+      res.render('people', {
+        people: people
+      });
+    });
   }
 }

@@ -21,9 +21,11 @@ block content
 
         if (user)
           a.btn(href="#", onclick="$.post('/skip'); return false;") skip
+          a.btn.btn-mini.pull-right(href="#playlist-modal", data-toggle="modal") your playlists
 
         #playlist
-          h3#playlist-summary Playlist
+          h3#playlist-summary
+            | Playlist
           ul#playlist-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
 
         h3 Add Track
@@ -68,3 +70,14 @@ block content
   else
     script.
       registered = true;
+
+    #playlist-modal.modal.hide.fade
+      .modal-header
+        button.close(data-dismiss="modal") &times;
+        h3 Your Playlists
+      .modal-body
+        h2 lol, not yet
+
+      .modal-footer
+        button.btn.btn(data-dismiss="modal") Cancel
+        button.btn.btn-primary.btn-large(data-dismiss="modal") Done

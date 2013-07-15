@@ -156,7 +156,7 @@ $(window).on('load', function() {
   $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
 
   // Lets Flash from another domain call JavaScript
-  var params = { allowScriptAccess: "always" };
+  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
   // The element id of the Flash embed
   var atts = { id: "ytPlayer" };
 

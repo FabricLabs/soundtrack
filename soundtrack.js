@@ -83,6 +83,11 @@ var sock = sockjs.createServer();
 var server = http.createServer(app);
 
 app.clients = {};
+
+var backupTracks = [];
+var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
+
+
 app.redis = redis.createClient();
 app.redis.get('soundtrack:playlist', function(err, playlist) {
   console.log('playlist: ' + playlist);
@@ -98,8 +103,6 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
     , listeners: {}
   };
 
-  var backupTracks = [];
-  var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
   async.series(tracks.map(function(videoID) {
     return function(callback) {
       getYoutubeVideo(videoID, function(track) {
@@ -241,7 +244,6 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
 
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
 /* this will be in MongoDB soon...*/
-var backupTracks = [];
 async.parallel([
   function(done) {
     var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
@@ -413,6 +415,8 @@ app.post('/playlist', requireLogin, function(req, res) {
   }
 });
 
+app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
+
 app.get('/pages.json', function(req, res) {
   res.send({
     "home": {
@@ -465,13 +469,8 @@ app.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-app.get('/people', function(req, res) {
-  Person.find({}).exec(function(err, people) {
-    res.render('people', {
-      people: people
-    });
-  });
-});
+
+app.get('/people', people.list);
 
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);

@@ -1,3 +1,31 @@
-module.export = {
+module.exports = {
+  create: function(req, res, next) {
+    var playlist = new Playlist({
+        name: req.param('name')
+      , _creator: req.user._id
+    });
+    playlist.save(function(err) {
+      res.send({
+        status: 'success'
+      });
+    });
+  },
+  addTrack: function(req, res, next) {
+    Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
+      if (!playlist) { return next(); }
 
+      Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
+        if (!track) { return next(); }
+
+        playlist._tracks.push( track._id );
+        playlist.save(function(err) {
+          res.send({
+            status: 'success'
+          });
+        });
+
+      });
+
+    });
+  }
 };
