@@ -5,14 +5,14 @@ block content
   #stage
     .row-fluid
       .span3
-        #current-track
+        #current-track.card
           //h2#track-title #{room.playlist[0].title}
           h5#track-title foo
           #track-progress.progress.progress-striped.active
             .bar(style="width: 0%;")
           span#time 00:00
 
-        .row-fluid
+        .card.row-fluid
           .span3
             a.btn(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
               i.icon-volume-up
@@ -23,18 +23,19 @@ block content
           a.btn(href="#", onclick="$.post('/skip'); return false;") skip
           a.btn.btn-mini.pull-right(href="#playlist-modal", data-toggle="modal") your playlists
 
-        #playlist
+        #playlist.card
           h3#playlist-summary
             | Playlist
           ul#playlist-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
 
-        h3 Add Track
-        form#search-form
-          if (user)
-            input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
-          else
-            input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
-          #search-results
+        .card
+          h3 Add Track
+          form#search-form
+            if (user)
+              input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
+            else
+              input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
+            #search-results
 
       .span6
         #screen-one
@@ -51,7 +52,7 @@ block content
         #slot-4
         #slot-5
 
-      .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
+      .span3.card(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
         h3
           small.pull-right.user-count
           | Chat
