@@ -11,6 +11,10 @@ var PersonSchema = new Schema({
   , avatar: {
       url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
     }
+  , bio: { type: String, default: '' }
+  , profiles: {
+
+    }
 });
 
 PersonSchema.plugin(passportLocalMongoose);

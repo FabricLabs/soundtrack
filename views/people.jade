@@ -9,3 +9,5 @@ block content
         a(href="/#{person.slug}")
           img.user-avatar-small(src="#{person.avatar.url}")
           | #{person.username}
+          - if (person.bio.length)
+            .badge has bio

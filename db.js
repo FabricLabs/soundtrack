@@ -1,5 +1,11 @@
 var config = require('./config')
+  , mongoose = require('mongoose')
+  , redis = require("redis")
+  , client = redis.createClient();
 
-var mongoose = require('mongoose');
 mongoose.connect(config.database.host, config.database.name);
-exports.mongoose = mongoose;
+
+module.exports = {
+    mongoose: mongoose
+  , client: client
+};

@@ -2,3 +2,12 @@ extends layout
 
 block content
   h1 #{person.username}
+  .bio
+    | !{marked(person.bio)}
+
+    - if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
+      a.btn EDIT!
+
+      form(action="/#{user.slug}", method="post")
+        textarea.input-block-level(name="bio", rows="3") #{person.bio}
+        button.btn.btn-primary(type="submit") Make Changes &raquo;

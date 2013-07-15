@@ -65,7 +65,7 @@ $(document).ready(function(){
 function onYouTubePlayerReady(playerId) {
   ytplayer = document.getElementById("ytPlayer");
 
-  var restartSockJs = function(){
+  restartSockJs = function(){
     sockjs = null;
     startSockJs();
   }

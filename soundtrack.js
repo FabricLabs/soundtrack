@@ -6,6 +6,7 @@ var config = require('./config')
   , http = require('http')
   , rest = require('restler')
   , async = require('async')
+  , redis = require('redis')
   , sockjs = require('sockjs')
   , _ = require('underscore')
   , mongoose = require('mongoose')
@@ -62,6 +63,11 @@ app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked = require('marked');
 
+var auth = require('./controllers/auth')
+  , pages = require('./controllers/pages')
+  , people = require('./controllers/people')
+  , playlists = require('./controllers/playlists');
+
 function requireLogin(req, res, next) {
   if (req.user) {
     next(); // allow the next route to run
@@ -76,13 +82,34 @@ function requireLogin(req, res, next) {
 var sock = sockjs.createServer();
 var server = http.createServer(app);
 
-app.room = {
-    track: undefined
-  , playlist: []
-  , listeners: {}
-};
-
 app.clients = {};
+app.redis = redis.createClient();
+app.redis.get('soundtrack:playlist', function(err, playlist) {
+  console.log('playlist: ' + playlist);
+  playlist = JSON.parse(playlist);
+
+  app.room = {
+      track: undefined
+    , playlist:  playlist || []
+    , listeners: {}
+  };
+
+  var backupTracks = [];
+  var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
+  async.series(tracks.map(function(videoID) {
+    return function(callback) {
+      getYoutubeVideo(videoID, function(track) {
+        backupTracks.push( track.toObject() );
+        callback();
+      });
+    };
+  }), function(err, results) {
+    // start streaming. :)
+    nextSong();
+  });
+  
+});
+app.socketAuthTokens = [];
 
 app.broadcast = function(msg) {
   var json = JSON.stringify(msg);
@@ -164,6 +191,7 @@ function nextSong() {
   // temporary (until playlist management is done)
   //app.room.playlist.push(lastTrack);
 
+  console.log('nextSong() called, current playlist is: ' + JSON.stringify(app.room.playlist));
   if (app.room.playlist.length == 0) {
     app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
   }
@@ -171,10 +199,13 @@ function nextSong() {
   app.room.playlist[0] = app.room.playlist[0];
   app.room.playlist[0].startTime = Date.now();
 
+  app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+
   var play = new Play({
     _track: app.room.playlist[0]._id
   });
   play.save(function(err) {
+
     app.broadcast({
         type: 'track'
       , data: app.room.playlist[0]
@@ -205,11 +236,6 @@ async.parallel([
       return function(callback) {
         getYoutubeVideo(videoID, function(track) {
           backupTracks.push( track.toObject() );
-
-          // go ahead and start...
-          // TODO: move elsewhere...
-          nextSong();
-
           callback();
         });
       };
@@ -222,13 +248,10 @@ async.parallel([
       });
       done();
     });
-    
   }
 ], function(err, trackLists) {
   //nextSong();
 });
-
-var socketAuthTokens = [];
 
 sock.on('connection', function(conn) {
   
@@ -249,10 +272,9 @@ sock.on('connection', function(conn) {
       //if they get it wrong, we just hang up :).
       case 'auth':
         var authData = data.authData;
-        var matches = socketAuthTokens.filter(function(o){
+        var matches = app.socketAuthTokens.filter(function(o){
           return o.token == authData;
         });
-        console.log( matches[0] );
 
         if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
           console.log("Connection auth success!", conn.id, matches[0].user.username);
@@ -305,19 +327,8 @@ sock.on('connection', function(conn) {
 });
 sock.installHandlers(server, {prefix:'/stream'});
 
-app.get('/', function(req, res, next) {
-  Chat.find({}).limit(10).sort('-created').populate('_author').exec(function(err, messages) {
-    res.render('index', {
-        messages: messages.reverse()
-      , backup: backupTracks
-      , room: app.room
-    });
-  });
-});
-
-app.get('/about', function(req, res, next) {
-  res.render('about', { });
-});
+app.get('/', pages.index);
+app.get('/about', pages.about);
 
 app.get('/playlist.json', function(req, res) {
   res.send(app.room.playlist);
@@ -331,14 +342,7 @@ app.get('/listeners.json', function(req, res) {
 //we generate a 32 byte (256bit) token and send that back.
 //But first we record the token's authData, user and time.
 //We use the recorded time to make sure we issued the token recently
-app.post('/socket-auth', requireLogin, function(req, res){
-  crypto.randomBytes(32, function(ex, buf){
-    var authData = buf.toString('hex');
-    var token = {token: authData, user: req.user, time: (new Date()).getTime()};
-    socketAuthTokens.push(token);
-    res.send({authData: authData});
-  });
-});
+app.post('/socket-auth', requireLogin, auth.configureToken);
 
 app.post('/chat', requireLogin, function(req, res) {
   var chat = new Chat({
@@ -454,16 +458,8 @@ app.get('/people', function(req, res) {
   });
 });
 
-app.get('/:usernameSlug', function(req, res, next) {
-  Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-    if (!person) { return next(); }
-
-    res.render('person', {
-      person: person
-    });
-
-  });
-});
+app.get('/:usernameSlug', people.profile);
+app.post('/:usernameSlug', people.edit);
 
 function getTop100FromCodingSoundtrack(done) {
   rest.get('http://codingsoundtrack.org/songs/100.json').on('complete', function(data) {
