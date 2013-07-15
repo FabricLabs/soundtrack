@@ -94,6 +94,11 @@ function onYouTubePlayerReady(playerId) {
     var time = ytplayer.getCurrentTime().toString().toHHMMSS();
     var total = ytplayer.getDuration().toString().toHHMMSS();
     $('#current-track #time').html( time + '/' + total);
+
+    var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
+    $('#track-progress .bar').css('width', progress + '%');
+    $('#track-progress').attr('title', progress + '%');
+
   }, 1000);
 
 };

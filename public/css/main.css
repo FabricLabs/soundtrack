@@ -10,7 +10,7 @@ body {
 }
 
 #current-track #track-title {
-  height: 100px;
+  height: 50px;
 }
 
 #search-results li {
