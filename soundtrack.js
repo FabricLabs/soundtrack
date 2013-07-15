@@ -62,6 +62,7 @@ app.use( flashify );
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked = require('marked');
+app.locals.helpers  = require('./helpers').helpers;
 
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
