@@ -109,7 +109,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
     };
   }), function(err, results) {
     // start streaming. :)
-    nextSong();
+    startMusic();
   });
   
 });
@@ -191,11 +191,17 @@ function getYoutubeVideo(videoID, callback) {
 
 
 function nextSong() {
+  // remove the first track in the playlist...
   var lastTrack = app.room.playlist.shift();
-  // temporary (until playlist management is done)
-  //app.room.playlist.push(lastTrack);
 
-  console.log('nextSong() called, current playlist is: ' + JSON.stringify(app.room.playlist));
+  // ...then start the music.
+  startMusic();
+}
+
+function startMusic() {
+
+  console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
+
   if (app.room.playlist.length == 0) {
     app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
   }
@@ -213,6 +219,7 @@ function nextSong() {
     app.broadcast({
         type: 'track'
       , data: app.room.playlist[0]
+      , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
     });
 
     clearTimeout( app.timeout );
