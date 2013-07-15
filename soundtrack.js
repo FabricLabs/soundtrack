@@ -171,13 +171,18 @@ function nextSong() {
   app.room.playlist[0] = app.room.playlist[0];
   app.room.playlist[0].startTime = Date.now();
 
-  app.broadcast({
-      type: 'track'
-    , data: app.room.playlist[0]
+  var play = new Play({
+    _track: app.room.playlist[0]._id
   });
+  play.save(function(err) {
+    app.broadcast({
+        type: 'track'
+      , data: app.room.playlist[0]
+    });
 
-  clearTimeout( app.timeout );
-  app.timeout = setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+    clearTimeout( app.timeout );
+    app.timeout = setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+  });
 
 }
 
