@@ -88,9 +88,13 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
   console.log('playlist: ' + playlist);
   playlist = JSON.parse(playlist);
 
+  if (!playlist || !playlist.length) {
+    playlist = [];
+  }
+
   app.room = {
       track: undefined
-    , playlist:  playlist || []
+    , playlist:  playlist
     , listeners: {}
   };
 
@@ -385,6 +389,8 @@ app.post('/playlist', requireLogin, function(req, res) {
               , slug: req.user.slug
             }
           } ) );
+
+          app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
 
           app.broadcast({
               type: 'playlist:add'
