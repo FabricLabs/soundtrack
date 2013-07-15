@@ -37,6 +37,10 @@ block content
         #screen-one
           .screen-inner#screen-inner
 
+        #audience
+          h3 Users
+          #userlist
+
       #decks
         #slot-1
         #slot-2
@@ -56,16 +60,6 @@ block content
             input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
           else
             input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
-
-  #audience
-    h3 Users
-    #userlist
-
-  #backup
-    h3 #{backup.length} Current "Backup" Tracks (in case the playlist hits bottom)
-    each track in backup
-      span #{track.title}
-      |  
 
   if (!user)
     script.
