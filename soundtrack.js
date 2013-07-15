@@ -2,6 +2,7 @@ var config = require('./config')
   , database = require('./db')
   , express = require('express')
   , app = express()
+  , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
   , async = require('async')
@@ -78,6 +79,7 @@ var server = http.createServer(app);
 app.room = {
     track: undefined
   , playlist: []
+  , listeners: {}
 };
 
 app.clients = {};
@@ -95,11 +97,18 @@ app.whisper = function(id, msg) {
 }
 
 app.markAndSweep = function(){
-  app.broadcast({type: 'ping'});
+  app.broadcast({type: 'ping'}); // we should probably not do this globally... instead, start interval after client connect?
   var time = (new Date()).getTime();
   app.forEachClient(function(client, id){
     if (client.pongTime < time - config.connection.clientTimeout) {
       client.close('', 'Timeout');
+      // TODO: broadcast part message
+      /*/app.broadcast({
+          type: 'part'
+        , data: {
+            id: conn.id
+          }
+      });/**/
     }
   });
 }
@@ -217,7 +226,9 @@ async.parallel([
 var socketAuthTokens = [];
 
 sock.on('connection', function(conn) {
-  app.clients[conn.id] = conn;
+  
+  app.clients[ conn.id ] = conn;
+
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
@@ -236,12 +247,21 @@ sock.on('connection', function(conn) {
         var matches = socketAuthTokens.filter(function(o){
           return o.token == authData;
         });
+        console.log( matches[0] );
 
         if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
           console.log("Connection auth success!", conn.id, matches[0].user.username);
           //TODO: I don't know where we want to store this information
           matches[0].user.connId = conn.id;
           matches[0].time = 0; //prohibit reuse
+
+          // TODO: strip salt, hash, etc.
+          // We do this on /listeners.json, but if nothing else, we save memory.
+          app.room.listeners[ matches[0].user._id ] = {
+              _id: matches[0].user._id
+            , slug: matches[0].user.slug
+            , username: matches[0].user.username
+          };
         } else {
           console.log("Connection auth failure!");
           conn.close();
@@ -258,7 +278,7 @@ sock.on('connection', function(conn) {
   app.broadcast({
       type: 'join'
     , data: {
-        id: conn.id
+        username: conn.id
       }
   });
 
@@ -299,7 +319,7 @@ app.get('/playlist.json', function(req, res) {
 });
 
 app.get('/listeners.json', function(req, res) {
-  res.send(app.clients);
+  res.send( _.toArray( app.room.listeners ) );
 });
 
 //client requests that we give them a token to auth their socket

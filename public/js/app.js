@@ -32,7 +32,7 @@ $(document).ready(function(){
           updatePlaylist();
         break;
         case 'join':
-          $('<li data-user-id="' + msg.data.id + '">'+msg.data.id+'</li>').appendTo('#userlist');
+          updateUserlist();
         break;
         case 'part':
           $('#userlist li[data-user-id='+msg.data.id+']').remove();
@@ -126,10 +126,10 @@ function updatePlaylist() {
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
-    for (var id in data) {
-      var user = {id: k};
-      $('<li data-user-id="' + user.id + '">'+user.id+'</li>').appendTo('#userlist');
-    }
+    data.forEach(function(user) {
+      // TODO: use template (Blade?)
+      $('<li data-user-id="' + user.id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+    });
   });
 }
 

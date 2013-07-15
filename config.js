@@ -7,7 +7,7 @@ module.exports = {
       key: 'put yourself a fancy little key here'
   },
   connection: {
-  	  clientTimeout: 2 * 60 * 1000
-  	, checkInterval: 30 * 1000
+      clientTimeout: 2 * 60 * 1000
+    , checkInterval: 30 * 1000
   }
 }
