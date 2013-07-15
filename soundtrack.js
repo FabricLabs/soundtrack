@@ -194,6 +194,12 @@ function nextSong() {
   // remove the first track in the playlist...
   var lastTrack = app.room.playlist.shift();
 
+  if (app.room.playlist.length == 0) {
+    app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
+  }
+
+  app.room.playlist[0].startTime = Date.now();
+
   // ...then start the music.
   startMusic();
 }
@@ -202,13 +208,6 @@ function startMusic() {
 
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
-  if (app.room.playlist.length == 0) {
-    app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
-  }
-
-  app.room.playlist[0] = app.room.playlist[0];
-  app.room.playlist[0].startTime = Date.now();
-
   app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
 
   var play = new Play({
@@ -216,14 +215,17 @@ function startMusic() {
   });
   play.save(function(err) {
 
+    var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
+
     app.broadcast({
         type: 'track'
       , data: app.room.playlist[0]
-      , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+      , seekTo: seekTo
     });
 
     clearTimeout( app.timeout );
-    app.timeout = setTimeout( nextSong , app.room.playlist[0].duration * 1000 );
+
+    app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
   });
 
 }
