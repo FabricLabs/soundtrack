@@ -2,4 +2,4 @@
   abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
   img.user-avatar-small(src="#{message._author.avatar.url}")
   strong #{message._author.username}:
-  span !{helpers.prepareChatMessage(message.message)}
+  span  !{helpers.prepareChatMessage(message.message)}
