@@ -3,7 +3,7 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
   var retryIdx = 0;
 
-  var startSockJs = function(){
+  startSockJs = function(){
     sockjs = new SockJS('/stream');
 
     sockjs.onopen = function(){
@@ -23,6 +23,7 @@ $(document).ready(function(){
       switch (msg.type) {
         default: console.log('unhandled message: ' + msg); break;
         case 'track':
+          $('#track-title').html( msg.data.title );
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
           ytplayer.playVideo();
@@ -59,16 +60,17 @@ $(document).ready(function(){
     };
   }
 
+});
+
+function onYouTubePlayerReady(playerId) {
+  ytplayer = document.getElementById("ytPlayer");
+
   var restartSockJs = function(){
     sockjs = null;
     startSockJs();
   }
 
   restartSockJs();
-});
-
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
 
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
