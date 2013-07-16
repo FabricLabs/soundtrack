@@ -31,6 +31,8 @@ html(lang="en-US")
                 a(href="/", ng-class="{active: slug == ''}") Home
               li
                 a(href="/about", ng-class="{active: slug == 'about'}") About
+              li
+                a(href="/history", ng-class="{active: slug == 'history'}") History
               if (user)
                 li
                   a(href="/people") People

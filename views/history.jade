@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  h1 Track History
+  ul
+    for play in plays
+      li
+        a(href="/#{play._track._artist}") #{play._track._artist} [artist]
+        |  &mdash; 
+        a(href="/#{play._track._artist}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
+        small  queued by 
+          a(href="#{play._curator.slug}") #{play._curator.username}

@@ -38,6 +38,7 @@ app.use(passport.session());
 
 Person       = require('./models/Person').Person;
 Track        = require('./models/Track').Track;
+Artist       = require('./models/Artist').Artist;
 Play         = require('./models/Play').Play;
 Playlist     = require('./models/Playlist').Playlist;
 Chat         = require('./models/Chat').Chat;
@@ -89,7 +90,6 @@ app.clients = {};
 var backupTracks = [];
 var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
 
-
 app.redis = redis.createClient();
 app.redis.get('soundtrack:playlist', function(err, playlist) {
   console.log('playlist: ' + playlist);
@@ -101,7 +101,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
 
   app.room = {
       track: undefined
-    , playlist:  playlist
+    , playlist: playlist
     , listeners: {}
   };
 
@@ -179,6 +179,9 @@ function getYoutubeVideo(videoID, callback) {
         track.duration = video.duration;
         track.images.thumbnail.url = video.thumbnail.hqDefault;
 
+        // TODO: use CodingSoundtrack.org's lookup for artist creation
+        //Author.findOne()
+
         track.save(function(err) {
           if (err) { console.log(err); }
           callback(track);
@@ -200,23 +203,27 @@ function nextSong() {
   var lastTrack = app.room.playlist.shift();
 
   if (app.room.playlist.length == 0) {
-    app.room.playlist.push( backupTracks[ _.random(0, backupTracks.length - 1 ) ] );
+    app.room.playlist.push( _.extend( backupTracks[ _.random(0, backupTracks.length - 1 ) ] , {
+        score: 0
+      , votes: {}
+    } ) );
   }
 
   app.room.playlist[0].startTime = Date.now();
+  app.room.track = app.room.playlist[0];
+
+  app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
 
   // ...then start the music.
   startMusic();
 }
 
 function startMusic() {
-
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
-  app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
-
   var play = new Play({
-    _track: app.room.playlist[0]._id
+      _track: app.room.playlist[0]._id
+    , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
   });
   play.save(function(err) {
 
@@ -387,6 +394,38 @@ app.post('/chat', requireLogin, function(req, res) {
   });
 });
 
+app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
+
+  var playlistMap = app.room.playlist.map(function(x) {
+    return x._id.toString();
+  });
+  var index = playlistMap.indexOf( req.param('trackID') );
+
+  if (!index) { return next(); }
+  if (!app.room.playlist[ index].votes) { app.room.playlist[ index].votes = {}; }
+
+  app.room.playlist[ index].votes[ req.user._id ] = (req.param('v') == 'up') ? 1 : -1;
+  app.room.playlist[ index].score = _.reduce( app.room.playlist[ index].votes , function(score, vote) {
+    return score + vote;
+  }, 0);
+
+  console.log('track score: ' + app.room.playlist[ index].score);
+  console.log('track votes: ' + JSON.stringify(app.room.playlist[ index].votes));
+
+  app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
+    return b.score - a.score;
+  }) );
+
+  app.broadcast({
+    type: 'playlist:update'
+  });
+
+  res.send({
+    status: 'success'
+  });
+
+});
+
 app.post('/playlist', requireLogin, function(req, res) {
   switch(req.param('source')) {
     default:
@@ -396,11 +435,13 @@ app.post('/playlist', requireLogin, function(req, res) {
       getYoutubeVideo(req.param('id'), function(track) {
         if (track) {
           app.room.playlist.push( _.extend( track.toObject() , {
-            curator: {
-                _id: req.user._id
-              , username: req.user.username
-              , slug: req.user.slug
-            }
+              score: 0
+            , votes: {} // TODO: auto-upvote?
+            , curator: {
+                  _id: req.user._id
+                , username: req.user.username
+                , slug: req.user.slug
+              }
           } ) );
 
           app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
@@ -472,6 +513,7 @@ app.get('/logout', function(req, res) {
 });
 
 
+app.get('/history', pages.history);
 app.get('/people', people.list);
 
 app.get('/:usernameSlug', people.profile);
