@@ -6,6 +6,8 @@ block content
     .row-fluid
       .span3
         #current-track
+          input(type="hidden", name="current-track-id")
+
           //h2#track-title #{room.playlist[0].title}
           h5#track-title foo
           #track-progress.progress.progress-striped.active
@@ -20,13 +22,24 @@ block content
             input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
         if (user)
-          a.btn(href="#", onclick="$.post('/skip'); return false;") skip
-          a.btn.btn-mini.pull-right(href="#playlist-modal", data-toggle="modal") your playlists
+          .btn-group
+            a.btn(href="#", onclick="$.post('/skip'); return false;") skip
+
+          .btn-group.pull-right
+            a.btn(href="#playlist-modal", data-toggle="modal") your playlists
+            a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
+              span.caret
+            ul.dropdown-menu(data-for="user-playlists")
+              for playlist in playlists
+                li(data-playlist-id="#{playlist._id}")
+                  a(href="#") #{playlist.name}
+              li(data-action="new-playlist")
+                a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
         #playlist
           h3#playlist-summary
             | Playlist
-          ul#playlist-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
+          ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
 
         h3 Add Track
         form#search-form
@@ -76,8 +89,41 @@ block content
         button.close(data-dismiss="modal") &times;
         h3 Your Playlists
       .modal-body
-        h2 lol, not yet
+        .row-fluid
+          .span3
+            ul.nav.nav-list(data-for="user-playlists")
+              for playlist in playlists
+                li(data-playlist-id="#{playlist._id}")
+                  a(href="/#{user.slug}/#{playlist.slug}")
+                    small.pull-right #{playlist._tracks.length}
+                    | #{playlist.name}
+          .span9
+            h4 Tracks
 
       .modal-footer
         button.btn.btn(data-dismiss="modal") Cancel
         button.btn.btn-primary.btn-large(data-dismiss="modal") Done
+
+
+    form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
+      #create-playlist-modal.modal.hide.fade
+        .modal-header
+          button.close(data-dismiss="modal") &times;
+          h3 Create Playlist
+        .modal-body
+          label(required="required") Name
+          input(type="text", name="name")
+
+          label(required="required") Description
+          textarea(type="text", name="description")
+
+          h4 You'll be adding the following track:
+          h5
+            span.track-artist foo
+            |  &mdash; 
+            span.track-title bar
+
+        .modal-footer
+          button.btn.btn(data-dismiss="modal") Cancel
+          button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
+

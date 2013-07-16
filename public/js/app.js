@@ -24,6 +24,8 @@ $(document).ready(function(){
         default: console.log('unhandled message: ' + msg); break;
         case 'track':
           $('#track-title').html( msg.data.title );
+          $('input[name=current-track-id]').val( msg.data._id );
+
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
           ytplayer.playVideo();
@@ -135,8 +137,9 @@ function updatePlaylist() {
     $('#playlist-summary').html('Playlist (' + data.length + ')');
     $('#playlist-list').html('');
     data.forEach(function(track) {
-      $('<li><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium" />'+track.title+'</li>').appendTo('#playlist-list');
+      $('<li data-track-id="'+track._id+'"><div class="playlist-controls"><i class="icon-chevron-up" data-action="upvote-track" data-track-id="'+track._id+'" /><i class="icon-chevron-down" data-action="downvote-track" data-track-id="'+track._id+'" /></div><a href="/'+track._artist+'/'+track.slug+'/'+track._id+'"><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium pull-left" /><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small>'+track.title+'</div></a></li>').appendTo('#playlist-list');
     });
+    $('#playlist-list li').first().addClass('active');
   });
 }
 function updateUserlist() {
@@ -232,5 +235,37 @@ $(window).on('load', function() {
 
     return false;
   });
+
+  $('#create-playlist-form').on('submit', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $('#create-playlist-modal').modal('hide');
+    // TODO: use real username, if only for rest purposes.
+    $.post('/username/playlists', {
+        name:        $('#create-playlist-form input[name=name]').val()
+      , description: $('#create-playlist-form textarea[name=description]').val()
+      , trackID:     $('input[name=current-track-id]').val()
+    }, function(data) {
+      console.log('playlist created!');
+
+      $('<li data-playlist-id="'+ data.results._id +'"><a href="#">'+ data.results.name +'</a></li>').click(function(e) {
+        e.preventDefault();
+
+        // TODO: action for adding a track to a playlist
+
+        return false;
+      }).appendTo('ul[data-for=user-playlists]');
+    });
+    return false;
+  });
+
+  $(document).on('click', '*[data-action=upvote-track]', function(e) {
+    e.preventDefault();
+    var self = this;
+    console.log('clicked upvote button for ' + $(self).data('track-id'));
+    return false;
+  });
+
 
 });

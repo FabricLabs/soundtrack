@@ -3,8 +3,11 @@ module.exports = {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      res.render('person', {
-        person: person
+      Playlist.find({ _creator: person._id, public: true }).exec(function(err, playlists) {
+        res.render('person', {
+            person: person
+          , playlists: playlists
+        });
       });
 
     });

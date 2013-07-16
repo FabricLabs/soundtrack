@@ -25,6 +25,10 @@ var TrackSchema = new Schema({
         id: { type: String, required: true }
       })]
     }
+  , _remixes: [ new Schema({
+        _artist: { type: ObjectId, ref: 'Artist' }
+      , _track: { type: ObjectId, ref: 'Track' }
+    }) ]
 });
 
 TrackSchema.statics.random = function(callback) {

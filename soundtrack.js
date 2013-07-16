@@ -39,6 +39,7 @@ app.use(passport.session());
 Person       = require('./models/Person').Person;
 Track        = require('./models/Track').Track;
 Play         = require('./models/Play').Play;
+Playlist     = require('./models/Playlist').Playlist;
 Chat         = require('./models/Chat').Chat;
 
 passport.use(Person.createStrategy());

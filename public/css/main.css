@@ -44,3 +44,23 @@ body {
   max-height: 2.4em;
   margin-right: 0.2em;
 }
+
+.media img {
+  max-height: 2.4em;
+}
+
+.playlist-controls {
+  float:left;
+  padding-right: 5px;
+}
+.active .playlist-controls {
+  visibility: hidden;
+}
+.playlist-controls i {
+  display: block;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.playlist-controls i:hover {
+  opacity: 1;
+}
