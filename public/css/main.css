@@ -58,6 +58,11 @@ body {
 }
 .active .playlist-controls {
   visibility: hidden;
+  display: none;
+}
+.playlist-controls .score {
+  float: right;
+  margin: 7px 0 0 15px;
 }
 .playlist-controls i {
   display: block;

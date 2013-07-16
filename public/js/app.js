@@ -34,6 +34,9 @@ $(document).ready(function(){
         case 'playlist:add':
           updatePlaylist();
         break;
+        case 'playlist:update':
+          updatePlaylist();
+        break;
         case 'join':
           updateUserlist();
         break;
@@ -110,9 +113,14 @@ function mutePlayer() {
   volume.slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
-  ytplayer.setVolume(80);
-  volume.slider('setValue', 80).val(80);
-  $.cookie('lastVolume', '80');
+  if ($.cookie('lastVolume')) {
+    ytplayer.setVolume( $.cookie('lastVolume') );
+    volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+  } else {
+    ytplayer.setVolume(80);
+    volume.slider('setValue', 80).val(80);
+    $.cookie('lastVolume', '80');
+  }
 }
 
 String.prototype.toHHMMSS = function () {
@@ -137,7 +145,7 @@ function updatePlaylist() {
     $('#playlist-summary').html('Playlist (' + data.length + ')');
     $('#playlist-list').html('');
     data.forEach(function(track) {
-      $('<li data-track-id="'+track._id+'"><div class="playlist-controls"><i class="icon-chevron-up" data-action="upvote-track" data-track-id="'+track._id+'" /><i class="icon-chevron-down" data-action="downvote-track" data-track-id="'+track._id+'" /></div><a href="/'+track._artist+'/'+track.slug+'/'+track._id+'"><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium pull-left" /><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small>'+track.title+'</div></a></li>').appendTo('#playlist-list');
+      $('<li data-track-id="'+track._id+'"><div class="playlist-controls"><div class="score badge">'+track.score+'</div><i class="icon-chevron-up" data-action="upvote-track" data-track-id="'+track._id+'" /><i class="icon-chevron-down" data-action="downvote-track" data-track-id="'+track._id+'" /></div><a href="/'+track._artist+'/'+track.slug+'/'+track._id+'"><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium pull-left" /><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small>'+track.title+'</div></a></li>').appendTo('#playlist-list');
     });
     $('#playlist-list li').first().addClass('active');
   });
@@ -249,22 +257,47 @@ $(window).on('load', function() {
     }, function(data) {
       console.log('playlist created!');
 
-      $('<li data-playlist-id="'+ data.results._id +'"><a href="#">'+ data.results.name +'</a></li>').click(function(e) {
-        e.preventDefault();
-
-        // TODO: action for adding a track to a playlist
-
-        return false;
-      }).insertBefore('ul[data-for=user-playlists] li:last-child');
+      $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
 
     });
     return false;
   });
 
+  $(document).on('click', '*[data-action=save-track]', function(e) {
+    var self = this;
+
+    $.post('/' + $('a[data-for=user-model]').data('username') +'/playlists/' + $(self).data('playlist-id'), {
+      trackID: $('input[name=current-track-id]').val()
+    }, function(data) {
+      // TODO: update UI with correct count
+      console.log(data);
+    });
+
+  });
+
   $(document).on('click', '*[data-action=upvote-track]', function(e) {
     e.preventDefault();
     var self = this;
-    console.log('clicked upvote button for ' + $(self).data('track-id'));
+
+    $.post('/playlist/' + $(self).data('track-id'), {
+      v: 'up'
+    }, function(data) {
+      console.log(data);
+    });
+
+    return false;
+  });
+
+  $(document).on('click', '*[data-action=downvote-track]', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $.post('/playlist/' + $(self).data('track-id'), {
+      v: 'down'
+    }, function(data) {
+      console.log(data);
+    });
+
     return false;
   });
 

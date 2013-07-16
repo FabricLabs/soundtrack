@@ -1,3 +1,5 @@
+var _ = require('underscore')
+
 module.exports = {
   create: function(req, res, next) {
     var playlist = new Playlist({
@@ -27,7 +29,7 @@ module.exports = {
     Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
       if (!playlist) { return next(); }
 
-      Track.findOne({ _id: req.param('trackID') }).populate('_tracks').exec(function(err, track) {
+      Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
         if (!track) { return next(); }
 
         playlist._tracks.push( track._id );

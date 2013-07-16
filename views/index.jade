@@ -32,7 +32,7 @@ block content
             ul.dropdown-menu(data-for="user-playlists")
               for playlist in playlists
                 li(data-playlist-id="#{playlist._id}")
-                  a(href="#") #{playlist.name}
+                  a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
               li(data-action="new-playlist")
                 a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
@@ -91,14 +91,14 @@ block content
         h3 Your Playlists
       .modal-body
         .row-fluid
-          .span3
+          .span4
             ul.nav.nav-list(data-for="user-playlists")
               for playlist in playlists
                 li(data-playlist-id="#{playlist._id}")
                   a(href="/#{user.slug}/#{playlist.slug}")
                     small.pull-right #{playlist._tracks.length}
                     | #{playlist.name}
-          .span9
+          .span8
             h4 Tracks
 
       .modal-footer

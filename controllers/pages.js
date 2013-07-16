@@ -18,5 +18,18 @@ module.exports = {
   },
   about: function(req, res, next) {
     res.render('about', { });
+  },
+  history: function(req, res) {
+    Play.find({}).populate('_track _curator').sort('-timestamp').limit(100).exec(function(err, plays) {
+      Artist.populate(plays, {
+        path: '_track._artist'
+      }, function(err, plays) {
+        console.log(plays);
+
+        res.render('history', {
+          plays: plays
+        });
+      });
+    });
   }
 }

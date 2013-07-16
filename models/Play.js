@@ -6,6 +6,7 @@ var mongoose = require('mongoose')
 // and moreover, their type.
 var PlaySchema = new Schema({
     _track: { type: ObjectId, ref: 'Track' }
+  , _curator: { type: ObjectId, ref: 'Person' }
   , timestamp: { type: Date, default: Date.now }
 });
 
