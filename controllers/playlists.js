@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require('underscore')
 
 module.exports = {
   create: function(req, res, next) {
@@ -32,7 +32,7 @@ module.exports = {
       Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
         if (!track) { return next(); }
 
-        playlist._tracks = _.union( playlist._tracks , [ track._id ] );
+        playlist._tracks.push( track._id );
         playlist.save(function(err) {
           res.send({
               status: 'success'

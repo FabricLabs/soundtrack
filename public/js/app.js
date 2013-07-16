@@ -113,9 +113,14 @@ function mutePlayer() {
   volume.slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
-  ytplayer.setVolume(80);
-  volume.slider('setValue', 80).val(80);
-  $.cookie('lastVolume', '80');
+  if ($.cookie('lastVolume')) {
+    ytplayer.setVolume( $.cookie('lastVolume') );
+    volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+  } else {
+    ytplayer.setVolume(80);
+    volume.slider('setValue', 80).val(80);
+    $.cookie('lastVolume', '80');
+  }
 }
 
 String.prototype.toHHMMSS = function () {
