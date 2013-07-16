@@ -255,7 +255,8 @@ $(window).on('load', function() {
         // TODO: action for adding a track to a playlist
 
         return false;
-      }).appendTo('ul[data-for=user-playlists]');
+      }).insertBefore('ul[data-for=user-playlists] li:last-child');
+
     });
     return false;
   });
