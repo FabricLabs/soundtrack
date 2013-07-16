@@ -96,7 +96,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
   playlist = JSON.parse(playlist);
 
   if (!playlist || !playlist.length) {
-    playlist = [];
+    playlist = ['ONyAv1HWDo0'];
   }
 
   app.room = {
