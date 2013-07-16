@@ -20,7 +20,7 @@ body {
   background: #ccc;
 }
 #messages, #playlist {
-  height: 420px;
+  height: 230px;
   overflow-y: scroll;
   overflow-x: hidden;
 }

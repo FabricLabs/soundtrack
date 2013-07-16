@@ -52,10 +52,15 @@ block content
       .span6
         #screen-one
           .screen-inner#screen-inner
+        #messages
+          each message in messages
+            include partials/message
+        form#chat-form
+          if (user)
+            input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
+          else
+            input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
 
-        #audience
-          h3 Users
-          #userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="top")
 
       #decks
         #slot-1
@@ -65,17 +70,11 @@ block content
         #slot-5
 
       .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
-        h3
-          small.pull-right.user-count
-          | Chat
-        #messages
-          each message in messages
-            include partials/message
-        form#chat-form
-          if (user)
-            input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
-          else
-            input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
+        #audience
+          h3 
+            small.pull-right.user-count
+            | Users
+          #userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="top")
 
   if (!user)
     script.
