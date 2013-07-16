@@ -20,7 +20,7 @@ body {
   background: #ccc;
 }
 #messages, #playlist {
-  height: 420px;
+  height: 230px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -68,4 +68,8 @@ body {
 }
 .playlist-controls i:hover {
   opacity: 1;
+}
+
+#playlist-list li {
+  clear: both;
 }
