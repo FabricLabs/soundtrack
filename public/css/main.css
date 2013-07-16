@@ -69,3 +69,7 @@ body {
 .playlist-controls i:hover {
   opacity: 1;
 }
+
+#playlist-list li {
+  clear: both;
+}
