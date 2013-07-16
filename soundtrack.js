@@ -229,7 +229,8 @@ function startMusic() {
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
-
+  app.room.track = app.room.playlist[0];
+  
   app.broadcast({
       type: 'track'
     , data: app.room.playlist[0]
@@ -252,7 +253,24 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log('skip received:');
   console.log(req.user);
   console.log(req.headers);
-
+  
+  //Announce who skipped this song
+  res.render('partials/announcement', {
+      message: {
+          message: "'" + app.room.track.title + "' was skipped by " + req.user.username + "."
+        , created: new Date()
+      }
+    }, function(err, html) {
+      app.broadcast({
+          type: 'announcement'
+        , data: {
+              formatted: html
+            , created: new Date()
+          }
+      });
+    }
+  );
+  
   nextSong();
   res.send({ status: 'success' });
 });

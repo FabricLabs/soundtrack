@@ -27,6 +27,10 @@ body {
 #playlist {
   height: 280px;
 }
+#announcement{
+  color: #08C;
+  font-size: 0.8em;
+}
 
 .message {
   clear: both;
