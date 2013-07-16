@@ -20,7 +20,7 @@ PlaylistSchema.virtual('isoDate').get(function() {
   return this.timestamp.toISOString();
 });
 
-PlaylistSchema.use( slug('name') );
+PlaylistSchema.plugin( slug('name') );
 PlaylistSchema.index({ slug: 1 });
 
 var Playlist = mongoose.model('Playlist', PlaylistSchema);
