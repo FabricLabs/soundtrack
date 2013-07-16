@@ -48,6 +48,25 @@ body {
   margin-right: 0.2em;
 }
 
+.media img {
+  max-height: 2.4em;
+}
+
+.playlist-controls {
+  float:left;
+  padding-right: 5px;
+}
+.active .playlist-controls {
+  visibility: hidden;
+}
+.playlist-controls i {
+  display: block;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.playlist-controls i:hover {
+  opacity: 1;
+}
 .card {
   background-color: rgba(0, 0, 0, 0.04);
   box-shadow: rgba(0, 0, 0, 0.3) 1px 11px 49px -18px;
@@ -68,4 +87,3 @@ li {
 .slider-horizontal {
   width:100% !important;
 }
-
