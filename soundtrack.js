@@ -214,31 +214,31 @@ function nextSong() {
 
   app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
 
-  // ...then start the music.
-  startMusic();
-}
-
-function startMusic() {
-  console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
-
   var play = new Play({
       _track: app.room.playlist[0]._id
     , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
   });
   play.save(function(err) {
-
-    var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
-
-    app.broadcast({
-        type: 'track'
-      , data: app.room.playlist[0]
-      , seekTo: seekTo
-    });
-
-    clearTimeout( app.timeout );
-
-    app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
+    // ...then start the music.
+    startMusic();
   });
+
+}
+
+function startMusic() {
+  console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
+
+  var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
+
+  app.broadcast({
+      type: 'track'
+    , data: app.room.playlist[0]
+    , seekTo: seekTo
+  });
+
+  clearTimeout( app.timeout );
+
+  app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
 
 }
 
@@ -459,6 +459,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 });
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
+app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
 
 app.get('/pages.json', function(req, res) {
   res.send({
@@ -511,7 +512,6 @@ app.get('/logout', function(req, res) {
   req.flash('info', 'You\'ve been logged out.');
   res.redirect('/');
 });
-
 
 app.get('/history', pages.history);
 app.get('/people', people.list);

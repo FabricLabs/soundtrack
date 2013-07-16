@@ -252,22 +252,27 @@ $(window).on('load', function() {
     }, function(data) {
       console.log('playlist created!');
 
-      $('<li data-playlist-id="'+ data.results._id +'"><a href="#">'+ data.results.name +'</a></li>').click(function(e) {
-        e.preventDefault();
-
-        // TODO: action for adding a track to a playlist
-
-        return false;
-      }).insertBefore('ul[data-for=user-playlists] li:last-child');
+      $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
 
     });
     return false;
   });
 
+  $(document).on('click', '*[data-action=save-track]', function(e) {
+    var self = this;
+
+    $.post('/' + $('a[data-for=user-model]').data('username') +'/playlists/' + $(self).data('playlist-id'), {
+      trackID: $('input[name=current-track-id]').val()
+    }, function(data) {
+      // TODO: update UI with correct count
+      console.log(data);
+    });
+
+  });
+
   $(document).on('click', '*[data-action=upvote-track]', function(e) {
     e.preventDefault();
     var self = this;
-    console.log('clicked upvote button for ' + $(self).data('track-id'));
 
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'up'
@@ -281,7 +286,6 @@ $(window).on('load', function() {
   $(document).on('click', '*[data-action=downvote-track]', function(e) {
     e.preventDefault();
     var self = this;
-    console.log('clicked upvote button for ' + $(self).data('track-id'));
 
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'down'
