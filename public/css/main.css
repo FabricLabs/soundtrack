@@ -1,6 +1,9 @@
+@import url('http://roboto-webfont.googlecode.com/svn/trunk/roboto.all.css');
+
 body {
   padding-top: 60px;
   padding-bottom: 40px;
+  font-family: 'Roboto', Helvetica;
 }
 
 #screen-one {
@@ -68,4 +71,24 @@ body {
 }
 .playlist-controls i:hover {
   opacity: 1;
+}
+.card {
+  background-color: rgba(0, 0, 0, 0.04);
+  box-shadow: rgba(0, 0, 0, 0.3) 1px 11px 49px -18px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding:18px;
+  width:auto;
+  margin-bottom:25px;
+}
+
+ul, ol {
+
+}
+
+li {
+ list-style:none;
+}
+
+.slider-horizontal {
+  width:100% !important;
 }

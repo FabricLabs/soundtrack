@@ -1,0 +1,9 @@
+
+/* only desktop resolutions */
+@media all and (min-width:1200px) {
+
+  .container, .navbar-fixed-top .container {
+    width: 80% !important;
+  }
+
+}
