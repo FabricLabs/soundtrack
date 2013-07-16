@@ -242,6 +242,12 @@ function startMusic() {
 
 }
 
+function sortPlaylist() {
+  app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
+    return b.score - a.score;
+  }) );
+}
+
 app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log('skip received:');
   console.log(req.user);
@@ -412,9 +418,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   console.log('track score: ' + app.room.playlist[ index].score);
   console.log('track votes: ' + JSON.stringify(app.room.playlist[ index].votes));
 
-  app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
-    return b.score - a.score;
-  }) );
+  sortPlaylist();
 
   app.broadcast({
     type: 'playlist:update'
@@ -443,6 +447,8 @@ app.post('/playlist', requireLogin, function(req, res) {
                 , slug: req.user.slug
               }
           } ) );
+
+          sortPlaylist();
 
           app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
 
