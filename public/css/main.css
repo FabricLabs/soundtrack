@@ -27,6 +27,11 @@ body {
 #playlist {
   height: 280px;
 }
+#announcement{
+  color: #08C;
+  font-size: 0.8em;
+}
+
 .chat-container {
   /*width: 480px; */
   margin-left: auto;
