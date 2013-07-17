@@ -40,7 +40,7 @@ html(lang="en-US")
             ul.nav.pull-right
               if (user)
                 li
-                  a(href="/#{user.slug}", data-username="#{user.slug}", data-for="user-model")
+                  a(href="/#{user.slug}", data-username="#{user.username}", data-for="user-model")
                     img.user-avatar-small(src="#{user.avatar.url}")
                     | #{user.username}
                 li
