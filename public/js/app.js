@@ -3,6 +3,8 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
   var retryIdx = 0;
 
+  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+
   startSockJs = function(){
     sockjs = new SockJS('/stream');
 
@@ -52,6 +54,7 @@ $(document).ready(function(){
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
           $("#messages").scrollTop($("#messages")[0].scrollHeight);
+          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
         break;
         case 'ping':
           sockjs.send(JSON.stringify({type: 'pong'}));
@@ -182,7 +185,7 @@ $(window).on('load', function() {
   var atts = { id: "ytPlayer" };
 
   // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "480", "295", "9", null, null, params, atts);
+  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "570", "295", "9", null, null, params, atts);
 
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
@@ -311,5 +314,12 @@ $(window).on('load', function() {
     return false;
   });
 
+  $(document).on('click', '.message *[data-role=author]', function(e) {
+    e.preventDefault();
+    var self = this;
+    $('#chat-input').val( $('#chat-input').val() + ' @'+$(self).data('user-username') + ' ');
+    $('#chat-input').focus();
+    return false;
+  });
 
 });
