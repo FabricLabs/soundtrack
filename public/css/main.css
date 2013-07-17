@@ -6,7 +6,7 @@ body {
 #screen-one {
   margin-left: auto;
   margin-right: auto;
-  width: 480px;
+  /*width: 480px;*/
 }
 
 #current-track #track-title {
@@ -27,12 +27,25 @@ body {
 #playlist {
   height: 280px;
 }
+.chat-container {
+  /*width: 480px; */
+  margin-left: auto;
+  margin-right: auto;
+}
 
 .message {
   clear: both;
 }
+
 .message abbr.timestamp {
   font-size: 0.75em;
+}
+.message strong[data-role=author] {
+  cursor: pointer;
+}
+
+.highlight {
+  background: #ffffd5;
 }
 
 .user-avatar-small {
