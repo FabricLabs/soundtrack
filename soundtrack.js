@@ -329,14 +329,24 @@ sock.on('connection', function(conn) {
           //TODO: I don't know where we want to store this information
           matches[0].user.connId = conn.id;
           matches[0].time = 0; //prohibit reuse
-
+          conn.user = matches[0].user; //keep information for quits
+          
           // TODO: strip salt, hash, etc.
           // We do this on /listeners.json, but if nothing else, we save memory.
           app.room.listeners[ matches[0].user._id ] = {
               _id: matches[0].user._id
             , slug: matches[0].user.slug
             , username: matches[0].user.username
+            , id: conn.id
           };
+          
+          app.broadcast({
+              type: 'join'
+            , data: {
+                username: conn.id
+              }
+          });
+          
         } else {
           console.log("Connection auth failure!");
           conn.close();
@@ -350,13 +360,6 @@ sock.on('connection', function(conn) {
     }
   });
 
-  app.broadcast({
-      type: 'join'
-    , data: {
-        username: conn.id
-      }
-  });
-
   conn.write(JSON.stringify({
       type: 'track'
     , data: app.room.playlist[0]
@@ -364,6 +367,15 @@ sock.on('connection', function(conn) {
   }));
 
   conn.on('close', function() {
+    if (conn.user) {
+      console.log("connection closed for user " + conn.user.username);
+      
+      //Remove user from listeners array if this is their connection
+      if (app.room.listeners[conn.user._id] && app.room.listeners[conn.user._id].id == conn.id) {
+        delete app.room.listeners[conn.user._id];
+      };
+    }
+    
     app.broadcast({
         type: 'part'
       , data: {
