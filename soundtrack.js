@@ -368,6 +368,11 @@ app.get('/listeners.json', function(req, res) {
   res.send( _.toArray( app.room.listeners ) );
 });
 
+app.get('/android', function(req, res) {
+  res.render('android');
+});
+
+
 //client requests that we give them a token to auth their socket
 //we generate a 32 byte (256bit) token and send that back.
 //But first we record the token's authData, user and time.
