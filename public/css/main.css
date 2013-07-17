@@ -19,13 +19,16 @@ body {
 #search-results li:hover {
   background: #ccc;
 }
-#messages, #playlist {
+#messages, #playlist, #userlist {
   height: 230px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 #playlist {
   height: 280px;
+}
+#userlist {
+  height: 500px;
 }
 .chat-container {
   /*width: 480px; */
