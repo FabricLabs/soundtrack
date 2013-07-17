@@ -377,7 +377,6 @@ app.get('/playlist.json', function(req, res) {
 });
 
 app.get('/listeners.json', function(req, res) {
-  console.log('get users');
   res.send( _.toArray( app.room.listeners ) );
 });
 
