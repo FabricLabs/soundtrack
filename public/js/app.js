@@ -27,6 +27,12 @@ $(document).ready(function(){
         case 'track':
           $('#track-title').html( msg.data.title );
           $('input[name=current-track-id]').val( msg.data._id );
+          if (msg.data.curator) {
+            $('#track-curator strong').html(msg.data.curator.username);
+          }
+          else {
+            $('#track-curator strong').html('Autoplay');
+          }
 
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
@@ -47,17 +53,21 @@ $(document).ready(function(){
         break;
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
-          $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
           $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
         break;
         case 'ping':
           sockjs.send(JSON.stringify({type: 'pong'}));
           console.log("Ping Pong\'d");
         break;
+        case 'announcement':
+          $( msg.data.formatted ).appendTo('#messages');
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
+        break;
       }
     };
 
-    sockjs.onclose   = function() { 
+    sockjs.onclose = function() { 
       console.log('Lost our connection, lets retry!');
       if (retryIdx < retryTimes.length) {
         console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
@@ -167,7 +177,7 @@ function updateUserlist() {
 $(window).on('load', function() {
   updatePlaylist();
   updateUserlist();
-  $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+  $("#messages").scrollTop($("#messages")[0].scrollHeight);
 
   // Lets Flash from another domain call JavaScript
   var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };

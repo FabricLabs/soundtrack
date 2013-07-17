@@ -30,6 +30,10 @@ body {
 #userlist {
   height: 500px;
 }
+#announcement{
+  color: #08C;
+  font-size: 0.8em;
+}
 .chat-container {
   /*width: 480px; */
   margin-left: auto;
@@ -88,4 +92,17 @@ body {
 
 #playlist-list li {
   clear: both;
+}
+
+#track-progress {
+  position: relative;
+}
+
+#time {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  display: block;
+  text-shadow: 1px 1px 1px #aaa;
 }
