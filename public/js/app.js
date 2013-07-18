@@ -28,10 +28,9 @@ $(document).ready(function(){
           $('#track-title').html( msg.data.title );
           $('input[name=current-track-id]').val( msg.data._id );
           if (msg.data.curator) {
-            $('#track-curator strong').html(msg.data.curator.username);
-          }
-          else {
-            $('#track-curator strong').html('Autoplay');
+            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
+          } else {
+            $('#track-curator').html('the machine');
           }
 
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );

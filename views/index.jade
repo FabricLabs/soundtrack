@@ -9,17 +9,18 @@ block content
           input(type="hidden", name="current-track-id")
 
           //h2#track-title #{room.playlist[0].title}
-          h5#track-title foo
+          #track-info
+            #attribution
+              #track-curator.pull-right
+              a#track-artist(href="#") Artist Name
+            a#track-title(href="#") foo
           #track-progress.progress.active
             .bar(style="width: 0%;")
             span#time 00:00
 
-          span#track-curator(style="margin-left:10px;") Added by: 
-            strong --
-
         .row-fluid
-          .span3
-            a.btn(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
+          .span2
+            a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
               i.icon-volume-up
           .span9
             input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
@@ -64,7 +65,6 @@ block content
               input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
             else
               input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
-
 
       #decks
         #slot-1

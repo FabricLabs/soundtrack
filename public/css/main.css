@@ -9,9 +9,21 @@ body {
   /*width: 480px;*/
 }
 
-#current-track #track-title {
-  height: 50px;
+#track-info a:hover { text-decoration: none; }
+#track-title, #attribution {
+  text-transform: uppercase;
+  font-weight: bold;
+  display: block;
+  height: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+#current-track #track-title {
+  height: 1.5em;
+  font-size: 1.5em;
+}
+#track-artist
 
 #search-results li {
   cursor: pointer;
@@ -25,7 +37,7 @@ body {
   overflow-x: hidden;
 }
 #playlist {
-  height: 280px;
+  height: 322px;
 }
 #userlist {
   height: 500px;
