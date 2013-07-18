@@ -3,6 +3,8 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
   var retryIdx = 0;
 
+  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+
   startSockJs = function(){
     sockjs = new SockJS('/stream');
 
@@ -25,6 +27,11 @@ $(document).ready(function(){
         case 'track':
           $('#track-title').html( msg.data.title );
           $('input[name=current-track-id]').val( msg.data._id );
+          if (msg.data.curator) {
+            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
+          } else {
+            $('#track-curator').html('the machine');
+          }
 
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
@@ -45,16 +52,21 @@ $(document).ready(function(){
         break;
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
-          $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
+          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
         break;
         case 'ping':
           sockjs.send(JSON.stringify({type: 'pong'}));
           console.log("Ping Pong\'d");
         break;
+        case 'announcement':
+          $( msg.data.formatted ).appendTo('#messages');
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
+        break;
       }
     };
 
-    sockjs.onclose   = function() { 
+    sockjs.onclose = function() { 
       console.log('Lost our connection, lets retry!');
       if (retryIdx < retryTimes.length) {
         console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
@@ -164,7 +176,7 @@ function updateUserlist() {
 $(window).on('load', function() {
   updatePlaylist();
   updateUserlist();
-  $('#messages').animate({ scrollTop: $('#messages > *').length * 200 }, "fast");
+  $("#messages").scrollTop($("#messages")[0].scrollHeight);
 
   // Lets Flash from another domain call JavaScript
   var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
@@ -172,7 +184,7 @@ $(window).on('load', function() {
   var atts = { id: "ytPlayer" };
 
   // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "480", "295", "9", null, null, params, atts);
+  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "570", "295", "9", null, null, params, atts);
 
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
@@ -301,5 +313,12 @@ $(window).on('load', function() {
     return false;
   });
 
+  $(document).on('click', '.message *[data-role=author]', function(e) {
+    e.preventDefault();
+    var self = this;
+    $('#chat-input').val( $('#chat-input').val() + ' @'+$(self).data('user-username') + ' ');
+    $('#chat-input').focus();
+    return false;
+  });
 
 });

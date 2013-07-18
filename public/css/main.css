@@ -6,12 +6,24 @@ body {
 #screen-one {
   margin-left: auto;
   margin-right: auto;
-  width: 480px;
+  /*width: 480px;*/
 }
 
-#current-track #track-title {
-  height: 50px;
+#track-info a:hover { text-decoration: none; }
+#track-title, #attribution {
+  text-transform: uppercase;
+  font-weight: bold;
+  display: block;
+  height: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+#current-track #track-title {
+  height: 1.5em;
+  font-size: 1.5em;
+}
+#track-artist
 
 #search-results li {
   cursor: pointer;
@@ -19,20 +31,40 @@ body {
 #search-results li:hover {
   background: #ccc;
 }
-#messages, #playlist {
+#messages, #playlist, #userlist {
   height: 230px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 #playlist {
-  height: 280px;
+  height: 322px;
+}
+#userlist {
+  height: 500px;
+}
+#announcement{
+  color: #08C;
+  font-size: 0.8em;
+}
+.chat-container {
+  /*width: 480px; */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .message {
   clear: both;
 }
+
 .message abbr.timestamp {
   font-size: 0.75em;
+}
+.message strong[data-role=author] {
+  cursor: pointer;
+}
+
+.highlight {
+  background: #ffffd5;
 }
 
 .user-avatar-small {
@@ -72,4 +104,17 @@ body {
 
 #playlist-list li {
   clear: both;
+}
+
+#track-progress {
+  position: relative;
+}
+
+#time {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  display: block;
+  text-shadow: 1px 1px 1px #aaa;
 }
