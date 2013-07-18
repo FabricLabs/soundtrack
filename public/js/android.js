@@ -24,7 +24,14 @@ var startSockJs = function(){
     switch (msg.type) {
       default: console.log('unhandled message: ' + msg); break;
       case 'track':
-        $('#track-title').html( msg.data.title );
+        $('#track-title').html(msg.data.title);
+        if (msg.data.curator) {
+          $('#track-curator').html(msg.data.curator.username);
+        }
+        else {
+          $('#track-curator').html('the machine');
+        }
+        
         console.log('track set to: ' + msg.data.sources.youtube[0].id + ' at: ' + msg.seekTo);
         android.startTrack(msg.data.sources.youtube[0].id, msg.seekTo * 1000);
       break;
