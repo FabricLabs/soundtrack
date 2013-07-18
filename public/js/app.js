@@ -212,21 +212,61 @@ $(window).on('load', function() {
     $.cookie('lastVolume', $(self).val() );
   });
 
+  OutgoingChatHandler = (function(){
+    var listeners = {};
+    var triggerWord = /^\/(\w+)/i;
+
+    function addListener(trigger, listener) {
+      if (!listeners[trigger]) {
+        listeners[trigger] = [];
+      }
+
+      listeners[trigger].push(listener);
+    }
+
+    function defaultFn(msg) {
+      $.post('/chat', { message: msg }, function(data){})
+    }
+
+    function chatSubmit(msg) {
+      var matches = msg.match(triggerWord);
+      if (matches) {
+        if (listeners[matches[1]]) {
+          listeners[matches[1]].forEach(function(l){
+            l(msg);
+          });
+          return;
+        }
+      }
+      defaultFn(msg);
+    }
+
+    return {
+      addListener: addListener,
+      chatSubmit: chatSubmit
+    }
+  })();
+
+  // /reset -> reset the video player
+  OutgoingChatHandler.addListener('reset', function(msg){
+    var cur = ytplayer.getCurrentTime();
+    ytplayer.stopVideo();
+    ytplayer.seekTo(cur);
+    ytplayer.playVideo();
+  });
+
   $('#chat-form').on('submit', function(e) {
     e.preventDefault();
 
     var msg = $('#chat-input').val();
     if (msg.length > 0) {
       $('#chat-input').val('');
-      $.post('/chat', {
-        message: msg
-      }, function(data) {
-
-      });
+      OutgoingChatHandler.chatSubmit(msg);
     }
 
     return false;
   });
+
   $('#search-form').on('submit', function(e) {
     e.preventDefault();
     $('#search-results').html('');
