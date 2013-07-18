@@ -17,7 +17,8 @@ var config = require('./config')
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
-  , crypto = require('crypto');
+  , crypto = require('crypto')
+  , marked = require('marked');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -63,7 +64,8 @@ app.use( flashify );
 
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
-app.locals.marked = require('marked');
+app.locals.marked   = marked;
+app.locals.lexer    = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});;
 app.locals.helpers  = require('./helpers').helpers;
 
 var auth = require('./controllers/auth')
