@@ -1,13 +1,11 @@
 var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
-  var retryIdx = 0;
-console.log('test test test');
-console.warn('more test');
+var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
+var retryIdx = 0;
+
 var startSockJs = function(){
   sockjs = new SockJS('/stream');
 
   sockjs.onopen = function(){
-    //android.showLog('socket onopen');
     //sockjs connection has been opened!
     $.post('/socket-auth', {}, function(data){
       sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
