@@ -308,55 +308,65 @@ sock.on('connection', function(conn) {
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
-    var data = JSON.parse(message);
-    switch (data.type) {
-      //respond to pings
-      case 'pong':
-        conn.pongTime = (new Date()).getTime();
-        break;
+    try {
+      var data = JSON.parse(message);
+    
+      switch (data.type) {
+        //respond to pings
+        case 'pong':
+          conn.pongTime = (new Date()).getTime();
+          break;
 
-      //user is trying to authenticate their socket...
-      //so we go ahead and look up the token they've sent us.
-      //if they get it wrong, we just hang up :).
-      case 'auth':
-        var authData = data.authData;
-        var matches = app.socketAuthTokens.filter(function(o){
-          return o.token == authData;
-        });
-
-        if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
-          console.log("Connection auth success!", conn.id, matches[0].user.username);
-          //TODO: I don't know where we want to store this information
-          matches[0].user.connId = conn.id;
-          matches[0].time = 0; //prohibit reuse
-          conn.user = matches[0].user; //keep information for quits
-          
-          // TODO: strip salt, hash, etc.
-          // We do this on /listeners.json, but if nothing else, we save memory.
-          app.room.listeners[ matches[0].user._id ] = {
-              _id: matches[0].user._id
-            , slug: matches[0].user.slug
-            , username: matches[0].user.username
-            , id: conn.id
-          };
-          
-          app.broadcast({
-              type: 'join'
-            , data: {
-                username: conn.id
-              }
+        //user is trying to authenticate their socket...
+        //so we go ahead and look up the token they've sent us.
+        //if they get it wrong, we just hang up :).
+        case 'auth':
+          var authData = data.authData;
+          var matches = app.socketAuthTokens.filter(function(o){
+            return o.token == authData;
           });
-          
-        } else {
-          console.log("Connection auth failure!");
-          conn.close();
-        }
-        break;
 
-      //echo anything else
-      default:
-        conn.write(message);
-        break;
+          if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
+            console.log("Connection auth success!", conn.id, matches[0].user.username);
+            //TODO: I don't know where we want to store this information
+            matches[0].user.connId = conn.id;
+            matches[0].time = 0; //prohibit reuse
+            conn.user = matches[0].user; //keep information for quits
+            
+            // TODO: strip salt, hash, etc.
+            // We do this on /listeners.json, but if nothing else, we save memory.
+            app.room.listeners[ matches[0].user._id ] = {
+                _id: matches[0].user._id
+              , slug: matches[0].user.slug
+              , username: matches[0].user.username
+              , id: conn.id
+            };
+            
+            app.broadcast({
+                type: 'join'
+              , data: {
+                  username: conn.id
+                }
+            });
+            
+          } else {
+            console.log("Connection auth failure!");
+            conn.close();
+          }
+          break;
+
+        //echo anything else
+        default:
+          conn.write(message);
+          break;
+      }
+    }
+    catch (e) {
+      //More than likely this is invalid JSON, but it could be an invalid object as well
+      console.log(e);
+      
+      //http://tools.ietf.org/html/rfc6455#section-7.4
+      conn.close(1003, "Invalid JSON or data structure");
     }
   });
 
