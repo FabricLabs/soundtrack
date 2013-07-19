@@ -120,6 +120,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
 });
 app.socketAuthTokens = [];
 
+//Send a message to all connected sockets
 app.broadcast = function(msg) {
   var json = JSON.stringify(msg);
   for (var id in app.clients) {
@@ -127,11 +128,13 @@ app.broadcast = function(msg) {
   }
 };
 
+//Send a message to a specific socket
 app.whisper = function(id, msg) {
   var json = JSON.stringify(msg);
   app.clients[id].write(json);
 }
 
+//Ping all connected clients
 app.markAndSweep = function(){
   app.broadcast({type: 'ping'}); // we should probably not do this globally... instead, start interval after client connect?
   var time = (new Date()).getTime();
@@ -157,6 +160,7 @@ app.forEachClient = function(fn) {
   }
 }
 
+//Get data from youtube for a specified videoID
 function getYoutubeVideo(videoID, callback) {
   rest.get('http://gdata.youtube.com/feeds/api/videos?max-results=1&v=2&alt=jsonc&q='+videoID).on('complete', function(data) {
     if (data && data.data && data.data.items) {
@@ -249,6 +253,7 @@ function sortPlaylist() {
   }) );
 }
 
+//Skip the currently playing song
 app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log('skip received:');
   console.log(req.user);
@@ -308,68 +313,69 @@ sock.on('connection', function(conn) {
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
+    
     try {
       var data = JSON.parse(message);
-    
-      switch (data.type) {
-        //respond to pings
-        case 'pong':
-          conn.pongTime = (new Date()).getTime();
-          break;
-
-        //user is trying to authenticate their socket...
-        //so we go ahead and look up the token they've sent us.
-        //if they get it wrong, we just hang up :).
-        case 'auth':
-          var authData = data.authData;
-          var matches = app.socketAuthTokens.filter(function(o){
-            return o.token == authData;
-          });
-
-          if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
-            console.log("Connection auth success!", conn.id, matches[0].user.username);
-            //TODO: I don't know where we want to store this information
-            matches[0].user.connId = conn.id;
-            matches[0].time = 0; //prohibit reuse
-            conn.user = matches[0].user; //keep information for quits
-            
-            // TODO: strip salt, hash, etc.
-            // We do this on /listeners.json, but if nothing else, we save memory.
-            app.room.listeners[ matches[0].user._id ] = {
-                _id: matches[0].user._id
-              , slug: matches[0].user.slug
-              , username: matches[0].user.username
-              , id: conn.id
-            };
-            
-            app.broadcast({
-                type: 'join'
-              , data: {
-                  username: conn.id
-                }
-            });
-            
-          } else {
-            console.log("Connection auth failure!");
-            conn.close();
-          }
-          break;
-
-        //echo anything else
-        default:
-          conn.write(message);
-          break;
-      }
     }
     catch (e) {
-      //More than likely this is invalid JSON, but it could be an invalid object as well
-      console.log(e);
-      
       //http://tools.ietf.org/html/rfc6455#section-7.4
-      conn.close(1003, "Invalid JSON or data structure");
+      conn.close(1003, "Invalid JSON");
+      return;
     }
+    
+    switch (data.type) {
+      //respond to pings
+      case 'pong':
+        conn.pongTime = (new Date()).getTime();
+        break;
+
+      //user is trying to authenticate their socket...
+      //so we go ahead and look up the token they've sent us.
+      //if they get it wrong, we just hang up :).
+      case 'auth':
+        var authData = data.authData;
+        var matches = app.socketAuthTokens.filter(function(o){
+          return o.token == authData;
+        });
+
+        if (1 == matches.length && matches[0].time > (new Date()).getTime() - 10000) {
+          console.log("Connection auth success!", conn.id, matches[0].user.username);
+          //TODO: I don't know where we want to store this information
+          matches[0].user.connId = conn.id;
+          matches[0].time = 0; //prohibit reuse
+          conn.user = matches[0].user; //keep information for quits
+          
+          // TODO: strip salt, hash, etc.
+          // We do this on /listeners.json, but if nothing else, we save memory.
+          app.room.listeners[ matches[0].user._id ] = {
+              _id: matches[0].user._id
+            , slug: matches[0].user.slug
+            , username: matches[0].user.username
+            , id: conn.id
+          };
+          
+          app.broadcast({
+              type: 'join'
+            , data: {
+                username: conn.id
+              }
+          });
+          
+        } else {
+          console.log("Connection auth failure!");
+          conn.close();
+        }
+        break;
+
+      //echo anything else
+      default:
+        conn.write(message);
+        break;
+    }
+
   });
 
+  //Send the newly connected client the current track data
   conn.write(JSON.stringify({
       type: 'track'
     , data: app.room.playlist[0]
@@ -377,6 +383,8 @@ sock.on('connection', function(conn) {
   }));
 
   conn.on('close', function() {
+  
+    //If this was an authenticated client then we should remove them from the listeners array
     if (conn.user) {
       console.log("connection closed for user " + conn.user.username);
       
@@ -386,6 +394,7 @@ sock.on('connection', function(conn) {
       };
     }
     
+    //Tell all connected clients about this disconnect
     app.broadcast({
         type: 'part'
       , data: {
@@ -400,10 +409,12 @@ sock.installHandlers(server, {prefix:'/stream'});
 app.get('/', pages.index);
 app.get('/about', pages.about);
 
+//Get the list of songs currently in the playlist
 app.get('/playlist.json', function(req, res) {
   res.send(app.room.playlist);
 });
 
+//Get list of users currently listening in the room
 app.get('/listeners.json', function(req, res) {
   res.send( _.toArray( app.room.listeners ) );
 });
@@ -414,6 +425,7 @@ app.get('/listeners.json', function(req, res) {
 //We use the recorded time to make sure we issued the token recently
 app.post('/socket-auth', requireLogin, auth.configureToken);
 
+//Send a chat message
 app.post('/chat', requireLogin, function(req, res) {
   var chat = new Chat({
       _author: req.user._id
@@ -440,6 +452,7 @@ app.post('/chat', requireLogin, function(req, res) {
   });
 });
 
+//Vote on a track
 app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
   var playlistMap = app.room.playlist.map(function(x) {
@@ -470,6 +483,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
 });
 
+//Add a track to the room playlist
 app.post('/playlist', requireLogin, function(req, res) {
   switch(req.param('source')) {
     default:
