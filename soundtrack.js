@@ -65,7 +65,8 @@ app.use( flashify );
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked   = marked;
-app.locals.lexer    = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});;
+app.locals.lexer    = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});
+app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
 
 var auth = require('./controllers/auth')
