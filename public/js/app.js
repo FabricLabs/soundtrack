@@ -152,16 +152,17 @@ String.prototype.toHHMMSS = function () {
   }
   return time;
 }
-function updatePlaylist() {
-  $.get('/playlist.json', function(data) {
-    $('#playlist-summary').html('Playlist (' + data.length + ')');
-    $('#playlist-list').html('');
-    data.forEach(function(track) {
-      $('<li data-track-id="'+track._id+'"><div class="playlist-controls"><div class="score badge">'+track.score+'</div><i class="icon-chevron-up" data-action="upvote-track" data-track-id="'+track._id+'" /><i class="icon-chevron-down" data-action="downvote-track" data-track-id="'+track._id+'" /></div><a href="/'+track._artist+'/'+track.slug+'/'+track._id+'"><img src="'+track.images.thumbnail.url+'" class="thumbnail-medium pull-left" /><small class="pull-right">'+track.duration.toString().toHHMMSS()+'</small>'+track.title+'</div></a></li>').appendTo('#playlist-list');
+
+function AppController($scope, $http) {
+  window.updatePlaylist = function(){
+    $http.get('/playlist.json').success(function(data){
+      $scope.tracks = data;
     });
-    $('#playlist-list li').first().addClass('active');
-  });
+  }
+
+  updatePlaylist()
 }
+
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
