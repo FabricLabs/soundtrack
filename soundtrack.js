@@ -481,6 +481,8 @@ app.post('/playlist', requireLogin, function(req, res) {
           app.room.playlist.push( _.extend( track.toObject() , {
               score: 0
             , votes: {} // TODO: auto-upvote?
+            , _artist: 'undefined'
+            , slug: 'undefined'
             , curator: {
                   _id: req.user._id
                 , username: req.user.username

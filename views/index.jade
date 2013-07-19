@@ -40,11 +40,18 @@ block content
               li(data-action="new-playlist")
                 a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
+        h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
         #playlist
-          h3#playlist-summary
-            | Playlist
           ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
-
+            li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
+              .playlist-controls
+                .score.badge {{track.score}}
+                i.icon-chevron-up(data-action="upvote-track", data-track-id="{{track._id}}")
+                i.icon-chevron-down(data-action="downvote-track", data-track-id="{{track._id}}")
+              a(href="{{'/'+track._artist+'/'+track.slug+'/'+track._id}}")
+                img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
+                small.pull-right {{track.duration.toString().toHHMMSS()}}
+                span {{track.title}}
         h3 Add Track
         form#search-form
           if (user)
