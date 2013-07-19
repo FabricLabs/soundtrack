@@ -152,7 +152,9 @@ String.prototype.toHHMMSS = function () {
   }
   return time;
 }
-function updatePlaylist() {
+
+/*function updatePlaylist() {
+  return;
   $.get('/playlist.json', function(data) {
     $('#playlist-summary').html('Playlist (' + data.length + ')');
     $('#playlist-list').html('');
@@ -161,7 +163,18 @@ function updatePlaylist() {
     });
     $('#playlist-list li').first().addClass('active');
   });
+}*/
+
+function AppController($scope, $http) {
+  window.updatePlaylist = function(){
+    $http.get('/playlist.json').success(function(data){
+      $scope.tracks = data;
+    });
+  }
+
+  updatePlaylist()
 }
+
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
