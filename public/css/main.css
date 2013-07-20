@@ -37,7 +37,7 @@ body {
   overflow-x: hidden;
 }
 #playlist {
-  height: 322px;
+  height: 338px;
 }
 #userlist {
   height: 500px;
@@ -81,6 +81,10 @@ body {
   max-height: 2.4em;
 }
 
+#userlist li.current-curator {
+  font-weight: bold;
+}
+
 .playlist-controls {
   float:left;
   padding-right: 5px;
@@ -104,6 +108,9 @@ body {
 
 #playlist-list li {
   clear: both;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 #track-progress {

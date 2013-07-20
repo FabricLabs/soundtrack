@@ -41,7 +41,7 @@ block content
               li(data-action="new-playlist")
                 a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
-        h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
+        //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
         #playlist
           ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
             li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
@@ -53,7 +53,7 @@ block content
                 img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                 small.pull-right {{track.duration.toString().toHHMMSS()}}
                 span {{track.title}}
-        h3 Add Track
+        h5 Add Track
         form#search-form
           if (user)
             input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query

@@ -29,6 +29,9 @@ $(document).ready(function(){
           $('input[name=current-track-id]').val( msg.data._id );
           if (msg.data.curator) {
             $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
+          
+            $('#userlist li').removeClass('current-curator');
+            $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
           } else {
             $('#track-curator').html('the machine');
           }
@@ -48,7 +51,7 @@ $(document).ready(function(){
           updateUserlist();
         break;
         case 'part':
-          $('#userlist li[data-user-id='+msg.data.id+']').remove();
+          $('#userlist li[data-user-id='+msg.data._id+']').remove();
         break;
         case 'chat':
           $( msg.data.formatted ).appendTo('#messages');
@@ -169,7 +172,7 @@ function updateUserlist() {
     $('.user-count').html('<strong>'+data.length+'</strong> online');
     data.forEach(function(user) {
       // TODO: use template (Blade?)
-      $('<li data-user-id="' + user.id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
     });
   });
 }
