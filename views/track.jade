@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1
+    a(href="/#{track._artist.slug}") #{track._artist.name}
+    |  &mdash; 
+    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+
+  h5 played #{history.length} times

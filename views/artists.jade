@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  h1 Artists
+  ul
+    for artist in artists
+      li
+        a(href="/#{artist.slug}") #{artist.name}

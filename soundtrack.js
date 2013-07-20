@@ -72,7 +72,9 @@ app.locals.helpers  = require('./helpers').helpers;
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
   , people = require('./controllers/people')
-  , playlists = require('./controllers/playlists');
+  , playlists = require('./controllers/playlists')
+  , artists = require('./controllers/artists')
+  , tracks = require('./controllers/tracks');
 
 function requireLogin(req, res, next) {
   if (req.user) {
@@ -91,7 +93,7 @@ var server = http.createServer(app);
 app.clients = {};
 
 var backupTracks = [];
-var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
+var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
 
 app.redis = redis.createClient();
 app.redis.get('soundtrack:playlist', function(err, playlist) {
@@ -108,7 +110,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
     , listeners: {}
   };
 
-  async.series(tracks.map(function(videoID) {
+  async.series(fallbackVideos.map(function(videoID) {
     return function(callback) {
       getYoutubeVideo(videoID, function(track) {
         backupTracks.push( track.toObject() );
@@ -169,27 +171,54 @@ function getYoutubeVideo(videoID, callback) {
       }).exec(function(err, track) {
         if (!track) { var track = new Track({}); }
 
-        var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
-        var index = youtubeVideoIDs.indexOf( video.id );
-        if (index == -1) {
-          track.sources.youtube.push({
-            id: video.id
+        // this is bad for now, until we have an importer...
+        // it'll be slow.
+        rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
+
+          console.log(data);
+          if (!data) { data = {}; }
+
+          Artist.findOne({ $or: [
+                { _id: track._artist }
+              , { name: data.author }
+            ] }).exec(function(err, artist) {
+            if (!artist) { var artist = new Artist({}); }
+
+            track._artist = artist._id;
+
+            artist.name = data.author;
+
+            var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
+            var index = youtubeVideoIDs.indexOf( video.id );
+            if (index == -1) {
+              track.sources.youtube.push({
+                id: video.id
+              });
+            }
+
+            track.title                = (data.title) ? data.title : video.title;
+            track.duration             = (track.duration) ? track.duration : video.duration;
+            track.images.thumbnail.url = video.thumbnail.hqDefault;
+
+            // TODO: use CodingSoundtrack.org's lookup for artist creation
+            //Author.findOne()
+            artist.save(function(err) {
+              if (err) { console.log(err); }
+              track.save(function(err) {
+                if (err) { console.log(err); }
+
+                track = _.extend(track, {
+                  _artist: artist
+                });
+
+                console.log( 'being sent back:')
+                console.log( track );
+
+                callback( track );
+              });
+            });
           });
-        }
-
-        // temporary, while only youtube:
-        track.title = video.title;
-        track.duration = video.duration;
-        track.images.thumbnail.url = video.thumbnail.hqDefault;
-
-        // TODO: use CodingSoundtrack.org's lookup for artist creation
-        //Author.findOne()
-
-        track.save(function(err) {
-          if (err) { console.log(err); }
-          callback(track);
         });
-
       });
     } else {
       console.log('waaaaaaaaaaat');
@@ -286,8 +315,8 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
 /* this will be in MongoDB soon...*/
 async.parallel([
   function(done) {
-    var tracks = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
-    async.series(tracks.map(function(videoID) {
+    var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
+    async.series(fallbackVideos.map(function(videoID) {
       return function(callback) {
         getYoutubeVideo(videoID, function(track) {
           backupTracks.push( track.toObject() );
@@ -297,8 +326,8 @@ async.parallel([
     }), done);
   },
   function(done) {
-    Track.find({}).limit(100).exec(function(err, tracks) {
-      tracks.forEach(function(track) {
+    Track.find({}).limit(100).exec(function(err, fallbackVideos) {
+      fallbackVideos.forEach(function(track) {
         backupTracks.push( track.toObject() );
       });
       done();
@@ -480,8 +509,6 @@ app.post('/playlist', requireLogin, function(req, res) {
               score: 0
             , votes: {} // TODO: auto-upvote?
             , timestamp: new Date()
-            , _artist: 'undefined'
-            , slug: 'undefined'
             , curator: {
                   _id: req.user._id
                 , id: req.app.room.listeners[ req.user._id.toString() ].connId
@@ -563,6 +590,12 @@ app.get('/logout', function(req, res) {
 
 app.get('/history', pages.history);
 app.get('/people', people.list);
+app.get('/artists', artists.list);
+app.get('/tracks', tracks.list);
+
+app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
+
+app.get('/:artistSlug', artists.view);
 
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);

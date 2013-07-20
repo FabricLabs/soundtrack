@@ -25,7 +25,12 @@ $(document).ready(function(){
       switch (msg.type) {
         default: console.log('unhandled message: ' + msg); break;
         case 'track':
+          $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
           $('#track-title').html( msg.data.title );
+
+          $('#track-artist').attr('href', '/'+msg.data._artist.slug);
+          $('#track-artist').html( msg.data._artist.name );
+
           $('input[name=current-track-id]').val( msg.data._id );
           if (msg.data.curator) {
             $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
@@ -163,7 +168,7 @@ function AppController($scope, $http) {
     });
   }
 
-  updatePlaylist()
+  updatePlaylist();
 }
 
 function updateUserlist() {
