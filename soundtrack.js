@@ -248,7 +248,11 @@ function startMusic() {
 
 function sortPlaylist() {
   app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
-    return b.score - a.score;
+    if (b.score == a.score) {
+      return b.timestamp - a.timestamp;
+    } else {
+      return b.score - a.score;
+    }
   }) );
 }
 
@@ -474,6 +478,7 @@ app.post('/playlist', requireLogin, function(req, res) {
           app.room.playlist.push( _.extend( track.toObject() , {
               score: 0
             , votes: {} // TODO: auto-upvote?
+            , timestamp: new Date()
             , _artist: 'undefined'
             , slug: 'undefined'
             , curator: {
