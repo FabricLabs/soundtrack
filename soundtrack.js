@@ -207,14 +207,16 @@ function getYoutubeVideo(videoID, callback) {
               track.save(function(err) {
                 if (err) { console.log(err); }
 
-                track = _.extend(track, {
-                  _artist: artist
+                Artist.populate(track, {
+                  path: '_artist'
+                }, function(err, track) {
+
+                  console.log( 'being sent back:')
+                  console.log( track );
+
+                  callback( track );
                 });
 
-                console.log( 'being sent back:')
-                console.log( track );
-
-                callback( track );
               });
             });
           });
@@ -278,7 +280,7 @@ function startMusic() {
 function sortPlaylist() {
   app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
     if (b.score == a.score) {
-      return b.timestamp - a.timestamp;
+      return a.timestamp - b.timestamp;
     } else {
       return b.score - a.score;
     }
@@ -505,13 +507,16 @@ app.post('/playlist', requireLogin, function(req, res) {
     case 'youtube':
       getYoutubeVideo(req.param('id'), function(track) {
         if (track) {
+          console.log('HEYYYYY');
+          console.log(track);
+
           app.room.playlist.push( _.extend( track.toObject() , {
               score: 0
             , votes: {} // TODO: auto-upvote?
             , timestamp: new Date()
             , curator: {
                   _id: req.user._id
-                , id: req.app.room.listeners[ req.user._id.toString() ].connId
+                , id: (req.app.room.listeners[ req.user._id.toString() ]) ? req.app.room.listeners[ req.user._id.toString() ].connId : undefined
                 , username: req.user.username
                 , slug: req.user.slug
               }

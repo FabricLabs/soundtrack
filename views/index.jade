@@ -12,7 +12,7 @@ block content
           #track-info
             #attribution
               #track-curator.pull-right
-              a#track-artist(href="#") Artist Name
+              a#track-artist(href="#", data-for="current-track-artist") Artist Name
             marquee
               a#track-title(href="#") foo
           #track-progress.progress.active
@@ -52,7 +52,7 @@ block content
               a(href="/{{track._artist.slug}}/{{track.slug}}/{{track.id}}")
                 img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                 small.pull-right {{track.duration.toString().toHHMMSS()}}
-                span {{track.title}}
+                span {{track._artist.name}} &mdash; {{track.title}}
         h5 Add Track
         form#search-form
           if (user)
