@@ -366,7 +366,33 @@ sock.on('connection', function(conn) {
           conn.close();
         }
         break;
-
+      
+      case 'chat':
+        if (conn.user) {
+          var chat = new Chat({
+              _author: conn.user._id
+            , message: data.chat
+          });
+          
+          chat.save(function(err) {
+            res.render('partials/message', {
+              message: chat
+            }, function(err, html) {
+              console.log('got chat', html);
+              app.broadcast({
+                  type: 'chat'
+                , data: {
+                      formatted: html
+                    , created: new Date()
+                  }
+              });
+              conn.write(JSON.stringify({ status: 'success' }));
+            });
+          });
+        }
+        else {
+          conn.write{JSON.stringify({"error":"User not authenticated"}));
+        }
       //echo anything else
       default:
         conn.write(message);
@@ -408,6 +434,9 @@ sock.installHandlers(server, {prefix:'/stream'});
 
 app.get('/', pages.index);
 app.get('/about', pages.about);
+app.get('/angular/:view', function(req, res) {
+  res.render('angular/'+req.param('view'));
+});
 
 //Get the list of songs currently in the playlist
 app.get('/playlist.json', function(req, res) {
@@ -522,6 +551,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
 app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
+app.get('/:usernameSlug/playlists', requireLogin, playlists.getPlaylists );
 
 app.get('/pages.json', function(req, res) {
   res.send({

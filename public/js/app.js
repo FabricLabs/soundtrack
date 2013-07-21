@@ -1,93 +1,11 @@
 $(document).ready(function(){
-  var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
-  var retryIdx = 0;
-
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-
-  startSockJs = function(){
-    sockjs = new SockJS('/stream');
-
-    sockjs.onopen = function(){
-      //sockjs connection has been opened!
-      $.post('/socket-auth', {}, function(data){
-        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
-      });
-    }
-
-    sockjs.onmessage = function(e) {
-      retryIdx = 0; //reset our retry timeouts
-
-      var msg = JSON.parse(e.data);
-
-      console.log(msg);
-
-      switch (msg.type) {
-        default: console.log('unhandled message: ' + msg); break;
-        case 'track':
-          $('#track-title').html( msg.data.title );
-          $('input[name=current-track-id]').val( msg.data._id );
-          if (msg.data.curator) {
-            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
-          } else {
-            $('#track-curator').html('the machine');
-          }
-
-          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-          ytplayer.seekTo( msg.seekTo );
-          ytplayer.playVideo();
-          updatePlaylist();
-        break;
-        case 'playlist:add':
-          updatePlaylist();
-        break;
-        case 'playlist:update':
-          updatePlaylist();
-        break;
-        case 'join':
-          updateUserlist();
-        break;
-        case 'part':
-          $('#userlist li[data-user-id='+msg.data.id+']').remove();
-        break;
-        case 'chat':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-        break;
-        case 'ping':
-          sockjs.send(JSON.stringify({type: 'pong'}));
-          console.log("Ping Pong\'d");
-        break;
-        case 'announcement':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
-      }
-    };
-
-    sockjs.onclose = function() { 
-      console.log('Lost our connection, lets retry!');
-      if (retryIdx < retryTimes.length) {
-        console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
-        setTimeout(restartSockJs, retryTimes[retryIdx++]);
-      } else {
-        alert('Bummer. We lost connection.');
-      }
-    };
-  }
-
 });
 
 function onYouTubePlayerReady(playerId) {
   ytplayer = document.getElementById("ytPlayer");
 
-  restartSockJs = function(){
-    sockjs = null;
-    startSockJs();
-  }
-
-  restartSockJs();
+  startSocket();
 
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
@@ -153,30 +71,7 @@ String.prototype.toHHMMSS = function () {
   return time;
 }
 
-function AppController($scope, $http) {
-  window.updatePlaylist = function(){
-    $http.get('/playlist.json').success(function(data){
-      $scope.tracks = data;
-    });
-  }
-
-  updatePlaylist()
-}
-
-function updateUserlist() {
-  $.get('/listeners.json', function(data) {
-    $('#userlist').html('');
-    $('.user-count').html('<strong>'+data.length+'</strong> online');
-    data.forEach(function(user) {
-      // TODO: use template (Blade?)
-      $('<li data-user-id="' + user.id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
-    });
-  });
-}
-
 $(window).on('load', function() {
-  updatePlaylist();
-  updateUserlist();
   $("#messages").scrollTop($("#messages")[0].scrollHeight);
 
   // Lets Flash from another domain call JavaScript
@@ -204,7 +99,6 @@ $(window).on('load', function() {
 
     return false;
   });
-
 
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;

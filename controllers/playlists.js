@@ -1,4 +1,5 @@
 var _ = require('underscore')
+  , async = require('async');
 
 module.exports = {
   create: function(req, res, next) {
@@ -47,5 +48,27 @@ module.exports = {
       });
 
     });
-  }
+  },
+  getPlaylists: function(req, res, next) {
+    Playlist.find({ _creator: req.user._id }).lean().exec(function(err, playlists) {
+      if (!playlists.length) { return next(); }
+      
+      async.map(playlists, function(playlist, callback) {
+        Track.find({ _id: {$in : playlist._tracks }}).exec(function(err, tracks) {
+          playlist._tracks = tracks;
+          callback(err, playlist);
+        });
+      }
+      , function(err, results) {
+        console.log(playlists);
+        res.send({
+           status: 'success'
+          , results: {
+              playlists: results
+            }
+        });
+      });
+
+    });
+  },
 };

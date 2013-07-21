@@ -1,5 +1,5 @@
 !!! 5
-html(lang="en-US", ng-app)
+html(lang="en-US", ng-app="soundtrack")
   head
     link(rel="stylesheet", href="/css/bootstrap.min.css")
     link(rel="stylesheet", href="/css/bootstrap-responsive.min.css")
@@ -15,10 +15,12 @@ html(lang="en-US", ng-app)
     script(src="//www.google.com/jsapi")
     script(src="/js/swfobject.js")
     script(src="/js/intro.js")
+    script(src="/js/angular-strap.min.js")
     script(src="http://cdn.sockjs.org/sockjs-0.3.min.js")
+    script(src="/js/soundtrack.js")
     script(src="/js/app.js")
 
-  body(ng-controller="AppController")
+  body()
 
     .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
@@ -40,7 +42,7 @@ html(lang="en-US", ng-app)
             ul.nav.pull-right
               if (user)
                 li
-                  a(href="/#{user.slug}", data-username="#{user.username}", data-for="user-model")
+                  a(href="/#{user.slug}", ng-init="userSlug='#{user.slug}'", data-username="#{user.username}", data-for="user-model")
                     img.user-avatar-small(src="#{user.avatar.url}")
                     | #{user.username}
                 li
