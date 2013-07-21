@@ -25,11 +25,17 @@ $(document).ready(function(){
       switch (msg.type) {
         default: console.log('unhandled message: ' + msg); break;
         case 'track':
-          $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
+          if (msg.data._artist) {
+            $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
+
+            $('#track-artist').attr('href', '/'+msg.data._artist.slug);
+            $('#track-artist').html( msg.data._artist.name );
+          } else {
+            $('#track-artist').html( 'unknown' );
+          }
+          
           $('#track-title').html( msg.data.title );
 
-          $('#track-artist').attr('href', '/'+msg.data._artist.slug);
-          $('#track-artist').html( msg.data._artist.name );
 
           $('input[name=current-track-id]').val( msg.data._id );
           if (msg.data.curator) {

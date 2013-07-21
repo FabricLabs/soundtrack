@@ -182,11 +182,11 @@ function getYoutubeVideo(videoID, callback) {
                 { _id: track._artist }
               , { name: data.author }
             ] }).exec(function(err, artist) {
-            if (!artist) { var artist = new Artist({}); }
+            if (!artist) { var artist = new Artist({
+              name: (data) ? data.author : video.title.split(' - ')[0]
+            }); }
 
             track._artist = artist._id;
-
-            artist.name = data.author;
 
             var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
             var index = youtubeVideoIDs.indexOf( video.id );
@@ -265,10 +265,12 @@ function startMusic() {
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
   
-  app.broadcast({
-      type: 'track'
-    , data: app.room.playlist[0]
-    , seekTo: seekTo
+  getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
+    app.broadcast({
+        type: 'track'
+      , data: _.extend( app.room.playlist[0] , track )
+      , seekTo: seekTo
+    });
   });
 
   clearTimeout( app.timeout );
