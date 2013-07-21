@@ -9,11 +9,11 @@ block content
           input(type="hidden", name="current-track-id", value="{{track.id}}") 
           #track-info
             #attribution
-              #track-curator.pull-right
-                a(title="added by", href="/{{track.curator.slug}}") {{track.curator.username}}
-              a#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
+              a.pull-left#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
+              a.pull-right#track-curator(title="added by", href="/{{track.curator.slug}}") {{track.curator.username || "--"}}
+              
             marquee
-              a#track-title(href="/{{track.artist.slug}}/{{track.slug}}") {{track.title}}
+              a#track-title(href="/{{track.artist.slug}}/{{track.slug}}") {{track.title || "--"}}
           #track-progress.progress.active
             .bar(style="width: 0%;")
             span#time 00:00
