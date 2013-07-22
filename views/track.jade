@@ -5,12 +5,24 @@ block content
     a(href="/#{track._artist.slug}") #{track._artist.name}
     |  &mdash; 
     a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+    |  
 
-  h5 played #{history.length} times
-
+  h2 played #{history.length} times
   ul
     for play in history
       li
         a(href="#") #{play.timestamp}
         |  by 
         a(href="/#{play._curator.slug}") #{play._curator.username}
+
+  h2 Available Sources
+  each list, key in track.sources.toObject()
+    h2 #{key}
+    ul
+      if (list)
+        each link in list
+          li
+            a(href="#") #{link}
+
+
+
