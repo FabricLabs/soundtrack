@@ -7,3 +7,10 @@ block content
     a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
 
   h5 played #{history.length} times
+
+  ul
+    for play in history
+      li
+        a(href="#") #{play.timestamp}
+        |  by 
+        a(href="/#{play._curator.slug}") #{play._curator.username}
