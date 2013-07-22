@@ -64,7 +64,7 @@ block content
       .span6
         #screen-one
           .screen-inner#screen-inner
-        .chat-container
+        .chat-container(ng-controller="ChatController")
           #messages.fadeout-top
             each message in messages
               include partials/message
@@ -89,7 +89,7 @@ block content
               |  online
             | Users
           ul.nav.nav-list#userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="left")
-            li(ng-repeat="user in users", data-user-id="{{user.id}}")
+            li(ng-repeat="user in users", data-user-id="{{user.id}}", derp="{{user}}", herp="{{track}}", ng-class="getClass(user)")
               a(href="/{{user.slug}}", target="_blank") {{user.username}}
 
   if (!user)

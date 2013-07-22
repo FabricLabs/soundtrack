@@ -74,7 +74,7 @@ app.factory('socket', function ($rootScope, $http) {
   
 });
 
-app.controller('PlaylistController', function($scope, $http, $modal, socket) {
+app.controller('PlaylistController', function($rootScope, $scope, $http, $modal, socket) {
 
   window.onYouTubeIframeAPIReady = function() {
     ytplayer = new YT.Player('screen-one', {
@@ -137,26 +137,26 @@ app.controller('PlaylistController', function($scope, $http, $modal, socket) {
     ytplayer.seekTo( msg.seekTo );
     ytplayer.playVideo();
     
-    $scope.track = {
+    $rootScope.track = {
         id: msg.data._id
       , title: msg.data.title
     };
     
     if (msg.data.slug) {
-      $scope.track.slug = msg.data.slug;
+      $rootScope.track.slug = msg.data.slug;
     }
     else {
-      $scope.track.slug = "";
+      $rootScope.track.slug = "";
     }
     
     if (msg.data._artist) {
-      $scope.track.artist = msg.data._artist
+      $rootScope.track.artist = msg.data._artist
     }
     
     if (msg.data.curator) {
-      $scope.track.curator = msg.data.curator;
+      $rootScope.track.curator = msg.data.curator;
     } else {
-      $scope.track.curator = {
+      $rootScope.track.curator = {
           username: "the machine"
         , slug: ""
       };
@@ -189,7 +189,7 @@ app.controller('PlaylistController', function($scope, $http, $modal, socket) {
   getPlaylists();
 });
 
-app.controller('UsersController', function($scope, $http, socket) {
+app.controller('UsersController', function($rootScope, $scope, $http, socket) {
   
   $scope.updateUserlist = function(){
     $http.get('/listeners.json').success(function(data){
@@ -197,11 +197,14 @@ app.controller('UsersController', function($scope, $http, socket) {
     });
   }
   
-  socket.$on('join', $scope.updateUserlist);
+  $scope.getClass = function(user) {
+    if (user._id == $rootScope.track.curator._id) {
+      return 'current-curator';
+    }
+    return '';
+  };
   
-  $scope.$watch('users', function() {
-    console.log('users changed');
-  });
+  socket.$on('join', $scope.updateUserlist);
   
   socket.$on('part', function(event, msg) {
     for(var index = 0; index < $scope.users.length; index++) {
@@ -220,5 +223,9 @@ app.controller('UsersController', function($scope, $http, socket) {
 });
 
 app.controller('ChatController', function($scope, socket) {
-  
+  socket.$on('chat', function(event, msg) {
+    $( msg.data.formatted ).appendTo('#messages');
+    $("#messages").scrollTop($("#messages")[0].scrollHeight);
+    $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+  });
 });
