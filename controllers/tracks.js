@@ -11,7 +11,7 @@ module.exports = {
         { _id: req.param('trackID') }
       , { slug: req.param('trackSlug') }
     ] }).populate('_artist').exec(function(err, track) {
-      Play.find({ _track: track._id }).populate('_curator').exec(function(err, history) {
+      Play.find({ _track: track._id }).sort('-timestamp').populate('_curator').exec(function(err, history) {
         if (err) { console.log(err); }
 
         res.render('track', {

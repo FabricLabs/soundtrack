@@ -13,7 +13,11 @@ block content
       li
         a(href="#") #{play.timestamp}
         |  by 
-        a(href="/#{play._curator.slug}") #{play._curator.username}
+        if (play._curator)
+          a(href="/#{play._curator.slug}") #{play._curator.username}
+        else
+          strong THE MACHINE
+        | .
 
   h2 Available Sources
   each list, key in track.sources.toObject()
