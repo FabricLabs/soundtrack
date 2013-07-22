@@ -27,6 +27,7 @@
     "passport-local": "~0.1.6",
     "marked": "~0.2.9",
     "moment": "~2.0.0",
-    "redis": "~0.8.4"
+    "redis": "~0.8.4",
+    "slug-component": "~1.1.0"
   }
 }
