@@ -9,8 +9,8 @@ block content
           input(type="hidden", name="current-track-id", value="{{track.id}}") 
           #track-info
             #attribution
-              a.pull-left#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
               a.pull-right#track-curator(title="added by", href="/{{track.curator.slug}}") {{track.curator.username || "--"}}
+              a#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
             marquee
               a#track-title(href="/{{track.artist.slug}}/{{track.slug}}") {{track.title || "--"}}
               

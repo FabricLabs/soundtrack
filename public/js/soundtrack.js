@@ -13,9 +13,12 @@ app.factory('socket', function ($rootScope, $http) {
 
     // Called when the socket opens a new connection to the server
     sockjs.onopen = function() {
-      $http.post('/socket-auth', {}).success(function(data) {
-        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
-      });
+      // If we're logged in we should authenticate our socket
+      if (registered) {
+        $http.post('/socket-auth', {}).success(function(data) {
+          sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+        });
+      }
     }
 
     // Called any time the socket receives a message from the server
@@ -76,6 +79,7 @@ app.factory('socket', function ($rootScope, $http) {
 
 app.controller('PlaylistController', function($rootScope, $scope, $http, $modal, socket) {
 
+  // This is called when the youtube iframe is loaded
   window.onYouTubeIframeAPIReady = function() {
     ytplayer = new YT.Player('screen-one', {
       height: '295',
@@ -85,18 +89,46 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
         showinfo: 0
       },
       events: {
-        'onReady': $scope.onPlayerReady
+        'onReady': $scope.onPlayerReady,
+        'onStateChange': function(event) {
+          if (localStorage.getItem('debug')) {
+            console.log(event);
+          }
+        },
+        'onError': function(event) {
+          if (localStorage.getItem('debug')) {
+            console.log(event);
+          }
+        },
+        'onPlaybackQualityChange': function(event) {
+          if (localStorage.getItem('debug')) {
+            console.log(event);
+          }
+        },
+        'onApiChange': function(event) {
+          if (localStorage.getItem('debug')) {
+            console.log(event);
+          }
+        },
+        'onPlaybackRateChange': function(event) {
+          if (localStorage.getItem('debug')) {
+            console.log(event);
+          }
+        }
       }
     });
   };
   
+  // Called when the player is loaded
   $scope.onPlayerReady = function(event) {
-  
+    
+    // Initialize the socket now that we have a ytplayer object
     startSocket();
+    
+    // Set the player quality to decrease buffering
     ytplayer.setPlaybackQuality('medium');
-    ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
-    ytplayer.addEventListener("onError", "onPlayerError");
 
+    // Handle tutorial and volume levels
     if (!registered) {
       introJs().start();
       mutePlayer();
@@ -109,10 +141,8 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
       }
     }
 
-    ytplayer.playVideo();
-
+    // Track the current playback time/progress
     setInterval(function() {
-      // TODO: use angularJS for this
       var time = ytplayer.getCurrentTime().toString().toHHMMSS();
       var total = ytplayer.getDuration().toString().toHHMMSS();
       $('#current-track #time').html( time + '/' + total);
@@ -120,60 +150,49 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
       var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
       $('#track-progress .bar').css('width', progress + '%');
       $('#track-progress').attr('title', progress + '%');
-
     }, 1000);
   };
-    
+  
+  // Update the playlist with data from the server
   $scope.updatePlaylist = function(){
-    console.log('get playlist');
     $http.get('/playlist.json').success(function(data){
       $scope.tracks = data;
     });
   };
   
+  // Handle new track event
   socket.$on('track', function(event, msg) {
-    // console.log('track event fired with data', data);
+    
+    // Load an play the video
     ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
     ytplayer.seekTo( msg.seekTo );
     ytplayer.playVideo();
     
-    $rootScope.track = {
-        id: msg.data._id
-      , title: msg.data.title
-    };
+    // Set the track data
+    $rootScope.track = msg.data;
     
-    if (msg.data.slug) {
-      $rootScope.track.slug = msg.data.slug;
-    }
-    else {
-      $rootScope.track.slug = "";
-    }
-    
-    if (msg.data._artist) {
-      $rootScope.track.artist = msg.data._artist
-    }
-    
-    if (msg.data.curator) {
-      $rootScope.track.curator = msg.data.curator;
-    } else {
+    // Set the curator to machine if none is provided
+    if (!msg.data.curator) {
       $rootScope.track.curator = {
           username: "the machine"
         , slug: ""
       };
     }
     
+    // Update the playlist
     $scope.updatePlaylist();
   });
-    
+  
+  // Handle playlist change events
   socket.$on('playlist:add', $scope.updatePlaylist);
   socket.$on('playlist:update', $scope.updatePlaylist);
   
+  // Gets the current user's playlists
   window.getPlaylists = function() {
     console.log('get playlists');
     $http.get('/' + $scope.userSlug + '/playlists').success(function(data) {
       if (data && data.status && data.status == 'success') {
         $scope.playlists = data.results.playlists;
-        console.log($scope.playlists);
       }
       else {
         console.warn('unable to get playlists');
@@ -184,40 +203,37 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
   $scope.selectPlaylist = function(playlist) {
     $scope.playlistTracks = playlist._tracks;
   };
-    
+  
   $scope.updatePlaylist();
-  getPlaylists();
+  
+  if (registered) {
+    getPlaylists();
+  }
 });
+
 
 app.controller('UsersController', function($rootScope, $scope, $http, socket) {
   
+  // Gets the current list of users in the room
   $scope.updateUserlist = function(){
     $http.get('/listeners.json').success(function(data){
       $scope.users = data;
     });
   }
   
+  // Bolds the current curator in the users list
   $scope.getClass = function(user) {
-    if (user._id == $rootScope.track.curator._id) {
-      return 'current-curator';
+    if ($rootScope.track && $rootScope.track.curator) {
+      if (user._id == $rootScope.track.curator._id) {
+        return 'current-curator';
+      }
     }
     return '';
   };
   
+  // Handle join & part events
   socket.$on('join', $scope.updateUserlist);
-  
-  socket.$on('part', function(event, msg) {
-    for(var index = 0; index < $scope.users.length; index++) {
-      if ($scope.users[index].id == msg.data.id) {
-        $scope.users.splice(index, 1);
-        break;
-      }
-      else {
-        console.log(user, msg.data.id);
-      }
-    };
-    $scope.$digest();
-  });
+  socket.$on('part', $scope.updateUserlist);
   
   $scope.updateUserlist();
 });
