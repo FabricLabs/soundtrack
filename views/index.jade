@@ -11,9 +11,9 @@ block content
             #attribution
               a.pull-left#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
               a.pull-right#track-curator(title="added by", href="/{{track.curator.slug}}") {{track.curator.username || "--"}}
-              
             marquee
               a#track-title(href="/{{track.artist.slug}}/{{track.slug}}") {{track.title || "--"}}
+              
           #track-progress.progress.active
             .bar(style="width: 0%;")
             span#time 00:00
@@ -40,7 +40,7 @@ block content
               li(data-action="new-playlist")
                 a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
-        h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
+        //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
         #playlist
           ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
             li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
@@ -48,11 +48,12 @@ block content
                 .score.badge {{track.score}}
                 i.icon-chevron-up(data-action="upvote-track", data-track-id="{{track._id}}")
                 i.icon-chevron-down(data-action="downvote-track", data-track-id="{{track._id}}")
-              a(href="{{'/'+track._artist+'/'+track.slug+'/'+track._id}}")
+              a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}")
                 img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                 small.pull-right {{track.duration.toString().toHHMMSS()}}
-                span {{track.title}}
-        h3 Add Track
+                span {{track._artist.name}} &mdash; {{track.title}}
+
+        h5 Add Track
         form#search-form
           if (user)
             input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query

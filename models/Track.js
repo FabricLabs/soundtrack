@@ -41,6 +41,9 @@ TrackSchema.statics.random = function(callback) {
   }.bind(this));
 };
 
+TrackSchema.plugin( slug('title') );
+TrackSchema.index({ slug: 1 });
+
 var Track = mongoose.model('Track', TrackSchema);
 
 // export the model to anything requiring it.

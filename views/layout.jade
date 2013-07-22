@@ -34,6 +34,10 @@ html(lang="en-US", ng-app="soundtrack")
                 a(href="/about", ng-class="{active: slug == 'about'}") About
               li
                 a(href="/history", ng-class="{active: slug == 'history'}") History
+              li
+                a(href="/artists", ng-class="{active: slug == 'artists'}") Artists
+              li
+                a(href="/tracks", ng-class="{active: slug == 'tracks'}") Tracks
               if (user)
                 li
                   a(href="/people") People

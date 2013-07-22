@@ -7,13 +7,13 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var ArtistSchema = new Schema({
-    name: { type: String, required: true }
+    name: { type: String, required: true, unique: true }
   , avatar: {
       url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
     }
 });
 
-ArtistSchema.plugin( slug('username') );
+ArtistSchema.plugin( slug('name') );
 ArtistSchema.index({ slug: 1 });
 
 var Artist = mongoose.model('Artist', ArtistSchema);

@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1 Tracks
+
+  ul
+    for track in tracks
+      li
+        a(href="/#{track._artist.slug}") #{track._artist.name}
+        |  &mdash;
+        a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
