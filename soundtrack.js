@@ -19,7 +19,7 @@ var config = require('./config')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
   , crypto = require('crypto')
-  , marked = require('marked');
+  , marked = require('./lib/marked');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
