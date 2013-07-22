@@ -275,7 +275,7 @@ function startMusic() {
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
     app.broadcast({
         type: 'track'
-      , data: _.extend( track, app.room.playlist[0] )
+      , data: _.extend( track.toObject(), app.room.playlist[0] )
       , seekTo: seekTo
     });
   });
