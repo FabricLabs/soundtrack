@@ -176,8 +176,8 @@ function getYoutubeVideo(videoID, callback) {
         // it'll be slow.
         rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
 
-          console.log(data);
-          if (!data) {
+          console.log('fff: ' + data);
+          if (!data.author) {
             data = {
               author: video.title.split(' - ')[0]
             };
