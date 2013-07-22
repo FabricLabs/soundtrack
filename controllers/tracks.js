@@ -1,6 +1,6 @@
 module.exports = {
   list: function(req, res, next) {
-    Track.find({}).populate('_artist').limit(100).exec(function(err, tracks) {
+    Track.find({}).sort('-_id').populate('_artist').limit(100).exec(function(err, tracks) {
       res.render('tracks', {
         tracks: tracks
       });

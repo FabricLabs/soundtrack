@@ -1,6 +1,6 @@
 $(document).ready(function(){
   var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
+  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
 
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
