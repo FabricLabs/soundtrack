@@ -2,42 +2,6 @@ $(document).ready(function(){
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 });
 
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-
-  startSocket();
-
-  ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
-  ytplayer.addEventListener("onError", "onPlayerError");
-
-  if (!registered) {
-    introJs().start();
-    mutePlayer();
-  } else {
-    if ($.cookie('lastVolume')) {
-      ytplayer.setVolume( $.cookie('lastVolume') );
-      volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
-    } else {
-      mutePlayer();
-    }
-  }
-
-  ytplayer.playVideo();
-
-  setInterval(function() {
-    // TODO: use angularJS for this
-    var time = ytplayer.getCurrentTime().toString().toHHMMSS();
-    var total = ytplayer.getDuration().toString().toHHMMSS();
-    $('#current-track #time').html( time + '/' + total);
-
-    var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
-    $('#track-progress .bar').css('width', progress + '%');
-    $('#track-progress').attr('title', progress + '%');
-
-  }, 1000);
-
-};
-
 function mutePlayer() {
   ytplayer.setVolume(0);
   volume.slider('setValue', 0).val(0);
@@ -74,14 +38,12 @@ String.prototype.toHHMMSS = function () {
 $(window).on('load', function() {
   $("#messages").scrollTop($("#messages")[0].scrollHeight);
 
-  // Lets Flash from another domain call JavaScript
-  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
-  // The element id of the Flash embed
-  var atts = { id: "ytPlayer" };
-
-  // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "570", "295", "9", null, null, params, atts);
-
+  //init youtube iframe
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;

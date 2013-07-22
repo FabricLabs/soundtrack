@@ -76,9 +76,53 @@ app.factory('socket', function ($rootScope, $http) {
 
 app.controller('PlaylistController', function($scope, $http, $modal, socket) {
 
-  $scope.playlists = [];
-  $scope.playlistTracks = [];
+  window.onYouTubeIframeAPIReady = function() {
+    ytplayer = new YT.Player('screen-one', {
+      height: '295',
+      width: '570',
+      playerVars: {
+        controls: 0,
+        showinfo: 0
+      },
+      events: {
+        'onReady': $scope.onPlayerReady
+      }
+    });
+  };
   
+  $scope.onPlayerReady = function(event) {
+  
+    startSocket();
+    ytplayer.setPlaybackQuality('medium');
+    ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
+    ytplayer.addEventListener("onError", "onPlayerError");
+
+    if (!registered) {
+      introJs().start();
+      mutePlayer();
+    } else {
+      if ($.cookie('lastVolume')) {
+        ytplayer.setVolume( $.cookie('lastVolume') );
+        volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+      } else {
+        mutePlayer();
+      }
+    }
+
+    ytplayer.playVideo();
+
+    setInterval(function() {
+      // TODO: use angularJS for this
+      var time = ytplayer.getCurrentTime().toString().toHHMMSS();
+      var total = ytplayer.getDuration().toString().toHHMMSS();
+      $('#current-track #time').html( time + '/' + total);
+
+      var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
+      $('#track-progress .bar').css('width', progress + '%');
+      $('#track-progress').attr('title', progress + '%');
+
+    }, 1000);
+  };
     
   $scope.updatePlaylist = function(){
     console.log('get playlist');
