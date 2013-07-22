@@ -5,6 +5,7 @@ var config = require('./config')
   , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
+  , slug = require('slug-component')
   , async = require('async')
   , redis = require('redis')
   , sockjs = require('sockjs')
@@ -176,14 +177,20 @@ function getYoutubeVideo(videoID, callback) {
         rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
 
           console.log(data);
-          if (!data) { data = {}; }
+          if (!data) {
+            data = {
+              author: video.title.split(' - ')[0]
+            };
+          }
 
           Artist.findOne({ $or: [
                 { _id: track._artist }
+              , { slug: slug( data.author ) }
               , { name: data.author }
-            ] }).exec(function(err, artist) {
+          ] }).exec(function(err, artist) {
+
             if (!artist) { var artist = new Artist({
-              name: (data) ? data.author : video.title.split(' - ')[0]
+              name: data.author
             }); }
 
             track._artist = artist._id;
