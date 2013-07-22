@@ -6,6 +6,9 @@ block content
   ul
     for track in tracks
       li
-        a(href="/#{track._artist.slug}") #{track._artist.name}
-        |  &mdash;
-        a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+        if (track._artist)
+          a(href="/#{track._artist.slug}") #{track._artist.name}
+          |  &mdash;
+          a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+        else
+          h5 ಠ_ಠ #{track}

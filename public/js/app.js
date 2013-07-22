@@ -1,6 +1,6 @@
 $(document).ready(function(){
   var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
+  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
 
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
@@ -374,6 +374,17 @@ $(window).on('load', function() {
     $('#chat-input').val( $('#chat-input').val() + ' @'+$(self).data('user-username') + ' ');
     $('#chat-input').focus();
     return false;
+  });
+
+  $(document).on('click', '*[data-action=toggle-video]', function(e) {
+    if (parseInt($('#messages').css('height')) != 230) {
+      $('#screen-one *').css('height', '295px'); $('#messages').css('height', '230px');
+      $(this).children('i').replaceWith($('<i class="icon-chevron-up"></i>'));
+      $("#messages").scrollTop($("#messages")[0].scrollHeight);
+    } else {
+      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '511px');
+      $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
+    }
   });
 
 });
