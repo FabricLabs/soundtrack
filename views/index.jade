@@ -68,9 +68,13 @@ block content
           #messages.fadeout-top
             each message in messages
               include partials/message
-          form#chat-form
+          form#chat-form.input-append(style="display:block;")
             if (user)
-              input.input-block-level(type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
+              input.input-block-level(style="width: 492px;", type="text", autocomplete="off", placeholder="click here to join the conversation")#chat-input
+              button.btn(type="submit")
+                i.icon-share-alt
+              button.btn(data-action="toggle-video")
+                i.icon-chevron-up
             else
               input.input-block-level(type="text", autocomplete="off", disabled, placeholder="click here to join the conversation")#chat-input
 

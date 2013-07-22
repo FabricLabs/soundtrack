@@ -5,7 +5,7 @@ app.factory('socket', function ($rootScope, $http) {
   
   var socket = $rootScope.$new();
   var sockjs;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000]; //in ms
+  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
   
   function init() {

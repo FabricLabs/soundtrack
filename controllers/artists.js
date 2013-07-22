@@ -1,6 +1,8 @@
+var rest = require('restler');
+
 module.exports = {
   list: function(req, res, next) {
-    Artist.find({}).limit(100).exec(function(err, artists) {
+    Artist.find({}).sort('name').exec(function(err, artists) {
       res.render('artists', {
         artists: artists
       });

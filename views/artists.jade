@@ -1,8 +1,10 @@
 extends layout
 
 block content
-  h1 Artists
+  h1 #{artists.length} Artists Known
   ul
     for artist in artists
       li
-        a(href="/#{artist.slug}") #{artist.name}
+        a(href="/#{artist.slug}")
+          img.pull-left.avatar-small(src="#{artist.image.url}")
+          | #{artist.name}
