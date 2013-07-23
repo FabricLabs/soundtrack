@@ -37,7 +37,7 @@ TrackSchema.post('init', function() {
 
   if (!self._artist) {
     var data = {
-      author: video.title.split(' - ')[0]
+      author: self.title.split(' - ')[0]
     };
 
     Artist.findOne({ $or: [
@@ -49,9 +49,9 @@ TrackSchema.post('init', function() {
         name: data.author
       }); }
 
-      track._artist = artist._id;
+      self._artist = artist._id;
 
-      track.save(function(err) {
+      self.save(function(err) {
 
       });
 
