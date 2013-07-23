@@ -94,26 +94,13 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
           if (localStorage.getItem('debug')) {
             console.log(event);
           }
+          // Prevent pausing
+          if (event.data == 2) {
+            ytplayer.playVideo();
+          }
         },
         'onError': function(event) {
-          if (localStorage.getItem('debug')) {
-            console.log(event);
-          }
-        },
-        'onPlaybackQualityChange': function(event) {
-          if (localStorage.getItem('debug')) {
-            console.log(event);
-          }
-        },
-        'onApiChange': function(event) {
-          if (localStorage.getItem('debug')) {
-            console.log(event);
-          }
-        },
-        'onPlaybackRateChange': function(event) {
-          if (localStorage.getItem('debug')) {
-            console.log(event);
-          }
+          console.warn(event);
         }
       }
     });
@@ -200,6 +187,7 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
     });
   };
   
+  // Select a playlist in the playlist modal
   $scope.selectPlaylist = function(playlist) {
     $scope.playlistTracks = playlist._tracks;
   };
