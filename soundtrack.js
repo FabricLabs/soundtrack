@@ -64,13 +64,17 @@ app.use(function(req, res, next) {
 });
 app.use( flashify );
 
-var lexer = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});
-lexer.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
+var lexers = {
+    chat: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
+  , content: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
+};
+lexers.chat.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
 
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked   = marked;
-app.locals.lexer    = lexer;
+app.locals.lexers   = lexers;
+app.locals.lexer    = lexers.content;
 app.locals.sanitize = validator.sanitize;
 app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
