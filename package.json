@@ -28,6 +28,7 @@
     "marked": "~0.2.9",
     "moment": "~2.0.0",
     "redis": "~0.8.4",
-    "slug-component": "~1.1.0"
+    "slug-component": "~1.1.0",
+    "validator": "~1.3.0"
   }
 }

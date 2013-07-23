@@ -43,7 +43,7 @@ $(window).on('load', function() {
   tag.src = "https://www.youtube.com/iframe_api";
   var firstScriptTag = document.getElementsByTagName('script')[0];
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-  
+
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;

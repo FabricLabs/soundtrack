@@ -19,7 +19,8 @@ var config = require('./config')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
   , crypto = require('crypto')
-  , marked = require('marked');
+  , marked = require('marked')
+  , validator = require('validator');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -63,10 +64,14 @@ app.use(function(req, res, next) {
 });
 app.use( flashify );
 
+var lexer = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});
+lexer.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
+
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked   = marked;
-app.locals.lexer    = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});
+app.locals.lexer    = lexer;
+app.locals.sanitize = validator.sanitize;
 app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
 
@@ -233,7 +238,7 @@ function getYoutubeVideo(videoID, callback) {
         });
       });
     } else {
-      console.log('waaaaaaaaaaat');
+      console.log('waaaaaaaaaaat  videoID: ' + videoID);
       console.log(data);
 
       callback();
@@ -359,7 +364,6 @@ sock.on('connection', function(conn) {
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
-    
     try {
       var data = JSON.parse(message);
     }
@@ -368,7 +372,6 @@ sock.on('connection', function(conn) {
       conn.close(1003, "Invalid JSON");
       return;
     }
-    
     switch (data.type) {
       //respond to pings
       case 'pong':
@@ -412,7 +415,7 @@ sock.on('connection', function(conn) {
           conn.close();
         }
         break;
-      
+        
       case 'chat':
         if (conn.user) {
           var chat = new Chat({

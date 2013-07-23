@@ -83,7 +83,7 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
   window.onYouTubeIframeAPIReady = function() {
     ytplayer = new YT.Player('screen-one', {
       height: '295',
-      width: '570',
+      width: '100%',
       playerVars: {
         controls: 0,
         showinfo: 0,
