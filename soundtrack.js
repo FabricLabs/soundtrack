@@ -234,7 +234,7 @@ function getYoutubeVideo(videoID, callback) {
         });
       });
     } else {
-      console.log('waaaaaaaaaaat');
+      console.log('waaaaaaaaaaat  videoID: ' + videoID);
       console.log(data);
 
       callback();
