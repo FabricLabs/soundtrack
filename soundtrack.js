@@ -191,7 +191,7 @@ function getYoutubeVideo(videoID, callback) {
 
           // hack to allow title re-parsing
           // be cautious here if we ever store the video titles
-          video.title = track.title || video.title;
+          //video.title = track.title || video.title;
 
           // TODO: load from datafile
           var baddies = ['[hd]', '[dubstep]', '[electro]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[monstercat release]'];
