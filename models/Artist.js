@@ -18,7 +18,7 @@ var ArtistSchema = new Schema({
 ArtistSchema.post('init', function() {
   var self = this;
 
-  if (!self.bio || !image.url) {
+  if (!self.bio || !self.image.url) {
     rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=Cher&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(data) {
       if (data.artist) {
         self.bio = strip_tags(data.artist.bio.summary).replace(/Read more about (.*) on Last.fm./, '');

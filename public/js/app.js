@@ -113,6 +113,42 @@ $(window).on('load', function() {
     ytplayer.playVideo();
   });
 
+  partying = false;
+  OutgoingChatHandler.addListener('party', function(msg) {
+    if (partying) {
+      $('.partying').removeClass('partying');
+    } else {
+      var d = function () {
+        var b = Math.floor(Math.random() * 255),
+          a = Math.floor(Math.random() * 255),
+          c = Math.floor(Math.random() * 255);
+        return "rgb(" + b + "," + a + "," + c + ")"
+      }, h = function () {
+          jQuery("p, li, h1, h2, h3, div, span, a, input").each(function (b, a) {
+            if (jQuery(a).children().size() == 0 && !jQuery(a).hasClass("partying")) {
+              var c = jQuery(a).text().split(" "),
+                c = jQuery.map(jQuery.makeArray(c), function (a) {
+                  return "<b style=\"color:" + d() + ";display:inline ! important;font-size:auto ! important;font-weight:inherit ! important\" class=\"partying\">" + a + "</b>"
+                });
+              jQuery(a).html(c.join(" "))
+            }
+          });
+          jQuery(".partying").each(function (b, a) {
+            jQuery(a).css("color", d())
+          });
+          partying = true;
+        }, g = function () {
+          setTimeout(function () {
+            h();
+            g();
+            jQuery("body").css("background-color", d())
+          }, 100)
+        };
+      g();
+    }
+
+  });
+
   $('#chat-form').on('submit', function(e) {
     e.preventDefault();
 
