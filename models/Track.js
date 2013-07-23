@@ -1,7 +1,8 @@
 var mongoose = require('mongoose')
   , Schema = mongoose.Schema
   , ObjectId = mongoose.SchemaTypes.ObjectId
-  , slug = require('mongoose-slug');
+  , slug = require('mongoose-slug')
+  , slugify = require('mongoose-slug');
 
 // this defines the fields associated with the model,
 // and moreover, their type.
@@ -29,6 +30,33 @@ var TrackSchema = new Schema({
         _artist: { type: ObjectId, ref: 'Artist' }
       , _track: { type: ObjectId, ref: 'Track' }
     }) ]
+});
+
+TrackSchema.post('init', function() {
+  var self = this;
+
+  if (!self._artist) {
+    var data = {
+      author: video.title.split(' - ')[0]
+    };
+
+    Artist.findOne({ $or: [
+        , { slug: slugify( data.author ) }
+        , { name: data.author }
+    ] }).exec(function(err, artist) {
+
+      if (!artist) { var artist = new Artist({
+        name: data.author
+      }); }
+
+      track._artist = artist._id;
+
+      track.save(function(err) {
+
+      });
+
+    });
+  }
 });
 
 TrackSchema.statics.random = function(callback) {
