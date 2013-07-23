@@ -78,6 +78,10 @@ app.locals.lexer    = lexers.content;
 app.locals.sanitize = validator.sanitize;
 app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
+String.prototype.capitalize = function(){
+  return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
+};
+
 
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
@@ -185,9 +189,18 @@ function getYoutubeVideo(videoID, callback) {
         // it'll be slow.
         rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
 
+          // TODO: load from datafile
+          var baddies = ['[hd]', '[dubstep]', '[electro]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[monstercat release]'];
+          baddies.forEach(function(token) {
+            video.title = video.title.replace(token, '').trim();
+            video.title = video.title.replace(token.toUpperCase(), '').trim();
+            video.title = video.title.replace(token.capitalize(), '').trim();
+          });
+
           if (!data.author) {
+            var parts = video.title.split(' - ');
             data = {
-              author: video.title.split(' - ')[0]
+              author: parts[0].trim()
             };
           }
 
@@ -576,17 +589,24 @@ app.get('/register', function(req, res) {
 });
 
 app.post('/register', function(req, res) {
-  Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
-    if (err) {
-      console.log(err);
-      req.flash('error', 'Something went wrong: ' + err);
+  Person.findOne({ slug: slug( req.body.username ) }).exec(function(err, user) {
+    if (user) {
+      req.flash('error', 'That username is already taken!');
       return res.render('register', { user : user });
-    } else {
-      req.logIn(user, function(err) {
-        req.flash('info', 'Welcome to soundtrack.io!');
-        res.redirect('/');
-      });
     }
+
+    Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
+      if (err) {
+        console.log(err);
+        req.flash('error', 'Something went wrong: ' + err);
+        return res.render('register', { user : user });
+      } else {
+        req.logIn(user, function(err) {
+          req.flash('info', 'Welcome to soundtrack.io!');
+          res.redirect('/');
+        });
+      }
+    });
   });
 });
 
