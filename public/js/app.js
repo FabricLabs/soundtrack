@@ -191,25 +191,6 @@ $(window).on('load', function() {
     return false;
   });
 
-  $('#create-playlist-form').on('submit', function(e) {
-    e.preventDefault();
-    var self = this;
-
-    $('#create-playlist-modal').modal('hide');
-    // TODO: use real username, if only for rest purposes.
-    $.post('/username/playlists', {
-        name:        $('#create-playlist-form input[name=name]').val()
-      , description: $('#create-playlist-form textarea[name=description]').val()
-      , trackID:     $('input[name=current-track-id]').val()
-    }, function(data) {
-      console.log('playlist created!');
-
-      $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
-
-    });
-    return false;
-  });
-
   $(document).on('click', '*[data-action=upvote-track]', function(e) {
     e.preventDefault();
     var self = this;

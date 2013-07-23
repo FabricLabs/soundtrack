@@ -1,4 +1,4 @@
-app.controller('PlaylistController', function($scope, $http, playlists, playlistTracks, dialog) {
+app.controller('ViewPlaylistsController', function($scope, $http, playlists, playlistTracks, dialog) {
 
   $scope.playlists = playlists;
   $scope.playlistTracks = playlistTracks;
@@ -8,6 +8,7 @@ app.controller('PlaylistController', function($scope, $http, playlists, playlist
     $scope.playlistTracks = playlist._tracks;
   };
   
+  // Add selected track to the main playlist
   $scope.addToRoomPlaylist = function(track) {
     console.log('add to room');
     $http.post('/playlist', {

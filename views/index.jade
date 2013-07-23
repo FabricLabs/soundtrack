@@ -10,9 +10,9 @@ block content
           #track-info
             #attribution
               a.pull-right#track-curator(title="added by", href="/{{track.curator.slug}}") {{track.curator.username || "--"}}
-              a#track-artist(href="/{{track.artist.slug}}") {{track.artist.name || "--"}}
+              a#track-artist(href="/{{track._artist.slug}}") {{track._artist.name || "--"}}
             marquee
-              a#track-title(href="/{{track.artist.slug}}/{{track.slug}}") {{track.title || "--"}}
+              a#track-title(href="/{{track._artist.slug}}/{{track.slug}}") {{track.title || "--"}}
               
           #track-progress.progress.active
             .bar(style="width: 0%;")
@@ -37,7 +37,7 @@ block content
               li(ng-repeat="playlist in playlists", data-playlist-id="{{playlist._id}}")
                 a(ng-click="addToPlaylist(playlist, track)") {{playlist.name}}
               li(data-action="new-playlist")
-                a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
+                a(ng-click="createPlaylist(track)") Create New &raquo;
 
         //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
         #playlist
@@ -102,47 +102,3 @@ block content
   else
     script.
       registered = true;
-
-    #playlist-modal.modal.hide.fade
-      .modal-header
-        button.close(data-dismiss="modal") &times;
-        h3 Your Playlists
-      .modal-body
-        .row-fluid
-          .span4
-            ul.nav.nav-list(data-for="user-playlists")
-              for playlist in playlists
-                li(data-playlist-id="#{playlist._id}")
-                  a(href="/#{user.slug}/#{playlist.slug}")
-                    small.pull-right #{playlist._tracks.length}
-                    | #{playlist.name}
-          .span8
-            h4 Tracks
-
-      .modal-footer
-        button.btn.btn(data-dismiss="modal") Cancel
-        button.btn.btn-primary.btn-large(data-dismiss="modal") Done
-
-
-    form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
-      #create-playlist-modal.modal.hide.fade
-        .modal-header
-          button.close(data-dismiss="modal") &times;
-          h3 Create Playlist
-        .modal-body
-          label(required="required") Name
-          input(type="text", name="name")
-
-          label(required="required") Description
-          textarea(type="text", name="description")
-
-          h4 You'll be adding the following track:
-          h5
-            span.track-artist foo
-            |  &mdash; 
-            span.track-title bar
-
-        .modal-footer
-          button.btn.btn(data-dismiss="modal") Cancel
-          button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
-

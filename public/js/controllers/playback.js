@@ -73,8 +73,7 @@ app.controller('PlaybackController', function($rootScope, $scope, $http, $dialog
   socket.$on('track', function(event, msg) {
     
     // Load an play the video
-    ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-    ytplayer.seekTo( msg.seekTo );
+    ytplayer.cueVideoById( msg.data.sources.youtube[0].id, msg.seekTo);
     ytplayer.playVideo();
     
     // Set the track data
@@ -117,7 +116,9 @@ app.controller('PlaybackController', function($rootScope, $scope, $http, $dialog
     $http.post('/' + $('a[data-for=user-model]').data('username') +'/playlists/' + playlist._id, {
       trackID: track._id
     }).success(function(data) {
-      console.log(data);
+      if (localStorage.getItem('debug')) {
+        console.log(data);
+      }
       $scope.getPlaylists();
     });
   };
@@ -126,11 +127,30 @@ app.controller('PlaybackController', function($rootScope, $scope, $http, $dialog
   $scope.openPlaylists = function() {
     $dialog.dialog({
       templateUrl: 'angular/playlists',
-      controller: 'PlaylistController',
+      controller: 'ViewPlaylistsController',
       resolve: { playlists: function() { return $scope.playlists;}, playlistTracks: function() { return $scope.playlists[0]._tracks}}
     }).open();
   };
   
+  // Opens the create playlist dialog
+  $scope.createPlaylist = function() {
+    $dialog.dialog({
+      templateUrl: 'angular/createPlaylist',
+      controller: 'CreatePlaylistController',
+      resolve: { newTrack: function() { return $rootScope.track}}
+    }).open().then(function(result) {
+        if(result) {
+          $http.post("/" + $('a[data-for=user-model]').data('username') + "/playlists", {
+              name:        result.name
+            , description: result.description
+            , trackID:     result.trackID
+          }).success(function(data) {
+            console.log(data);
+            $scope.getPlaylists();
+          });
+        }
+    });;
+  };
   
   // These update our data on first load
   $scope.updatePlaylist();
