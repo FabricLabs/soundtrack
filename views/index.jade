@@ -49,8 +49,9 @@ block content
                 .score.badge {{track.score}}
                 i.icon-chevron-up(data-action="upvote-track", data-track-id="{{track._id}}")
                 i.icon-chevron-down(data-action="downvote-track", data-track-id="{{track._id}}")
+              img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
+              span(style="font-size: 0.75em;") {{track.curator.username}} wants to play 
               a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}")
-                img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                 small.pull-right {{track.duration.toString().toHHMMSS()}}
                 span {{track._artist.name}} &mdash; {{track.title}}
 

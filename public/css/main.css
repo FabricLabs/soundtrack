@@ -67,9 +67,19 @@ body {
   background: #ffffd5;
 }
 
-.user-avatar-small {
+.user-avatar-small, .avatar-small {
   max-height: 1.2em;
   margin-right: 0.2em;
+}
+.avatar {
+  max-height: 2.5em;
+  margin-right: 0.5em;
+}
+.avatar-large {
+  max-height: 5em;
+  max-width: 10em;
+  margin-right: 1em;
+  border: 5px solid black;
 }
 
 .thumbnail-medium {
