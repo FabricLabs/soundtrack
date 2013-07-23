@@ -3,6 +3,31 @@ body {
   padding-bottom: 40px;
 }
 
+#chat-form .input-block-level {
+  width: 492px;
+}
+
+@media (max-width: 1199px) {
+  #chat-form .input-block-level {
+    width: 382px;
+  }
+}
+
+@media (max-width: 979px) {
+  body {
+    padding-top: 0px;
+    padding-bottom: 40px;
+  }
+  #chat-form .input-block-level {
+    width: 275px;
+  }
+}
+@media (max-width: 781px) {
+  #chat-form .input-block-level {
+    width: 100%;
+  }
+}
+
 #screen-one {
   margin-left: auto;
   margin-right: auto;
@@ -38,10 +63,15 @@ body {
 }
 #playlist {
   height: 338px;
+  clear: both;
 }
 #userlist {
   height: 500px;
 }
+#playlist .active {
+  display: none;
+}
+
 #announcement{
   color: #08C;
   font-size: 0.8em;
