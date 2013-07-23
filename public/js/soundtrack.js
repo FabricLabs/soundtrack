@@ -29,7 +29,7 @@ app.factory('socket', function ($rootScope, $http) {
 
       // Check localStorage for debug so we dont spam regular users
       if (localStorage.getItem('debug')) {
-        console.log(msg);
+        console.log('socket_message', msg);
       }
       
       // This will emit an event of whatever type is sent in the message
@@ -86,13 +86,14 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
       width: '570',
       playerVars: {
         controls: 0,
-        showinfo: 0
+        showinfo: 0,
+        iv_load_policy: 3
       },
       events: {
         'onReady': $scope.onPlayerReady,
         'onStateChange': function(event) {
           if (localStorage.getItem('debug')) {
-            console.log(event);
+            console.log('ytplayer_state_change', event);
           }
           // Prevent pausing
           if (event.data == 2) {
@@ -100,7 +101,7 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
           }
         },
         'onError': function(event) {
-          console.warn(event);
+          console.warn('ytplayer_error', event);
         }
       }
     });
@@ -176,7 +177,10 @@ app.controller('PlaylistController', function($rootScope, $scope, $http, $modal,
   
   // Gets the current user's playlists
   window.getPlaylists = function() {
-    console.log('get playlists');
+    if (localStorage.getItem('debug')) {
+      console.log('get playlists');
+    }
+    
     $http.get('/' + $scope.userSlug + '/playlists').success(function(data) {
       if (data && data.status && data.status == 'success') {
         $scope.playlists = data.results.playlists;
