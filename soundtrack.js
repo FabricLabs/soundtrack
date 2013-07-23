@@ -19,7 +19,8 @@ var config = require('./config')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
   , crypto = require('crypto')
-  , marked = require('marked');
+  , marked = require('marked')
+  , validator = require('validator');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -67,6 +68,7 @@ app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked   = marked;
 app.locals.lexer    = new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true});
+app.locals.sanitize = validator.sanitize;
 app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
 
