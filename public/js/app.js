@@ -199,7 +199,7 @@ $(window).on('load', function() {
   var atts = { id: "ytPlayer" };
 
   // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "570", "295", "9", null, null, params, atts);
+  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
 
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
