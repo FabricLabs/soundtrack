@@ -599,6 +599,38 @@ app.post('/playlist', requireLogin, function(req, res) {
         res.send({ status: 'success' });
       });
     break;
+    // add a track via its soundtack _id
+    case 'id':
+      Track.findOne({'_id':req.param('id')}).exec(function(err, track) {
+        if (track) {
+          app.room.playlist.push( _.extend( track.toObject() , {
+              score: 0
+            , votes: {} // TODO: auto-upvote?
+            , timestamp: new Date()
+            , curator: {
+                  _id: req.user._id
+                , id: (req.app.room.listeners[ req.user._id.toString() ]) ? req.app.room.listeners[ req.user._id.toString() ].connId : undefined
+                , username: req.user.username
+                , slug: req.user.slug
+              }
+          } ) );
+          
+          sortPlaylist();
+
+          app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+
+          app.broadcast({
+              type: 'playlist:add'
+            , data: track
+          });
+          
+          res.send({status: 'success'});
+        }
+        else {
+          res.send(500, {status: 'error'})
+        }
+      });
+    break;
   }
 });
 

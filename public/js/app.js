@@ -1,3 +1,5 @@
+var app = angular.module('soundtrack', ['ui.bootstrap.dialog']);
+
 $(document).ready(function(){
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 });
@@ -37,7 +39,7 @@ String.prototype.toHHMMSS = function () {
 
 $(window).on('load', function() {
   $("#messages").scrollTop($("#messages")[0].scrollHeight);
-
+  
   //init youtube iframe
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
@@ -170,18 +172,6 @@ $(window).on('load', function() {
 
     });
     return false;
-  });
-
-  $(document).on('click', '*[data-action=save-track]', function(e) {
-    var self = this;
-
-    $.post('/' + $('a[data-for=user-model]').data('username') +'/playlists/' + $(self).data('playlist-id'), {
-      trackID: $('input[name=current-track-id]').val()
-    }, function(data) {
-      // TODO: update UI with correct count
-      console.log(data);
-    });
-
   });
 
   $(document).on('click', '*[data-action=upvote-track]', function(e) {

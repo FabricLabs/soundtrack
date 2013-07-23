@@ -4,7 +4,7 @@ block content
 
   #stage
     .row-fluid
-      .span3(ng-controller="PlaylistController")
+      .span3(ng-controller="PlaybackController")
         #current-track
           input(type="hidden", name="current-track-id", value="{{track.id}}") 
           #track-info
@@ -30,13 +30,12 @@ block content
             a.btn(href="#", onclick="$.post('/skip'); return false;") skip
 
           .btn-group.pull-right
-            button.btn(bs-modal="'angular/modal'") your playlists
+            button.btn(ng-click="openPlaylists()") your playlists
             a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
               span.caret
             ul.dropdown-menu(data-for="user-playlists")
-              for playlist in playlists
-                li(data-playlist-id="#{playlist._id}")
-                  a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
+              li(ng-repeat="playlist in playlists", data-playlist-id="{{playlist._id}}")
+                a(ng-click="addToPlaylist(playlist, track)") {{playlist.name}}
               li(data-action="new-playlist")
                 a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
 
