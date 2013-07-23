@@ -26,6 +26,10 @@ body {
   #chat-form .input-block-level {
     width: 100%;
   }
+  #chat-form button {
+    display: block;
+    width: 100%;
+  }
 }
 
 #screen-one {
