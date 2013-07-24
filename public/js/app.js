@@ -50,7 +50,15 @@ $(document).ready(function(){
           ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
           ytplayer.seekTo( msg.seekTo );
           ytplayer.playVideo();
-          updatePlaylist();
+
+          if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
+            $('#playlist-list li:first').slideUp(function() {
+              updatePlaylist();
+            });
+          } else {
+            updatePlaylist();
+          }
+
         break;
         case 'playlist:add':
           updatePlaylist();

@@ -194,7 +194,7 @@ function getYoutubeVideo(videoID, callback) {
           //video.title = track.title || video.title;
 
           // TODO: load from datafile
-          var baddies = ['[hd]', '[dubstep]', '[electro]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[free download]', '[monstercat release]'];
+          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[free download]', '[free DL]', '[monstercat release]'];
           baddies.forEach(function(token) {
             video.title = video.title.replace(token + ' - ', '').trim();
             video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
@@ -425,7 +425,9 @@ sock.on('connection', function(conn) {
           app.broadcast({
               type: 'join'
             , data: {
-                username: conn.id //wat
+                  _id: matches[0].user._id
+                , username: matches[0].user.username
+                , slug: matches[0].user.slug
               }
           });
           
@@ -481,6 +483,12 @@ app.get('/listeners.json', function(req, res) {
   res.send( _.toArray( app.room.listeners ) );
 });
 
+app.get('/clients.json', function(req, res) {
+  res.send( _.toArray( app.clients ).map(function(client) {
+    return client.user;
+  }) );
+});
+
 //client requests that we give them a token to auth their socket
 //we generate a 32 byte (256bit) token and send that back.
 //But first we record the token's authData, user and time.
@@ -500,11 +508,16 @@ app.post('/chat', requireLogin, function(req, res) {
         , created: chat.created
       }
     }, function(err, html) {
-      console.log('got chat', html);
       app.broadcast({
           type: 'chat'
         , data: {
-              formatted: html
+              _author: {
+                  _id: req.user._id
+                , username: req.user.username
+                , slug: req.user.slug
+              }
+            , message: req.param('message')
+            , formatted: html
             , created: new Date()
           }
       });
@@ -584,19 +597,6 @@ app.post('/playlist', requireLogin, function(req, res) {
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
 app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
-
-app.get('/pages.json', function(req, res) {
-  res.send({
-    "home": {
-      "title": "Home",
-      "content": "This is the home page. Welcome"
-    },
-    "about": {
-      "title": "About",
-      "content": "This is the about page. Welcome"
-    }
-  });
-});
 
 app.get('/register', function(req, res) {
   res.render('register');
