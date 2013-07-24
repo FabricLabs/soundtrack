@@ -60,6 +60,9 @@ body {
 #search-results li:hover {
   background: #ccc;
 }
+#search-form .input-block-level {
+  width: 230px;
+}
 #messages, #playlist, #userlist {
   height: 230px;
   overflow-y: scroll;
