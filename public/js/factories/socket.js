@@ -71,6 +71,13 @@ app.factory('socket', function ($rootScope, $http) {
     init();
   }
   
+  //Basic ability to add a listener to the socket (plugins/greasemonkey)
+  window.API = {
+    addSocketListener : function(event_type, trigger) {
+      socket.$on(event_type, trigger);
+    }
+  };
+  
   return socket;
   
 });
