@@ -52,7 +52,8 @@ $(document).ready(function(){
           ytplayer.playVideo();
 
           if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
-            $('#playlist-list li:first').slideUp(function() {
+            $('#playlist-list li:first').slideUp('slow', function() {
+              $('#playlist-list li:first').attr('style', 'display: none;');
               updatePlaylist();
             });
           } else {

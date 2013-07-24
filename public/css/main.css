@@ -75,10 +75,6 @@ body {
 #userlist {
   height: 500px;
 }
-#playlist .active {
-  display: none;
-}
-
 #announcement{
   color: #08C;
   font-size: 0.8em;
@@ -158,6 +154,9 @@ body {
   text-transform: uppercase;
   font-weight: bold;
   font-size: 0.8em;
+}
+#playlist-list li.active {
+  display: none;
 }
 
 #track-progress {

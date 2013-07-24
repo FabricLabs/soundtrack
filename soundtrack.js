@@ -177,9 +177,9 @@ app.forEachClient = function(fn) {
 }
 
 function getYoutubeVideo(videoID, callback) {
-  rest.get('http://gdata.youtube.com/feeds/api/videos?max-results=1&v=2&alt=jsonc&q='+videoID).on('complete', function(data) {
-    if (data && data.data && data.data.items) {
-      var video = data.data.items[0];
+  rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data) {
+    if (data && data.data) {
+      var video = data.data;
       Track.findOne({
         'sources.youtube.id': video.id
       }).exec(function(err, track) {
