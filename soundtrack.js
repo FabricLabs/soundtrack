@@ -193,10 +193,13 @@ function getYoutubeVideo(videoID, callback) {
         // it'll be slow.
         rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
 
+          // hack to allow title re-parsing
+          // be cautious here if we ever store the video titles
+          //video.title = track.title || video.title;
+
           // TODO: load from datafile
           var baddies = ['[hd]', '[dubstep]', '[electro]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[monstercat release]'];
           baddies.forEach(function(token) {
-
             video.title = video.title.replace(token + ' - ', '').trim();
             video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
             video.title = video.title.replace(token.capitalize() + ' - ', '').trim();
@@ -206,10 +209,12 @@ function getYoutubeVideo(videoID, callback) {
             video.title = video.title.replace(token.capitalize(), '').trim();
           });
 
+          // if codingsoundtrack.org isn't aware of it...
           if (!data.author) {
             var parts = video.title.split(' - ');
             data = {
-              author: parts[0].trim()
+                author: parts[0].trim()
+              , title: (track.title) ? track.title : video.title
             };
           }
 
@@ -233,7 +238,11 @@ function getYoutubeVideo(videoID, callback) {
               });
             }
 
-            track.title                = (data.title) ? data.title : video.title;
+            // if the track doesn't already have a title, set it from 
+            if (!track.title) {
+              track.title = data.title || video.title;
+            }
+
             track.duration             = (track.duration) ? track.duration : video.duration;
             track.images.thumbnail.url = video.thumbnail.hqDefault;
 
