@@ -47,7 +47,7 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
     }
     
     // Process the chat after rendering
-    setTimeout($scope.modifyChat, 200);
+    setTimeout($scope.modifyChat, 50);
   });
   
   // Handle announcements
