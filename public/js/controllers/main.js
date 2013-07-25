@@ -127,7 +127,9 @@ app.controller('MainController', function($rootScope, $scope, $http, $dialog, so
             , description: result.description
             , trackID:     result.trackID
           }).success(function(data) {
-            console.log(data);
+            if (localStorage.getItem('debug')) {
+              console.log('create_playlist', data);
+            }
             $scope.getPlaylists();
           });
         }

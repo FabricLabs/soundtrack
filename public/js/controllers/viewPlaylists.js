@@ -23,7 +23,9 @@ app.controller('ViewPlaylistsController', function($scope, $http, playlists, pla
         source: 'id'
       , id: track._id
     }).success(function(response) {
-      console.log(response);
+      if (localStorage.getItem('debug')) {
+        console.log('add_track_to_room_response', response);
+      }
     });
   };
   
