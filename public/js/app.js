@@ -238,6 +238,7 @@ $(window).on('load', function() {
   OutgoingChatHandler = (function(){
     var listeners = {};
     var triggerWord = /^\/(\w+)/i;
+    var CHAT_DEFAULT = '$DEFAULT$';
 
     function addListener(trigger, listener) {
       if (!listeners[trigger]) {
@@ -247,26 +248,38 @@ $(window).on('load', function() {
       listeners[trigger].push(listener);
     }
 
-    function defaultFn(msg) {
-      $.post('/chat', { message: msg }, function(data){})
+    function notify(key, msg) {
+        if (listeners[key]) {
+          listeners[key].forEach(function(l){
+            l(msg);
+          });
+
+          return true;
+        }
+
+        return false;
     }
 
     function chatSubmit(msg) {
       var matches = msg.match(triggerWord);
       if (matches) {
-        if (listeners[matches[1]]) {
-          listeners[matches[1]].forEach(function(l){
-            l(msg);
-          });
+        if (notify(matches[1])) {
           return;
         }
       }
-      defaultFn(msg);
+
+      notify(CHAT_DEFAULT, msg);
     }
+
+    //add our default chat handler that actually sends the messages
+    addListener(CHAT_DEFAULT, function (msg) {
+      $.post('/chat', { message: msg }, function(data){});
+    });
 
     return {
       addListener: addListener,
-      chatSubmit: chatSubmit
+      chatSubmit: chatSubmit,
+      CHAT_DEFAULT: CHAT_DEFAULT
     }
   })();
 
