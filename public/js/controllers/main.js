@@ -77,8 +77,8 @@ app.controller('MainController', function($rootScope, $scope, $http, $dialog, so
     if (localStorage.getItem('debug')) {
       console.log('get_user_playlists');
     }
-    
-    $http.get('/' + $scope.userSlug + '/playlists').success(function(data) {
+        
+    $http.get('/' + userSlug + '/playlists').success(function(data) {
       if (data && data.status && data.status == 'success') {
         $scope.playlists = data.results.playlists;
       }
@@ -108,8 +108,22 @@ app.controller('MainController', function($rootScope, $scope, $http, $dialog, so
       templateUrl: 'angular/playlists',
       controller: 'ViewPlaylistsController',
       resolve: { 
-          playlists: function() { return $scope.playlists;}
-        , playlistTracks: function() { return $scope.playlists[0]._tracks;}
+          playlists: function() { 
+            if (typeof($scope.playlists) != 'undefined') {
+              return $scope.playlists;
+            }
+            else {
+              return [];
+            }
+          }
+        , playlistTracks: function() { 
+            if (typeof($scope.playlists) != 'undefined') {
+              return $scope.playlists[0]._tracks;
+            }
+            else {
+              return [];
+            }
+          }
       }
     }).open();
   };
