@@ -342,21 +342,13 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log(req.headers);
   
   //Announce who skipped this song
-  res.render('partials/announcement', {
-      message: {
+  app.broadcast({
+      type: 'announcement'
+    , data: {
           message: "'" + app.room.track.title + "' was skipped by " + req.user.username + "."
         , created: new Date()
       }
-    }, function(err, html) {
-      app.broadcast({
-          type: 'announcement'
-        , data: {
-              formatted: html
-            , created: new Date()
-          }
-      });
-    }
-  );
+  });
   
   nextSong();
   res.send({ status: 'success' });

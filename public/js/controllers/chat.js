@@ -46,7 +46,19 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
       }
     }
     
-    $scope.modifyChat();
+    // Process the chat after rendering
+    setTimeout($scope.modifyChat, 200);
+  });
+  
+  // Handle announcements
+    socket.$on('announcement', function(event, msg) {
+    
+    // Add announcement and alert angular to the change
+    $scope.messages.push(msg.data);
+    $scope.$apply();
+    
+    setTimeout($scope.modifyChat, 200);
+
   });
   
   $scope.modifyChat = function() {
@@ -61,5 +73,17 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
     if ($rootScope.getSetting('chat_links')) {
       $('.message-content a').attr('target','_blank');
     } 
+  }
+  
+  // Lets us render different templates for chats and announcements
+  $scope.getChatTemplate = function(message) {
+    // Chat message
+    if (message.formatted) {
+      return 'angular/chatMessage';
+    }
+    // Announcement
+    else {
+      return 'angular/chatAnnouncement';
+    }
   }
 });

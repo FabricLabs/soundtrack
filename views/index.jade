@@ -68,11 +68,7 @@ block content
           .screen-inner#screen-inner
         .chat-container(ng-controller="ChatController")
           #messages.fadeout-top
-            .message(ng-repeat="message in messages")
-              abbr.timestamp.pull-right(title="{{message.created}}") {{message.created | date:'mediumTime'}}
-              img.user-avatar-small(ng-src="{{message._author.avatar.url}}")
-              strong(data-role="author", data-user-username="{{message._author.username}}") {{message._author.username}}
-              span(ng-bind-html-unsafe="message.formatted")
+            .message(ng-repeat="message in messages", ng-include="getChatTemplate(message)")
               
           form#chat-form.input-append(style="display:block;")
             if (user)
