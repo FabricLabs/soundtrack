@@ -1,147 +1,4 @@
-$(document).ready(function(){
-  var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
-  var retryIdx = 0;
-
-  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-
-  startSockJs = function(){
-    sockjs = new SockJS('/stream');
-
-    sockjs.onopen = function(){
-      //sockjs connection has been opened!
-      $.post('/socket-auth', {}, function(data){
-        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
-      });
-    }
-
-    sockjs.onmessage = function(e) {
-      retryIdx = 0; //reset our retry timeouts
-
-      var msg = JSON.parse(e.data);
-
-      console.log(msg);
-
-      switch (msg.type) {
-        default: console.log('unhandled message: ' + msg); break;
-        case 'track':
-          if (msg.data._artist) {
-            $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
-
-            $('#track-artist').attr('href', '/'+msg.data._artist.slug);
-            $('#track-artist').html( msg.data._artist.name );
-          } else {
-            $('#track-artist').html( 'unknown' );
-          }
-          
-          $('#track-title').html( msg.data.title );
-
-
-          $('input[name=current-track-id]').val( msg.data._id );
-          if (msg.data.curator) {
-            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
-          
-            $('#userlist li').removeClass('current-curator');
-            $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
-          } else {
-            $('#track-curator').html('the machine');
-          }
-
-          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-          ytplayer.seekTo( msg.seekTo );
-          ytplayer.playVideo();
-
-          if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
-            $('#playlist-list li:first').slideUp('slow', function() {
-              $('#playlist-list li:first').attr('style', 'display: none;');
-              updatePlaylist();
-            });
-          } else {
-            updatePlaylist();
-          }
-
-        break;
-        case 'playlist:add':
-          updatePlaylist();
-        break;
-        case 'playlist:update':
-          updatePlaylist();
-        break;
-        case 'join':
-          updateUserlist();
-        break;
-        case 'part':
-          $('#userlist li[data-user-id='+msg.data._id+']').remove();
-        break;
-        case 'chat':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-        break;
-        case 'ping':
-          sockjs.send(JSON.stringify({type: 'pong'}));
-          console.log("Ping Pong\'d");
-        break;
-        case 'announcement':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
-      }
-    };
-
-    sockjs.onclose = function() { 
-      console.log('Lost our connection, lets retry!');
-      if (retryIdx < retryTimes.length) {
-        console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
-        setTimeout(restartSockJs, retryTimes[retryIdx++]);
-      } else {
-        alert('Bummer. We lost connection.');
-      }
-    };
-  }
-
-});
-
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-
-  restartSockJs = function(){
-    sockjs = null;
-    startSockJs();
-  }
-
-  restartSockJs();
-
-  ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
-  ytplayer.addEventListener("onError", "onPlayerError");
-
-  if (!registered) {
-    introJs().start();
-    mutePlayer();
-  } else {
-    if ($.cookie('lastVolume')) {
-      ytplayer.setVolume( $.cookie('lastVolume') );
-      volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
-    } else {
-      mutePlayer();
-    }
-  }
-
-  ytplayer.playVideo();
-
-  setInterval(function() {
-    // TODO: use angularJS for this
-    var time = ytplayer.getCurrentTime().toString().toHHMMSS();
-    var total = ytplayer.getDuration().toString().toHHMMSS();
-    $('#current-track #time').html( time + '/' + total);
-
-    var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
-    $('#track-progress .bar').css('width', progress + '%');
-    $('#track-progress').attr('title', progress + '%');
-
-  }, 1000);
-
-};
+var app = angular.module('soundtrack', ['ui.bootstrap.dialog']);
 
 function mutePlayer() {
   ytplayer.setVolume(0);
@@ -158,6 +15,7 @@ function unmutePlayer() {
   }
 }
 
+// Format youtube progress timer
 String.prototype.toHHMMSS = function () {
   var sec_num = parseInt(this, 10); // don't forget the second parm
   var hours   = Math.floor(sec_num / 3600);
@@ -176,46 +34,41 @@ String.prototype.toHHMMSS = function () {
   return time;
 }
 
-function AppController($scope, $http) {
-  window.updatePlaylist = function(){
-    $http.get('/playlist.json').success(function(data){
-      $scope.tracks = data;
-    });
-  }
-
-  updatePlaylist();
-}
-
-function updateUserlist() {
-  $.get('/listeners.json', function(data) {
-    $('#userlist').html('');
-    $('.user-count').html('<strong>'+data.length+'</strong> online');
-    data.forEach(function(user) {
-      // TODO: use template (Blade?)
-      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
-    });
-  });
-}
-
 $(window).on('load', function() {
-  updatePlaylist();
-  updateUserlist();
-  $("#messages").scrollTop($("#messages")[0].scrollHeight);
+  
+  if (localStorage.getItem('debug')) {
+    console.warn("Debug is currently: ON");
+    console.warn("To disable run: localStorage.removeItem('debug')");
+    
+    if (localStorage.getItem('debugSettings')) {
+      console.warn("Settings debug is enabled, expect to get a lot of logspam");
+      console.warn("To disable run: localStorage.removeItem('debugSettings')");
+    }
+    else {
+      console.warn('Settings it has its own debug flag, due to logspam');
+      console.warn("To enable debugging of Settings use: localStorage.setItem('debugSettings', true)");
+    }
+  }
+  else {
+    console.log("Debug is currently: OFF");
+    console.log("To enable run: localStorage.setItem('debug', true)");
+  }
+  
+  //init youtube iframe
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-  // Lets Flash from another domain call JavaScript
-  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
-  // The element id of the Flash embed
-  var atts = { id: "ytPlayer" };
-
-  // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
-
+  // Toggle mute button
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
     var currentVolume = parseInt(volume.slider('getValue').val());
 
-    console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
+    if (localStorage.getItem('debug')) {
+      console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
+    }
 
     if (currentVolume) {
       mutePlayer();
@@ -228,7 +81,7 @@ $(window).on('load', function() {
     return false;
   });
 
-
+  // Set volume on slider slide
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;
     ytplayer.setVolume( $(self).val() );
@@ -467,6 +320,7 @@ $(window).on('load', function() {
     })();
   });
 
+  // Send chat
   $('#chat-form').on('submit', function(e) {
     e.preventDefault();
 
@@ -479,12 +333,15 @@ $(window).on('load', function() {
     return false;
   });
 
+  // Search for and add tracks to the room playlist
   $('#search-form').on('submit', function(e) {
     e.preventDefault();
     $('#search-results').html('');
 
     $.getJSON('http://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
-      console.log(data.data.items);
+      if (localStorage.getItem('debug')) {
+        console.log('youtube_gdata_response', data.data.items);
+      }
 
       data.data.items.forEach(function(item) {
         $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
@@ -495,7 +352,9 @@ $(window).on('load', function() {
               source: $(self).data('source')
             , id: $(self).data('id')
           }, function(response) {
-            console.log(response);
+            if (localStorage.getItem('debug')) {
+              console.log('add_track_response', response);
+            }
           });
 
           $('#search-results').html('');
@@ -509,37 +368,7 @@ $(window).on('load', function() {
     return false;
   });
 
-  $('#create-playlist-form').on('submit', function(e) {
-    e.preventDefault();
-    var self = this;
-
-    $('#create-playlist-modal').modal('hide');
-    // TODO: use real username, if only for rest purposes.
-    $.post('/username/playlists', {
-        name:        $('#create-playlist-form input[name=name]').val()
-      , description: $('#create-playlist-form textarea[name=description]').val()
-      , trackID:     $('input[name=current-track-id]').val()
-    }, function(data) {
-      console.log('playlist created!');
-
-      $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
-
-    });
-    return false;
-  });
-
-  $(document).on('click', '*[data-action=save-track]', function(e) {
-    var self = this;
-
-    $.post('/' + $('a[data-for=user-model]').data('username') +'/playlists/' + $(self).data('playlist-id'), {
-      trackID: $('input[name=current-track-id]').val()
-    }, function(data) {
-      // TODO: update UI with correct count
-      console.log(data);
-    });
-
-  });
-
+  // Upvote track in playlist
   $(document).on('click', '*[data-action=upvote-track]', function(e) {
     e.preventDefault();
     var self = this;
@@ -547,12 +376,15 @@ $(window).on('load', function() {
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'up'
     }, function(data) {
-      console.log(data);
+      if (localStorage.getItem('debug')) {
+        console.log('upvote_response', data);
+      }
     });
 
     return false;
   });
 
+  // Downvote track in playlist
   $(document).on('click', '*[data-action=downvote-track]', function(e) {
     e.preventDefault();
     var self = this;
@@ -560,12 +392,15 @@ $(window).on('load', function() {
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'down'
     }, function(data) {
-      console.log(data);
+      if (localStorage.getItem('debug')) {
+        console.log('downvote_response', data);
+      }
     });
 
     return false;
   });
 
+  // Mention user by clicking their name
   $(document).on('click', '.message *[data-role=author]', function(e) {
     e.preventDefault();
     var self = this;
@@ -574,6 +409,7 @@ $(window).on('load', function() {
     return false;
   });
 
+  // Toggle chat covering video
   $(document).on('click', '*[data-action=toggle-video]', function(e) {
     if (parseInt($('#messages').css('height')) != 230) {
       $('#screen-one *').css('height', '295px'); $('#messages').css('height', '230px');

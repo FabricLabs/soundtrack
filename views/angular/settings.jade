@@ -1,0 +1,17 @@
+#settings-modal.modal
+  .modal-header
+    button.close(ng-click="dismiss()") &times;
+    h3 Settings
+  .modal-body
+    - if (user)
+      label(required="required") Beep on mentions
+        input(type="checkbox", ng-model="settings.mention")
+
+    label(required="required") Open chat links in a new tab 
+      input(type="checkbox", ng-model="settings.chat_links") 
+      |   (May require a refresh for old links)
+
+    //- If you add any new settings to this page, add them to the default settings object in main.js
+  .modal-footer
+    button.btn.btn(ng-click="dismiss()") Cancel
+    button.btn.btn-primary.btn-large(ng-click="save()") Save

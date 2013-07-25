@@ -1,0 +1,20 @@
+#create-playlist-modal.modal
+  .modal-header
+    button.close(ng-click="dismiss()") &times;
+    h3 Create Playlist
+  .modal-body
+    label(required="required") Name
+    input(type="text", ng-model="playlist.name")
+
+    label(required="required") Description
+    input(type="text", ng-model="playlist.description")
+
+    h4 You'll be adding the following track:
+    h5
+      span.track-artist {{newTrack._artist.name}}
+      |  &mdash; 
+      span.track-title {{newTrack.title}}
+
+  .modal-footer
+    button.btn.btn(ng-click="dismiss()") Cancel
+    button.btn.btn-primary.btn-large(ng-click="save()") Create Playlist &raquo;
