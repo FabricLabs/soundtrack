@@ -22,6 +22,7 @@ body {
     width: 275px;
   }
 }
+
 @media (max-width: 781px) {
   #chat-form .input-block-level {
     width: 100%;
@@ -38,7 +39,10 @@ body {
   /*width: 480px;*/
 }
 
-#track-info a:hover { text-decoration: none; }
+#track-info a:hover {
+  text-decoration: none;
+}
+
 #track-title, #attribution {
   text-transform: uppercase;
   font-weight: bold;
@@ -48,37 +52,44 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 #current-track #track-title {
   height: 1.5em;
   font-size: 1.5em;
 }
-#track-artist
 
-#search-results li {
+#track-artist #search-results li {
   cursor: pointer;
 }
+
 #search-results li:hover {
   background: #ccc;
 }
+
 #search-form .input-block-level {
   width: 230px;
 }
+
 #messages, #playlist, #userlist {
   height: 230px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
+
 #playlist {
   height: 338px;
   clear: both;
 }
+
 #userlist {
   height: 500px;
 }
+
 #announcement{
   color: #08C;
   font-size: 0.8em;
 }
+
 .chat-container {
   /*width: 480px; */
   margin-left: auto;
@@ -88,7 +99,6 @@ body {
 .message {
   clear: both;
 }
-
 .message abbr.timestamp {
   font-size: 0.75em;
 }
@@ -104,10 +114,12 @@ body {
   max-height: 1.2em;
   margin-right: 0.2em;
 }
+
 .avatar {
   max-height: 2.5em;
   margin-right: 0.5em;
 }
+
 .avatar-large {
   max-height: 5em;
   max-width: 10em;
@@ -155,6 +167,7 @@ body {
   font-weight: bold;
   font-size: 0.8em;
 }
+
 #playlist-list li.active {
   display: none;
 }

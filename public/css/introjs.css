@@ -13,10 +13,10 @@
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
   filter: alpha(opacity=50);
   -webkit-transition: all 0.3s ease-out;
-     -moz-transition: all 0.3s ease-out;
-      -ms-transition: all 0.3s ease-out;
-       -o-transition: all 0.3s ease-out;
-          transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
 }
 
 .introjs-fixParent {
@@ -41,10 +41,10 @@
   border-radius: 4px;
   box-shadow: 0 2px 15px rgba(0,0,0,.4);
   -webkit-transition: all 0.3s ease-out;
-     -moz-transition: all 0.3s ease-out;
-      -ms-transition: all 0.3s ease-out;
-       -o-transition: all 0.3s ease-out;
-          transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
 }
 
 .introjs-helperNumberLayer {
@@ -62,10 +62,10 @@
   background: #ff3019; /* Old browsers */
   background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
-  background:    -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
-  background:     -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
-  background:      -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
-  background:         linear-gradient(to bottom, #ff3019 0%, #cf0404 100%);  /* W3C */
+  background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+  background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+  background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+  background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%);  /* W3C */
   width: 20px;
   height:20px;
   line-height: 20px;
@@ -173,8 +173,7 @@
   box-shadow: 0px 1px 1px #e3e3e3;
 }
 
-.introjs-button:focus,
-.introjs-button:active {
+.introjs-button:focus, .introjs-button:active {
   background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ececec), to(#f4f4f4));
   background-image: -moz-linear-gradient(#ececec, #f4f4f4);
   background-image: -o-linear-gradient(#ececec, #f4f4f4);
