@@ -87,8 +87,16 @@ app.controller('PlaybackController', function($rootScope, $scope, $http, $dialog
       };
     }
     
-    // Update the playlist
-    $scope.updatePlaylist();
+    // Animate the playlist to remove the top track
+    if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
+      $('#playlist-list li:first').slideUp('slow', function() {
+        $('#playlist-list li:first').attr('style', 'display: none;');
+        $scope.updatePlaylist();
+      });
+    } else {
+      $scope.updatePlaylist();
+    }
+    
   });
   
   // Handle playlist change events

@@ -54,12 +54,14 @@ block content
                 span {{track._artist.name}} &mdash; {{track.title}}
 
         h5 Add Track
-        form#search-form
+        form#search-form.input-append(style="display:block;")
           if (user)
             input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
+            button.btn(type="submit")
+              i.icon-share-alt
           else
             input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
-          #search-results
+        #search-results
 
       .span6
         #screen-one
