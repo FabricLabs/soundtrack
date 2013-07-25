@@ -1,9 +1,4 @@
-.message
-  abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
-  img.user-avatar-small(src="#{message._author.avatar.url}")
-  - if (message.message.substring(0, 4) == '/me ')
-    strong(data-role="author", data-user-username="#{message._author.username}") #{message._author.username} 
-      span.message-content #{helpers.linkify(message.message.substring(4))}
-  - else
-    strong(data-role="author", data-user-username="#{message._author.username}") #{message._author.username}:
-    span.message-content  !{sanitize(lexers.chat.output(message.message)).xss()}
+- if (message.substring(0, 4) == '/me ')
+  strong.message-content  #{message.substring(4)}
+- else
+  span.message-content  !{sanitize(lexers.chat.output(message)).xss()}
