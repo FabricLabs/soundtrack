@@ -1,6 +1,14 @@
-app.controller('ChatController', function($scope, $http, socket) {
+app.controller('ChatController', function($rootScope, $scope, $http, socket) {
   $scope.messages = [];
-  $scope.beep = new Audio('/media/beep.ogg');
+  
+  // Chrome, Firefox, Opera
+  if (new Audio().canPlayType('audio/ogg')) {
+    $scope.beep = new Audio('/media/beep.ogg');
+  }
+  //Safari, IE (not that we actually care about IE)
+  else if (new Audio().canPlayType('audio/mpeg')) {
+    $scope.beep = new Audio('/media/beep.mp3');
+  }
   
   // Load chat history
   $http.get('/chat.json').success(function(data) {
@@ -24,18 +32,33 @@ app.controller('ChatController', function($scope, $http, socket) {
     $scope.$apply();
     
     // Play mention beep if not disabled
-    if (msg.data.message.indexOf(username) !== -1 && !$.cookie('noMention')) {
-      $scope.beep.play();
+    if (typeof(username) != 'undefined') {
+      if (msg.data.message.indexOf(username) !== -1 && $rootScope.getSetting('mention')) {
+        var myVolume = ytplayer.getVolume();
+        if (myVolume > 0) {
+          // Play beep at 1/3 distance to full volume than current playback volume
+          $scope.beep.volume = (myVolume / 100) + (((100 - myVolume) / 100) / 3);
+        }
+        else {
+          $scope.beep.volume = 0.3;
+        }
+        $scope.beep.play();
+      }
     }
+    
+    $scope.modifyChat();
   });
   
   $scope.modifyChat = function() {
     // Scroll to bottom, highlight mentions
     $("#messages").scrollTop($("#messages")[0].scrollHeight);
-    $('.message .message-content').filter(':contains("'+ username + '")').parent().parent().addClass('highlight');
+    
+    if (typeof(username) != 'undefined') {
+      $('.message .message-content').filter(':contains("'+ username + '")').parent().parent().addClass('highlight');
+    }
     
     // Set target unless they don't want that
-    if (!$.cookie('noNewTab')) {
+    if ($rootScope.getSetting('chat_links')) {
       $('.message-content a').attr('target','_blank');
     } 
   }
