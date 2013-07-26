@@ -1,0 +1,24 @@
+#playlist-modal(ng-init="getPlaylists()")
+  .modal-header
+    button.close(ng-click="dismiss()") &times;
+    h3 Your Playlists
+  .modal-body
+    .row-fluid
+      .span4
+        ul.nav.nav-list(data-for="user-playlists", ng-hide="playlists.length == 0")
+          li(ng-repeat="playlist in playlists", data-playlist-id="{{playlist._id}}")
+            a(ng-click="selectPlaylist(playlist)")
+              small.pull-right {{playlist._tracks.length}}
+              | {{playlist.name}}
+        p(ng-show="playlists.length == 0") Looks like you don't have any playlists yet.
+      .span8
+        ul.nav.nav-list(ng-hide="playlists.length == 0")
+          li(ng-repeat="playlistTrack in playlistTracks", data-track-id="{{playlistTrack._id}}", style="padding-bottom:20px;")
+            span.pull-right(ng-click="addToRoomPlaylist(playlistTrack)", style="cursor:pointer; padding-left:7px") [add]
+            div
+              img.thumbnail-medium.pull-left(ng-src="{{playlistTrack.images.thumbnail.url}}")
+              small.pull-right {{playlistTrack.duration.toString().toHHMMSS()}}
+              span {{playlistTrack._artist.name}} &mdash; {{playlistTrack.title}}
+        p(ng-show="playlist.length == 0") Nothing to show here.
+  .modal-footer
+    button.btn.btn(ng-click="dismiss()") Close
