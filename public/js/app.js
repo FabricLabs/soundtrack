@@ -54,11 +54,15 @@ $(window).on('load', function() {
     console.log("To enable run: localStorage.setItem('debug', true)");
   }
   
-  //init youtube iframe
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  var firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  //init youtube
+  // Lets Flash from another domain call JavaScript
+  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
+  // The element id of the Flash embed
+  var atts = { id: "ytPlayer" };
+
+  // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
+  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
+
 
   // Toggle mute button
   $('*[data-action=toggle-volume]').click(function(e) {

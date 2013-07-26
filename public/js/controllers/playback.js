@@ -1,33 +1,26 @@
 // This controller handles the youtube player and other track related things
 app.controller('PlaybackController', function($rootScope, $scope, $http, socket) {
 
-  // This is called when the youtube iframe is loaded
-  window.onYouTubeIframeAPIReady = function() {
-    ytplayer = new YT.Player('screen-inner', {
-      height: '295',
-      width: '100%',
-      playerVars: {
-        controls: 0,
-        showinfo: 0,
-        iv_load_policy: 3,
-        wmode: 'opaque'
-      },
-      events: {
-        'onReady': $scope.onPlayerReady,
-        'onStateChange': function(event) {
-          if (localStorage.getItem('debug')) {
-            console.log('ytplayer_state_change', event);
-          }
-          // Prevent pausing
-          if (event.data == 2) {
-            ytplayer.playVideo();
-          }
-        },
-        'onError': function(event) {
-          console.warn('ytplayer_error', event);
-        }
-      }
-    });
+  // This is called when the youtube player is loaded
+  window.onYouTubePlayerReady = function() {
+    ytplayer = document.getElementById("ytPlayer");
+    ytPlayer.addEventListener('onStateChange', 'onPlayerStateChange');
+    ytPlayer.addEventListener("onError", "onPlayerError");
+    $scope.onPlayerReady();
+  };
+  
+  // Handles state change events from youtube player
+  window.onPlayerStateChange = function(event) {
+    if (localStorage.getItem('debug')) {
+      console.log('ytplayer_state_change', event);
+    }
+  };
+  
+  // Handles error events from youtube player
+  window.onPlayerError = function(event) {
+    if (localStorage.getItem('debug')) {
+      console.warn('ytplayer_error', event);
+    }
   };
   
   // Called when the player is loaded
