@@ -57,9 +57,6 @@ html(lang="en-US", ng-app="soundtrack")
               if (user)
                 li
                   a(href="/people") People
-              else
-                li
-                  a(ng-click="openSettings()", style="cursor:pointer;", title="This will open in the same page") Settings
 
             ul.nav.pull-right
               if (user)
@@ -67,8 +64,6 @@ html(lang="en-US", ng-app="soundtrack")
                   a(href="/#{user.slug}", ng-init="userSlug='#{user.slug}'", data-username="#{user.username}", data-for="user-model")
                     img.user-avatar-small(src="#{user.avatar.url}")
                     | #{user.username}
-                li
-                  a(ng-click="openSettings()", style="cursor:pointer;", title="This will open in the same page") Settings
                 li
                   a(href="/logout") Logout
               else

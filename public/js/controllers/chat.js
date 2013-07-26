@@ -1,15 +1,6 @@
 app.controller('ChatController', function($rootScope, $scope, $http, socket) {
   $scope.messages = [];
   
-  // Chrome, Firefox, Opera
-  if (new Audio().canPlayType('audio/ogg')) {
-    $scope.beep = new Audio('/media/beep.ogg');
-  }
-  //Safari, IE (not that we actually care about IE)
-  else if (new Audio().canPlayType('audio/mpeg')) {
-    $scope.beep = new Audio('/media/beep.mp3');
-  }
-  
   // Load chat history
   $http.get('/chat.json').success(function(data) {
     
@@ -31,21 +22,6 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
     $scope.messages.push(msg.data);
     $scope.$apply();
     
-    // Play mention beep if not disabled
-    if (typeof(username) != 'undefined') {
-      if (msg.data.message.indexOf(username) !== -1 && $rootScope.getSetting('mention')) {
-        var myVolume = ytplayer.getVolume();
-        if (myVolume > 0) {
-          // Play beep at 1/3 distance to full volume than current playback volume
-          $scope.beep.volume = (myVolume / 100) + (((100 - myVolume) / 100) / 3);
-        }
-        else {
-          $scope.beep.volume = 0.3;
-        }
-        $scope.beep.play();
-      }
-    }
-    
     // Process the chat after rendering
     setTimeout($scope.modifyChat, 50);
   });
@@ -65,14 +41,10 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
     // Scroll to bottom, highlight mentions
     $("#messages").scrollTop($("#messages")[0].scrollHeight);
     
+    // Highlight mention
     if (typeof(username) != 'undefined') {
       $('.message .message-content').filter(':contains("'+ username + '")').parent().parent().addClass('highlight');
     }
-    
-    // Set target unless they don't want that
-    if ($rootScope.getSetting('chat_links')) {
-      $('.message-content a').attr('target','_blank');
-    } 
   }
   
   // Lets us render different templates for chats and announcements

@@ -39,15 +39,6 @@ $(window).on('load', function() {
   if (localStorage.getItem('debug')) {
     console.warn("Debug is currently: ON");
     console.warn("To disable run: localStorage.removeItem('debug')");
-    
-    if (localStorage.getItem('debugSettings')) {
-      console.warn("Settings debug is enabled, expect to get a lot of logspam");
-      console.warn("To disable run: localStorage.removeItem('debugSettings')");
-    }
-    else {
-      console.warn('Settings it has its own debug flag, due to logspam');
-      console.warn("To enable debugging of Settings use: localStorage.setItem('debugSettings', true)");
-    }
   }
   else {
     console.log("Debug is currently: OFF");
