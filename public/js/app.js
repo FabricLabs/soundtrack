@@ -3,6 +3,17 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
 
+  // Simple warning to help users clicking links
+  window.onbeforeunload = function(e) {
+    var message = "Continuing will stop playback. Are you sure?";
+    console.log(e);
+    e = e || window.event;
+    if (e) {
+      e.returnValue = message;
+    }
+    return message;
+  }
+
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
   startSockJs = function(){
