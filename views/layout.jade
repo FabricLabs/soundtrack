@@ -50,13 +50,8 @@ html(lang="en-US", ng-app)
             ul.nav.pull-right
               if (user)
                 li.dropdown
-                  a(href="/settings", class="dropdown-toggle", data-toggle="dropdown")
+                  a(href="#settings-modal", data-toggle="modal")
                     i.icon-white.icon-cog
-                  ul.dropdown-menu
-                    li
-                      a(href="#", data-action="ding") ding
-
-
                 li
                   a(href="/#{user.slug}", data-username="#{user.username}", data-for="user-model")
                     img.user-avatar-small(src="#{user.avatar.url}")
@@ -89,5 +84,19 @@ html(lang="en-US", ng-app)
         p ♫ soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
 
         a(href="#", data-action="ding") ding
+
+    #settings-modal.modal.hide.fade
+      .modal-header
+        button.close(data-dismiss="modal") &times;
+        h3 Settings
+      .modal-body
+        a(href="#", data-action="ding") ding (test)
+        label
+          input(type="checkbox", data-action="toggle-link-warning")
+          |  Warn Before Interrupting Music
+
+      .modal-footer
+        button.btn.btn(data-dismiss="modal") Cancel
+        button.btn.btn-primary.btn-large(data-dismiss="modal") Done
 
     block scripts

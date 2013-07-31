@@ -3,26 +3,6 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
 
-  // Warning for navigating away from the page via chat links
-  var skipWarning = false;
-  $(document).bind('keyup keydown', function(e) {
-    var commandKeyCodes = [
-      224, // Firefox
-      17, // Opera
-      91, 93// WebKit
-    ];
-    if (e.ctrlKey || e.metaKey || $.inArray(e.keyCode, commandKeyCodes)) {
-      skipWarning = e.type == "keydown";
-    }
-  });
-  $(document).on('click', '.message-content a', function(e) {
-    if (e.which != 2 && !skipWarning)
-    if (!confirm("Continuing will stop playback. Are you sure?")) {
-      e.preventDefault();
-    }
-    return true;
-  })
-
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
   startSockJs = function(){
@@ -626,5 +606,46 @@ $(window).on('load', function() {
       console.log(data);
     });
   });
+
+  var skipWarning = false;
+  $(document).bind('keyup keydown', function(e) {
+    var commandKeyCodes = [
+      224, // Firefox
+      17, // Opera
+      91, 93// WebKit
+    ];
+    if (e.ctrlKey || e.metaKey || $.inArray(e.keyCode, commandKeyCodes)) {
+      skipWarning = e.type == "keydown";
+    }
+  });
+
+  function warnBeforeInterrupting(e) {
+    // Warning for navigating away from the page via chat links
+    if (e.which != 2 && !skipWarning)
+    if (!confirm("Continuing will stop playback. Are you sure?")) {
+      e.preventDefault();
+    }
+    return true;
+  };
+
+  $('*[data-action=toggle-link-warning]').on('click', function(e) {
+    var self = this;
+    console.log(typeof($(self).prop('checked')));
+    console.log($(self).prop('checked'));
+    if ($(self).prop('checked')) {
+      console.log('enabling link warning...');
+      $(document).on('click', '.message-content a', warnBeforeInterrupting);
+      $.cookie('warnBeforeInterrupting', true);
+    } else {
+      console.log('disabling link warning...')
+      $(document).off('click', '.message-content a', warnBeforeInterrupting);
+      $.cookie('warnBeforeInterrupting', false);
+    }
+  });
+
+  if ($.cookie('warnBeforeInterrupting')) {
+    $('*[data-action=toggle-link-warning]').prop('checked', true);
+    $(document).on('click', '.message-content a', warnBeforeInterrupting);
+  }
 
 });
