@@ -1,0 +1,19 @@
+extends layout
+
+block content
+
+  h1
+    a(href="/#{playlist._creator.slug}/#{playlist.slug}") #{playlist.name}
+    |  by 
+    a(href="/#{playlist._creator.slug}") #{playlist._creator.username}
+  p #{playlist.description}
+
+  ul
+    for track in playlist._tracks
+      li
+        if (track._artist)
+          a(href="/#{track._artist.slug}") #{track._artist.name}
+          |  &mdash; 
+          a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+        else
+          h5 ಠ_ಠ #{track}

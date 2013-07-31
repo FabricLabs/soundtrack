@@ -6,15 +6,32 @@ module.exports = {
       if (!person) { return next(); }
 
       // TODO: use $or to allow user to view non-public
-      Playlist.findOne({ _creator: person._id, slug: req.param('playlistSlug'), public: true }).populate('_tracks _creator').exec(function(err, playlist) {
+      var slug = req.param('playlistSlug').split('.')[0];
+      Playlist.findOne({ _creator: person._id, slug: slug, public: true }).populate('_tracks _creator').exec(function(err, playlist) {
         if (!playlist) { return next(); }
 
         Artist.populate(playlist, {
           path: '_tracks._artist'
         }, function(err, playlist) {
-          res.render('playlist', {
-            playlist: playlist
+
+
+          res.format({
+            json: function() {
+              //var playlist = playlist.toObject();
+              playlist._creator = {
+                  _id: playlist._creator._id
+                , username: playlist._creator.username
+                , slug: playlist._creator.slug
+              };
+              res.send( playlist );
+            },
+            html: function() {
+              res.render('playlist', {
+                playlist: playlist
+              });
+            }
           });
+
         });
       });
 
@@ -24,7 +41,7 @@ module.exports = {
     var playlist = new Playlist({
         name: req.param('name')
       , _creator: req.user._id
-      , public: req.param('public')
+      , public: (req.param('public') == 'true') ? true : false
     });
 
     Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {

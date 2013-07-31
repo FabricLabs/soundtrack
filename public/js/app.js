@@ -637,7 +637,7 @@ $(window).on('load', function() {
       $(document).on('click', '.message-content a', warnBeforeInterrupting);
       $.cookie('warnBeforeInterrupting', true);
     } else {
-      console.log('disabling link warning...')
+      console.log('disabling link warning...');
       $(document).off('click', '.message-content a', warnBeforeInterrupting);
       $.cookie('warnBeforeInterrupting', false);
     }

@@ -88,7 +88,8 @@ var auth = require('./controllers/auth')
   , people = require('./controllers/people')
   , playlists = require('./controllers/playlists')
   , artists = require('./controllers/artists')
-  , tracks = require('./controllers/tracks');
+  , tracks = require('./controllers/tracks')
+  , chat = require('./controllers/chat');
 
 function requireLogin(req, res, next) {
   if (req.user) {
@@ -509,7 +510,8 @@ app.post('/chat', requireLogin, function(req, res) {
       app.broadcast({
           type: 'chat'
         , data: {
-              _author: {
+              _id: chat._id
+            , _author: {
                   _id: req.user._id
                 , username: req.user.username
                 , slug: req.user.slug
@@ -647,6 +649,8 @@ app.get('/history', pages.history);
 app.get('/people', people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
+app.get('/chat', chat.view);
+app.get('/chat/since.json', chat.since);
 
 app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
 

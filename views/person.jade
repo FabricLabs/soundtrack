@@ -3,7 +3,7 @@ extends layout
 block content
   h1 #{person.username}
   .bio
-    | !{sanitize(lexers.content.output(person.bio)).xss()}
+    | !{lexers.content.output(person.bio)}
 
   h3 Public Playlists 
     ul.nav.nav-list
