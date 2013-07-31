@@ -110,12 +110,14 @@ block content
       .modal-body
         .row-fluid
           .span4
+            i.icon-globe(title="public")
             ul.nav.nav-list(data-for="user-playlists")
               for playlist in playlists
                 li(data-playlist-id="#{playlist._id}")
                   a(href="/#{user.slug}/#{playlist.slug}")
                     small.pull-right #{playlist._tracks.length}
-                    | #{playlist.name}
+                    input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
+                    |  #{playlist.name}
           .span8
             h4 Tracks
 
@@ -135,6 +137,12 @@ block content
 
           label(required="required") Description
           textarea(type="text", name="description")
+
+          label
+            input(type="checkbox", name="public", checked)
+            |  
+            i.icon-globe
+            |  Public
 
           h4 You'll be adding the following track:
           h5

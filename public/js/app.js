@@ -587,7 +587,6 @@ $(window).on('load', function() {
     }
   });
 
-
   $('*[data-action=ding]').on('click', function(e) {
     if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
       // function defined in step 2
@@ -598,5 +597,14 @@ $(window).on('load', function() {
     }
   });
 
+  $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
+    var self = this;
+    console.log();
+    $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
+      public: $(self).prop('checked')
+    }, function(data) {
+      console.log(data);
+    });
+  });
 
 });

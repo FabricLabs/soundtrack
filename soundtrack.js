@@ -212,8 +212,9 @@ function getYoutubeVideo(videoID, callback) {
                 author: parts[0].trim()
               , title: (track.title) ? track.title : video.title
             };
-            if (parts.length > 1) {
-              data.title = data.title.replace(data.author, '');
+            if (parts.length == 2) {
+              data.title = data.title.replace(data.author + ' - ', '').trim();
+
             }
           }
 
@@ -594,6 +595,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
 app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
+app.post('/:usernameSlug/playlists/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
 app.get('/register', function(req, res) {
   res.render('register');
@@ -650,6 +652,7 @@ app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
 
 app.get('/:artistSlug', artists.view);
 
+app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);
 
