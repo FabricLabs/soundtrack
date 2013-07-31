@@ -3,7 +3,20 @@ $(document).ready(function(){
   var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
 
+  // Warning for navigating away from the page via chat links
+  var skipWarning = false;
+  $(document).bind('keyup keydown', function(e) {
+    var commandKeyCodes = [
+      224, // Firefox
+      17, // Opera
+      91, 93// WebKit
+    ];
+    if (e.ctrlKey || e.metaKey || $.inArray(e.keyCode, commandKeyCodes)) {
+      skipWarning = e.type == "keydown";
+    }
+  });
   $(document).on('click', '.message-content a', function(e) {
+    if (e.which != 2 && !skipWarning)
     if (!confirm("Continuing will stop playback. Are you sure?")) {
       e.preventDefault();
     }
