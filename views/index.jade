@@ -34,7 +34,7 @@ block content
             a.btn(href="#playlist-modal", data-toggle="modal") your playlists
             a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
               span.caret
-            ul.dropdown-menu(data-for="user-playlists")
+            ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
               for playlist in playlists
                 li(data-playlist-id="#{playlist._id}")
                   a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
@@ -145,4 +145,3 @@ block content
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel
           button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
-

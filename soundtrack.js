@@ -194,7 +194,7 @@ function getYoutubeVideo(videoID, callback) {
           //video.title = track.title || video.title;
 
           // TODO: load from datafile
-          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[free download]', '[free DL]', '[monstercat release]'];
+          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '(official video)', '[free download]', '[free DL]', '[monstercat release]'];
           baddies.forEach(function(token) {
             video.title = video.title.replace(token + ' - ', '').trim();
             video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
@@ -212,6 +212,9 @@ function getYoutubeVideo(videoID, callback) {
                 author: parts[0].trim()
               , title: (track.title) ? track.title : video.title
             };
+            if (parts.length > 1) {
+              data.title = data.title.replace(data.author, '');
+            }
           }
 
           Artist.findOne({ $or: [
@@ -481,12 +484,6 @@ app.get('/playlist.json', function(req, res) {
 
 app.get('/listeners.json', function(req, res) {
   res.send( _.toArray( app.room.listeners ) );
-});
-
-app.get('/clients.json', function(req, res) {
-  res.send( _.toArray( app.clients ).map(function(client) {
-    return client.user;
-  }) );
 });
 
 //client requests that we give them a token to auth their socket

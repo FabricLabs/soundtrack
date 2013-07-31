@@ -200,7 +200,9 @@ function updateUserlist() {
 $(window).on('load', function() {
   updatePlaylist();
   updateUserlist();
-  $("#messages").scrollTop($("#messages")[0].scrollHeight);
+
+  // breaks javascript if page doesn't have #messages
+  //$("#messages").scrollTop($("#messages")[0].scrollHeight);
 
   // Lets Flash from another domain call JavaScript
   var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
@@ -584,5 +586,17 @@ $(window).on('load', function() {
       $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
     }
   });
+
+
+  $('*[data-action=ding]').on('click', function(e) {
+    if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
+      // function defined in step 2
+      window.webkitNotifications.createNotification(
+          'icon.png', 'Notification Title', 'Notification content...');
+    } else {
+      window.webkitNotifications.requestPermission();
+    }
+  });
+
 
 });

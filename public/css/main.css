@@ -75,6 +75,14 @@ body {
 #userlist {
   height: 500px;
 }
+#user-playlists-dropdown {
+  max-height: 300px;
+  overflow-y: scroll;
+}
+#user-playlists-dropdown a {
+  cursor: pointer;
+}
+
 #announcement{
   color: #08C;
   font-size: 0.8em;
