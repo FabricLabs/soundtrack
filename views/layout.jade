@@ -1,6 +1,8 @@
 !!! 5
 html(lang="en-US", ng-app)
   head
+    title soundtrack.io | music for all.
+
     link(rel="stylesheet", href="/css/bootstrap.min.css")
     //-link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
     //-link(rel="stylesheet", href="/css/bootstrap-custom.css")
@@ -20,6 +22,8 @@ html(lang="en-US", ng-app)
     script(src="/js/intro.js")
     script(src="http://cdn.sockjs.org/sockjs-0.3.min.js")
     script(src="/js/app.js")
+
+    base
 
   body(ng-controller="AppController")
 
@@ -91,6 +95,9 @@ html(lang="en-US", ng-app)
         h3 Settings
       .modal-body
         a(href="#", data-action="ding") ding (test)
+        label
+          input(type="checkbox", data-action="toggle-target-blank")
+          |  Always Open Links in New Window
         label
           input(type="checkbox", data-action="toggle-link-warning")
           |  Warn Before Interrupting Music

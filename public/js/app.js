@@ -630,8 +630,6 @@ $(window).on('load', function() {
 
   $('*[data-action=toggle-link-warning]').on('click', function(e) {
     var self = this;
-    console.log(typeof($(self).prop('checked')));
-    console.log($(self).prop('checked'));
     if ($(self).prop('checked')) {
       console.log('enabling link warning...');
       $(document).on('click', '.message-content a', warnBeforeInterrupting);
@@ -643,9 +641,25 @@ $(window).on('load', function() {
     }
   });
 
-  if ($.cookie('warnBeforeInterrupting')) {
+  $('*[data-action=toggle-target-blank]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      $('base').attr('target', '_blank');
+      $.cookie('openLinksInNewWindow', true);
+    } else {
+      $('base').attr('target', '_self');
+      $.cookie('openLinksInNewWindow', false);
+    }
+  });
+
+  if ($.cookie('warnBeforeInterrupting') == 'true') {
     $('*[data-action=toggle-link-warning]').prop('checked', true);
     $(document).on('click', '.message-content a', warnBeforeInterrupting);
+  }
+
+  if ($.cookie('openLinksInNewWindow') == 'true') {
+    $('*[data-action=toggle-target-blank]').prop('checked', true);
+    $('base').attr('target', '_blank');
   }
 
 });

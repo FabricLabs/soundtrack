@@ -195,7 +195,7 @@ function getYoutubeVideo(videoID, callback) {
           //video.title = track.title || video.title;
 
           // TODO: load from datafile
-          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '(official video)', '[free download]', '[free DL]', '[monstercat release]'];
+          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '(official video)', '[ official video ]', '[free download]', '[free DL]', '[monstercat release]'];
           baddies.forEach(function(token) {
             video.title = video.title.replace(token + ' - ', '').trim();
             video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
