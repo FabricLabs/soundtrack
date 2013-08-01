@@ -28,8 +28,12 @@ block content
     ul
       if (list)
         each link in list
-          li
-            a(href="#") #{link}
+          case key
+            when 'youtube'
+              li
+                a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
+            default
+              li #{link}
 
 block scripts
   style

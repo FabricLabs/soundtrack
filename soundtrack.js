@@ -18,6 +18,7 @@ var config = require('./config')
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
+  , cachify = require('connect-cachify')
   , crypto = require('crypto')
   , marked = require('marked')
   , validator = require('validator');
@@ -26,7 +27,10 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.set('strict routing', true);
 app.use(express.static(__dirname + '/public'));
-
+app.use(cachify.setup( require('./assets') , {
+  root: __dirname + '/public',
+  production: true
+}));
 app.use(express.methodOverride());
 app.use(express.cookieParser(config.sessions.key));
 app.use(express.bodyParser());
@@ -36,6 +40,7 @@ app.use(express.session({
   , secret: config.sessions.key
   , store: sessionStore
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
