@@ -26,11 +26,12 @@ var config = require('./config')
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.set('strict routing', true);
-app.use(express.static(__dirname + '/public'));
 app.use(cachify.setup( require('./assets') , {
   root: __dirname + '/public',
   production: true
 }));
+app.use(express.static(__dirname + '/public'));
+
 app.use(express.methodOverride());
 app.use(express.cookieParser(config.sessions.key));
 app.use(express.bodyParser());
