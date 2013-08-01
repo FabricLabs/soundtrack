@@ -117,8 +117,7 @@ var backupTracks = [];
 var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
 
 app.redis = redis.createClient();
-app.redis.get('soundtrack:playlist', function(err, playlist) {
-  console.log('playlist: ' + playlist);
+app.redis.get(config.database.name + ':playlist', function(err, playlist) {
   playlist = JSON.parse(playlist);
 
   if (!playlist || !playlist.length) {
@@ -299,7 +298,7 @@ function nextSong() {
   app.room.playlist[0].startTime = Date.now();
   app.room.track = app.room.playlist[0];
 
-  app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
   var play = new Play({
       _track: app.room.playlist[0]._id
@@ -587,7 +586,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 
           sortPlaylist();
 
-          app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+          app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
           app.broadcast({
               type: 'playlist:add'
