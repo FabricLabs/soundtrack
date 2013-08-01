@@ -688,7 +688,9 @@ function getTop100FromCodingSoundtrack(done) {
   });
 }
 
-server.listen(13000);
-console.log('Listening on port 13000 for HTTP');
-console.log('Must have redis listening on port 6379');
-console.log('Must have mongodb listening on port 27017');
+server.listen(config.app.port, function(err) {
+  console.log('Listening on port ' + config.app.port + ' for HTTP');
+  console.log('Must have redis listening on port 6379');
+  console.log('Must have mongodb listening on port 27017');
+});
+
