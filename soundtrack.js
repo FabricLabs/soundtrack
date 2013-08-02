@@ -70,15 +70,21 @@ app.use(function(req, res, next) {
 });
 app.use( flashify );
 
+// 
+var otherMarked = require('./lib/marked');
+otherMarked.setOptions({
+    sanitize: true
+  , smartypants: true
+});
 var lexers = {
-    chat: new marked.InlineLexer({sanitize: true, smartypants:true, gfm:true})
-  , content: new marked.Lexer({sanitize: true, smartypants:true, gfm:true})
+    chat: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
+  , content: otherMarked
 };
 lexers.chat.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
 
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
-app.locals.marked   = marked;
+app.locals.marked   = otherMarked;
 app.locals.lexers   = lexers;
 app.locals.lexer    = lexers.content;
 app.locals.sanitize = validator.sanitize;
@@ -262,10 +268,6 @@ function getYoutubeVideo(videoID, callback) {
                 Artist.populate(track, {
                   path: '_artist'
                 }, function(err, track) {
-
-                  console.log( 'being sent back:')
-                  console.log( track );
-
                   callback( track );
                 });
 
@@ -692,4 +694,3 @@ server.listen(config.app.port, function(err) {
   console.log('Must have redis listening on port 6379');
   console.log('Must have mongodb listening on port 27017');
 });
-
