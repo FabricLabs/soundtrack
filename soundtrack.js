@@ -320,11 +320,15 @@ function startMusic() {
   app.room.track = app.room.playlist[0];
   
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
-    app.broadcast({
-        type: 'track'
-      , data: _.extend( track.toObject(), app.room.playlist[0] )
-      , seekTo: seekTo
-    });
+    if (track) {
+      app.broadcast({
+          type: 'track'
+        , data: _.extend( track.toObject(), app.room.playlist[0] )
+        , seekTo: seekTo
+      });
+    } else {
+      console.log('uhhh... broken: ' + app.room.playlist[0].sources['youtube'][0].id + ' and ' +track);
+    }
   });
 
   clearTimeout( app.timeout );
