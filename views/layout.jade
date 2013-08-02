@@ -82,21 +82,23 @@ html(lang="en-US", ng-app)
               .alert.alert-info !{info}
 
       block content
-      ng-view
 
     footer
       .container
         h5 About
         p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
 
-        a(href="#", data-action="ding") ding
+        a(href="/enabled-notifications", data-action="ding") ding
 
     #settings-modal.modal.hide.fade
       .modal-header
         button.close(data-dismiss="modal") &times;
         h3 Settings
       .modal-body
-        a(href="#", data-action="ding") ding (test)
+        label
+          input(type="checkbox", data-action="toggle-notifications")
+          |  Enable Notifications
+
         label
           input(type="checkbox", data-action="toggle-target-blank")
           |  Always Open Links in New Window
