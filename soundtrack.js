@@ -134,7 +134,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
   async.series(fallbackVideos.map(function(videoID) {
     return function(callback) {
       getYoutubeVideo(videoID, function(track) {
-        backupTracks.push( track.toObject() );
+        if (track) { backupTracks.push( track.toObject() ); }
         callback();
       });
     };
@@ -376,7 +376,7 @@ async.parallel([
     async.series(fallbackVideos.map(function(videoID) {
       return function(callback) {
         getYoutubeVideo(videoID, function(track) {
-          backupTracks.push( track.toObject() );
+          if (track) { backupTracks.push( track.toObject() ); }
           callback();
         });
       };
@@ -385,7 +385,7 @@ async.parallel([
   function(done) {
     Track.find({}).limit(100).exec(function(err, fallbackVideos) {
       fallbackVideos.forEach(function(track) {
-        backupTracks.push( track.toObject() );
+        if (track) { backupTracks.push( track.toObject() ); }
       });
       done();
     });
