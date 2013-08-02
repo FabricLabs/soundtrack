@@ -8,6 +8,9 @@ block content
     |  
 
   h2 played #{history.length} times
+
+  #track-stats
+
   ul
     for play in history
       li
@@ -25,8 +28,70 @@ block content
     ul
       if (list)
         each link in list
-          li
-            a(href="#") #{link}
+          case key
+            when 'youtube'
+              li
+                a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
+            default
+              li #{link}
 
+block scripts
+  style
+    .chart rect {
+      fill: steelblue;
+      stroke: white;
+    }
 
+  script
+    // TODO: embed this in microdata.
+    var playsPerDay = [#{playsPerDay}];
+
+     var w = 20,
+         h = 80;
+
+      var x = d3.scale.linear()
+          .domain([0, 1])
+          .range([0, w]);
+      
+      var y = d3.scale.linear()
+          .domain([0, 100])
+        .rangeRound([0, h]);
+
+     var chart = d3.select("#track-stats").append("svg")
+          .attr("class", "chart")
+          .attr("width", w * playsPerDay.length - 1)
+          .attr("height", h);
+
+      chart.selectAll("rect")
+          .data(playsPerDay)
+        .enter().append("rect")
+          .attr("x", function(d, i) { return x(i) - .5; })
+          .attr("y", function(d) { return h - y(d) - .5; })
+          .attr("width", w)
+          .attr("height", function(d) { return y(d); });
+
+      chart.append("line")
+          .attr("x1", 0)
+          .attr("x2", w * playsPerDay.length)
+          .attr("y1", h - .5)
+          .attr("y2", h - .5)
+          .style("stroke", "#000");
+
+      chart.selectAll("text")
+               .data(playsPerDay)
+               .enter()
+               .append("text")
+               .text(function(d) {
+                  return d;
+               })
+               .attr("text-anchor", "middle")
+               .attr("x", function(d, i) {
+                  return i * (w / playsPerDay.length) + (w / playsPerDay.length - barPadding) / 2;
+               })
+               .attr("y", function(d) {
+                  return h - (d * 4) + 14;
+               })
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "11px")
+               .attr("fill", "white");
 

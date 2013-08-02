@@ -68,7 +68,7 @@ block content
           .screen-inner#screen-inner
         .chat-container(ng-controller="ChatController")
           #messages.fadeout-top
-            .message(ng-repeat="message in messages", ng-include="getChatTemplate(message)")
+            .message(data-message-id="{{message._id}}", ng-repeat="message in messages", ng-include="getChatTemplate(message)")
               
           form#chat-form.input-append(style="display:block;")
             if (user)

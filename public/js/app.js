@@ -1,4 +1,5 @@
 var app = angular.module('soundtrack', ['ui.bootstrap.dialog']);
+var COOKIE_EXPIRES = 30;
 
 function mutePlayer() {
   ytplayer.setVolume(0);
@@ -11,7 +12,7 @@ function unmutePlayer() {
   } else {
     ytplayer.setVolume(80);
     volume.slider('setValue', 80).val(80);
-    $.cookie('lastVolume', '80');
+    $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
   }
 }
 
@@ -80,7 +81,7 @@ $(window).on('load', function() {
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;
     ytplayer.setVolume( $(self).val() );
-    $.cookie('lastVolume', $(self).val() );
+    $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
   });
 
   OutgoingChatHandler = (function(){
@@ -415,5 +416,80 @@ $(window).on('load', function() {
       $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
     }
   });
+
+  $('*[data-action=ding]').on('click', function(e) {
+    if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
+      // function defined in step 2
+      window.webkitNotifications.createNotification(
+          'icon.png', 'Notification Title', 'Notification content...');
+    } else {
+      window.webkitNotifications.requestPermission();
+    }
+  });
+
+  $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
+    var self = this;
+    console.log();
+    $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
+      public: $(self).prop('checked')
+    }, function(data) {
+      console.log(data);
+    });
+  });
+
+  var skipWarning = false;
+  $(document).bind('keyup keydown', function(e) {
+    var commandKeyCodes = [
+      224, // Firefox
+      17, // Opera
+      91, 93// WebKit
+    ];
+    if (e.ctrlKey || e.metaKey || $.inArray(e.keyCode, commandKeyCodes)) {
+      skipWarning = e.type == "keydown";
+    }
+  });
+
+  function warnBeforeInterrupting(e) {
+    // Warning for navigating away from the page via chat links
+    if (e.which != 2 && !skipWarning)
+    if (!confirm("Continuing will stop playback. Are you sure?")) {
+      e.preventDefault();
+    }
+    return true;
+  };
+
+  $('*[data-action=toggle-link-warning]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      console.log('enabling link warning...');
+      $(document).on('click', '.message-content a', warnBeforeInterrupting);
+      $.cookie('warnBeforeInterrupting', true, { expires: COOKIE_EXPIRES });
+    } else {
+      console.log('disabling link warning...');
+      $(document).off('click', '.message-content a', warnBeforeInterrupting);
+      $.cookie('warnBeforeInterrupting', false, { expires: COOKIE_EXPIRES });
+    }
+  });
+
+  $('*[data-action=toggle-target-blank]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      $('base').attr('target', '_blank');
+      $.cookie('openLinksInNewWindow', true, { expires: COOKIE_EXPIRES });
+    } else {
+      $('base').attr('target', '_self');
+      $.cookie('openLinksInNewWindow', false, { expires: COOKIE_EXPIRES });
+    }
+  });
+
+  if ($.cookie('warnBeforeInterrupting') == 'true') {
+    $('*[data-action=toggle-link-warning]').prop('checked', true);
+    $(document).on('click', '.message-content a', warnBeforeInterrupting);
+  }
+
+  if ($.cookie('openLinksInNewWindow') == 'true') {
+    $('*[data-action=toggle-target-blank]').prop('checked', true);
+    $('base').attr('target', '_blank');
+  }
 
 });

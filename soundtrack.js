@@ -18,6 +18,7 @@ var config = require('./config')
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore({ client: database.client })
+  , cachify = require('connect-cachify')
   , crypto = require('crypto')
   , marked = require('marked')
   , validator = require('validator');
@@ -25,6 +26,10 @@ var config = require('./config')
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.set('strict routing', true);
+app.use(cachify.setup( require('./assets') , {
+  root: __dirname + '/public',
+  production: true
+}));
 app.use(express.static(__dirname + '/public'));
 
 app.use(express.methodOverride());
@@ -36,6 +41,7 @@ app.use(express.session({
   , secret: config.sessions.key
   , store: sessionStore
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -88,7 +94,8 @@ var auth = require('./controllers/auth')
   , people = require('./controllers/people')
   , playlists = require('./controllers/playlists')
   , artists = require('./controllers/artists')
-  , tracks = require('./controllers/tracks');
+  , tracks = require('./controllers/tracks')
+  , chat = require('./controllers/chat');
 
 function requireLogin(req, res, next) {
   if (req.user) {
@@ -198,7 +205,7 @@ function getYoutubeVideo(videoID, callback) {
           //video.title = track.title || video.title;
 
           // TODO: load from datafile
-          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '[free download]', '[free DL]', '[monstercat release]'];
+          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '(official video)', '[ official video ]', '[free download]', '[free DL]', '[monstercat release]'];
           baddies.forEach(function(token) {
             video.title = video.title.replace(token + ' - ', '').trim();
             video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
@@ -216,6 +223,10 @@ function getYoutubeVideo(videoID, callback) {
                 author: parts[0].trim()
               , title: (track.title) ? track.title : video.title
             };
+            if (parts.length == 2) {
+              data.title = data.title.replace(data.author + ' - ', '').trim();
+
+            }
           }
 
           Artist.findOne({ $or: [
@@ -314,7 +325,7 @@ function startMusic() {
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
     app.broadcast({
         type: 'track'
-      , data: _.extend( track.toObject(), app.room.playlist[0] )
+      , data: _.extend(app.room.playlist[0], track.toObject())
       , seekTo: seekTo
     });
   });
@@ -532,13 +543,6 @@ app.get('/listeners.json', function(req, res) {
   res.send( _.toArray( app.room.listeners ) );
 });
 
-//Get a list of connected clients
-app.get('/clients.json', function(req, res) {
-  res.send( _.toArray( app.clients ).map(function(client) {
-    return client.user;
-  }) );
-});
-
 //Get chat history
 app.get('/chat.json', function(req, res) {
   Chat.find({}).lean().limit(20).sort('-created').populate('_author', {hash: 0, salt:0}).exec(function(err, messages) {
@@ -574,7 +578,8 @@ app.post('/chat', requireLogin, function(req, res) {
       app.broadcast({
           type: 'chat'
         , data: {
-              message: req.param('message')
+              message: chat.message
+            , _id: chat._id
             , _author: {
                   _id: req.user._id
                 , username: req.user.username
@@ -660,7 +665,7 @@ app.post('/playlist', requireLogin, function(req, res) {
     break;
     // add a track via its soundtack _id
     case 'id':
-      Track.findOne({'_id':req.param('id')}).exec(function(err, track) {
+      Track.findOne({'_id':req.param('id')}).populate('_artist').exec(function(err, track) {
         if (track) {
           app.room.playlist.push( _.extend( track.toObject() , {
               score: 0
@@ -696,6 +701,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
 app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
 app.get('/:usernameSlug/playlists', requireLogin, playlists.getPlaylists );
+app.post('/:usernameSlug/playlists/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
 app.get('/register', function(req, res) {
   res.render('register');
@@ -747,11 +753,14 @@ app.get('/history', pages.history);
 app.get('/people', people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
+app.get('/chat', chat.view);
+app.get('/chat/since.json', chat.since);
 
 app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
 
 app.get('/:artistSlug', artists.view);
 
+app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);
 
