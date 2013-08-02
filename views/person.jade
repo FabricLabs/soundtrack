@@ -1,6 +1,13 @@
 extends layout
 
 block content
+  - if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
+    a.btn.pull-right(data-action="enable-profile-editor") EDIT!
+
+    form#profile-editor(action="/#{user.slug}", method="post", style="display:none;")
+      textarea.input-block-level(name="bio", rows="3") #{person.bio}
+      button.btn.btn-primary(type="submit") Make Changes &raquo;
+
   h1 #{person.username}
   .bio
     | !{marked(person.bio)}
@@ -13,9 +20,3 @@ block content
             a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
           p #{playlist.description}
 
-    - if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
-      a.btn EDIT!
-
-      form(action="/#{user.slug}", method="post")
-        textarea.input-block-level(name="bio", rows="3") #{person.bio}
-        button.btn.btn-primary(type="submit") Make Changes &raquo;
