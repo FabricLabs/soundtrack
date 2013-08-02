@@ -3,8 +3,10 @@ html(lang="en-US", ng-app)
   head
     title soundtrack.io | music for all.
 
+    link(href="/favicon.ico", rel="icon")
+
     link(rel="stylesheet", href="/css/bootstrap.min.css")
-    //-link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
+    link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
     //-link(rel="stylesheet", href="/css/bootstrap-custom.css")
     link(rel="stylesheet", href="/css/bootstrap-responsive.min.css")
     link(rel="stylesheet", href="/css/slider.css")
@@ -17,17 +19,17 @@ html(lang="en-US", ng-app)
     script(src="/js/d3.min.js")
     script(src="/js/bootstrap.slider.js")
     script(src="/js/jquery.cookie.js")
-    script(src="//www.google.com/jsapi")
+    script(src="https://www.google.com/jsapi")
     script(src="/js/swfobject.js")
     script(src="/js/intro.js")
-    script(src="http://cdn.sockjs.org/sockjs-0.3.min.js")
+    script(src="/js/sockjs-0.3.min.js")
     script(src="/js/app.js")
 
     base
 
   body(ng-controller="AppController")
 
-    .navbar.navbar-inverse.navbar-fixed-top
+    .navbar.navbar-fixed-top
       .navbar-inner
         .container
           button.btn.btn-navbar(type="button", data-toggle="collapse", data-target=".nav-collapse")
@@ -69,7 +71,7 @@ html(lang="en-US", ng-app)
                   button.btn.btn-primary(type="submit") Sign In &raquo;
                   a.btn(href="/register") Register &raquo;
 
-    .container
+    .container.module
       if (typeof(flash) != 'undefined')
         .messages
           if (typeof(flash.error) != 'undefined')
