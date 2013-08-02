@@ -71,8 +71,8 @@ app.use(function(req, res, next) {
 app.use( flashify );
 
 var lexers = {
-    chat: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
-  , content: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
+    chat: new marked.InlineLexer({sanitize: true, smartypants:true, gfm:true})
+  , content: new marked.Lexer({sanitize: true, smartypants:true, gfm:true})
 };
 lexers.chat.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
 
