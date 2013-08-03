@@ -147,9 +147,6 @@ $(document).ready(function(){
     };
   }
 
-});
-
-promise.done(function() {
   restartSockJs = function(){
     sockjs = null;
     startSockJs();
@@ -157,6 +154,9 @@ promise.done(function() {
 
   restartSockJs();
 
+});
+
+promise.done(function() {
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
 
