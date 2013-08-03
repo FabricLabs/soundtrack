@@ -1,20 +1,5 @@
 app.controller('ChatController', function($rootScope, $scope, $http, socket) {
-  $scope.messages = [];
-  
-  // Load chat history
-  $http.get('/chat.json').success(function(data) {
     
-    if (localStorage.getItem('debug')) {
-      console.log('load_chat', data);
-    }
-    
-    // Sort items
-    $scope.messages = data.reverse();
-    
-    // Process the chat after rendering (if someone can make this use a render callback instead of a timeout, please do)
-    setTimeout($scope.modifyChat, 200);
-  });
-  
   // Handle incomming chat
   socket.$on('chat', function(event, msg) {
     
@@ -27,7 +12,7 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
   });
   
   // Handle announcements
-    socket.$on('announcement', function(event, msg) {
+  socket.$on('announcement', function(event, msg) {
     
     // Add announcement and alert angular to the change
     $scope.messages.push(msg.data);
@@ -38,6 +23,7 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
   });
   
   $scope.modifyChat = function() {
+    console.log('modify');
     // Scroll to bottom, highlight mentions
     $("#messages").scrollTop($("#messages")[0].scrollHeight);
     
@@ -58,4 +44,8 @@ app.controller('ChatController', function($rootScope, $scope, $http, socket) {
       return 'angular/chatAnnouncement';
     }
   }
+  
+  // Use data from window
+  $scope.messages = window.chats.reverse();
+  setTimeout($scope.modifyChat, 400);
 });

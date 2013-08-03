@@ -98,7 +98,6 @@ app.controller('PlaybackController', function($rootScope, $scope, $http, socket)
   socket.$on('playlist:add', $scope.updatePlaylist);
   socket.$on('playlist:update', $scope.updatePlaylist);
   
-  // These update our data on first load
-  $scope.updatePlaylist();
-  
+  // Use data from window
+  $scope.tracks = window.tracks;
 });

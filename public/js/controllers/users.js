@@ -22,5 +22,5 @@ app.controller('UsersController', function($rootScope, $scope, $http, socket) {
   socket.$on('part', $scope.updateUserlist);
   
   // Initial load of the user list
-  $scope.updateUserlist();
+  $scope.users = window.users;
 });

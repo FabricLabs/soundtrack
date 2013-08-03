@@ -104,3 +104,8 @@ block content
   else
     script.
       registered = true;
+      
+  script.
+    var tracks = !{JSON.stringify(room.playlist)};
+    var chats = !{JSON.stringify(chats)};
+    var users = !{JSON.stringify(_.toArray(room.listeners))};
