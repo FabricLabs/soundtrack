@@ -1,6 +1,37 @@
 var app = angular.module('soundtrack', ['ui.bootstrap.dialog']);
 var COOKIE_EXPIRES = 30;
 
+var Soundtrack = function() {
+  this.settings = {
+    notifications: $.cookie('notificationsEnabled')
+  };
+  this.user = {
+    username: window.username
+  };
+};
+
+Soundtrack.prototype.checkNotificationPermissions = function(callback) {
+  if (window.webkitNotifications.checkPermission() != 0) {
+    window.webkitNotifications.requestPermission(function(e) {
+      console.log(e);
+    });
+  }
+}
+
+Soundtrack.prototype.notify = function(img, title, content, callback) {
+  var notification = window.webkitNotifications.createNotification( img , title , content );
+  notification.ondisplay = function(e) {
+    setTimeout(function() {
+      e.currentTarget.cancel();
+    }, 15000);
+  }
+  notification.onclick = function() {
+    window.focus();
+    this.cancel();
+  }
+  notification.show();
+};
+
 function mutePlayer() {
   ytplayer.setVolume(0);
   volume.slider('setValue', 0).val(0);
@@ -36,6 +67,7 @@ String.prototype.toHHMMSS = function () {
 }
 
 $(window).on('load', function() {
+  soundtrack = new Soundtrack();
   
   if (localStorage.getItem('debug')) {
     console.warn("Debug is currently: ON");
@@ -53,7 +85,7 @@ $(window).on('load', function() {
   var atts = { id: "ytPlayer" };
 
   // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
+  swfobject.embedSWF("https://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
 
 
   // Toggle mute button
@@ -417,24 +449,36 @@ $(window).on('load', function() {
     }
   });
 
-  $('*[data-action=ding]').on('click', function(e) {
-    if (window.webkitNotifications.checkPermission() == 0) { // 0 is PERMISSION_ALLOWED
-      // function defined in step 2
-      window.webkitNotifications.createNotification(
-          'icon.png', 'Notification Title', 'Notification content...');
-    } else {
-      window.webkitNotifications.requestPermission();
-    }
+  $('*[data-action=ding]').click(function(e) {
+    e.preventDefault();
+    soundtrack.checkNotificationPermissions();
+    return false;
   });
 
   $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
     var self = this;
-    console.log();
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
       public: $(self).prop('checked')
     }, function(data) {
       console.log(data);
     });
+  });
+
+  $('*[data-action=enable-profile-editor]').on('click', function(e) {
+    var self = this;
+    $('.bio').replaceWith( $('#profile-editor').show() );
+  });
+
+  $('*[data-action=toggle-notifications]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      soundtrack.settings.notifications = true;
+      soundtrack.checkNotificationPermissions();
+      $.cookie('notificationsEnabled', true, { expires: COOKIE_EXPIRES });
+    } else {
+      soundtrack.settings.notifications = false;
+      $.cookie('notificationsEnabled', false, { expires: COOKIE_EXPIRES });
+    }
   });
 
   var skipWarning = false;
@@ -481,6 +525,10 @@ $(window).on('load', function() {
       $.cookie('openLinksInNewWindow', false, { expires: COOKIE_EXPIRES });
     }
   });
+
+  if ($.cookie('notificationsEnabled') == 'true') {
+    $('*[data-action=toggle-notifications]').prop('checked', true);
+  }
 
   if ($.cookie('warnBeforeInterrupting') == 'true') {
     $('*[data-action=toggle-link-warning]').prop('checked', true);

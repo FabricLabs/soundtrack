@@ -3,8 +3,10 @@ html(lang="en-US", ng-app="soundtrack")
   head
     title soundtrack.io | music for all.
 
+    link(rel="shortcut icon", href="/favicon.ico")
+
     link(rel="stylesheet", href="/css/bootstrap.min.css")
-    //-link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
+    link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
     //-link(rel="stylesheet", href="/css/bootstrap-custom.css")
     link(rel="stylesheet", href="/css/bootstrap-responsive.min.css")
     link(rel="stylesheet", href="/css/slider.css")
@@ -38,7 +40,7 @@ html(lang="en-US", ng-app="soundtrack")
 
   body(ng-controller="MainController")
 
-    .navbar.navbar-inverse.navbar-fixed-top
+    .navbar.navbar-fixed-top
       .navbar-inner
         .container
           button.btn.btn-navbar(type="button", data-toggle="collapse", data-target=".nav-collapse")
@@ -80,7 +82,7 @@ html(lang="en-US", ng-app="soundtrack")
                   button.btn.btn-primary(type="submit") Sign In &raquo;
                   a.btn(href="/register") Register &raquo;
 
-    .container
+    .container.module
       if (typeof(flash) != 'undefined')
         .messages
           if (typeof(flash.error) != 'undefined')
@@ -91,21 +93,23 @@ html(lang="en-US", ng-app="soundtrack")
               .alert.alert-info !{info}
 
       block content
-      ng-view
 
     footer
       .container
         h5 About
         p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
 
-        a(href="#", data-action="ding") ding
+        a(href="/enabled-notifications", data-action="ding") ding
 
     #settings-modal.modal.hide.fade
       .modal-header
         button.close(data-dismiss="modal") &times;
         h3 Settings
       .modal-body
-        a(href="#", data-action="ding") ding (test)
+        label
+          input(type="checkbox", data-action="toggle-notifications")
+          |  Enable Notifications
+
         label
           input(type="checkbox", data-action="toggle-target-blank")
           |  Always Open Links in New Window

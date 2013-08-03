@@ -70,15 +70,21 @@ app.use(function(req, res, next) {
 });
 app.use( flashify );
 
+// 
+var otherMarked = require('./lib/marked');
+otherMarked.setOptions({
+    sanitize: true
+  , smartypants: true
+});
 var lexers = {
     chat: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
-  , content: new marked.InlineLexer([], {sanitize: true, smartypants:true, gfm:true})
+  , content: otherMarked
 };
 lexers.chat.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
 
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
-app.locals.marked   = marked;
+app.locals.marked   = otherMarked;
 app.locals.lexers   = lexers;
 app.locals.lexer    = lexers.content;
 app.locals.sanitize = validator.sanitize;
@@ -117,8 +123,7 @@ var backupTracks = [];
 var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
 
 app.redis = redis.createClient();
-app.redis.get('soundtrack:playlist', function(err, playlist) {
-  console.log('playlist: ' + playlist);
+app.redis.get(config.database.name + ':playlist', function(err, playlist) {
   playlist = JSON.parse(playlist);
 
   if (!playlist || !playlist.length) {
@@ -134,7 +139,7 @@ app.redis.get('soundtrack:playlist', function(err, playlist) {
   async.series(fallbackVideos.map(function(videoID) {
     return function(callback) {
       getYoutubeVideo(videoID, function(track) {
-        backupTracks.push( track.toObject() );
+        if (track) { backupTracks.push( track.toObject() ); }
         callback();
       });
     };
@@ -267,10 +272,6 @@ function getYoutubeVideo(videoID, callback) {
                 Artist.populate(track, {
                   path: '_artist'
                 }, function(err, track) {
-
-                  console.log( 'being sent back:')
-                  console.log( track );
-
                   callback( track );
                 });
 
@@ -303,7 +304,7 @@ function nextSong() {
   app.room.playlist[0].startTime = Date.now();
   app.room.track = app.room.playlist[0];
 
-  app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
   var play = new Play({
       _track: app.room.playlist[0]._id
@@ -323,11 +324,15 @@ function startMusic() {
   app.room.track = app.room.playlist[0];
   
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
-    app.broadcast({
-        type: 'track'
-      , data: _.extend(app.room.playlist[0], track.toObject())
-      , seekTo: seekTo
-    });
+    if (track) {
+      app.broadcast({
+          type: 'track'
+        , data: _.extend(app.room.playlist[0],  track.toObject())
+        , seekTo: seekTo
+      });
+    } else {
+      console.log('uhhh... broken: ' + app.room.playlist[0].sources['youtube'][0].id + ' and ' +track);
+    }
   });
 
   clearTimeout( app.timeout );
@@ -373,7 +378,7 @@ async.parallel([
     async.series(fallbackVideos.map(function(videoID) {
       return function(callback) {
         getYoutubeVideo(videoID, function(track) {
-          backupTracks.push( track.toObject() );
+          if (track) { backupTracks.push( track.toObject() ); }
           callback();
         });
       };
@@ -382,7 +387,7 @@ async.parallel([
   function(done) {
     Track.find({}).limit(100).exec(function(err, fallbackVideos) {
       fallbackVideos.forEach(function(track) {
-        backupTracks.push( track.toObject() );
+        if (track) { backupTracks.push( track.toObject() ); }
       });
       done();
     });
@@ -652,7 +657,7 @@ app.post('/playlist', requireLogin, function(req, res) {
 
           sortPlaylist();
 
-          app.redis.set("soundtrack:playlist", JSON.stringify( app.room.playlist ) );
+          app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
           app.broadcast({
               type: 'playlist:add'
@@ -786,7 +791,8 @@ function getTop100FromCodingSoundtrack(done) {
   });
 }
 
-server.listen(13000);
-console.log('Listening on port 13000 for HTTP');
-console.log('Must have redis listening on port 6379');
-console.log('Must have mongodb listening on port 27017');
+server.listen(config.app.port, function(err) {
+  console.log('Listening on port ' + config.app.port + ' for HTTP');
+  console.log('Must have redis listening on port 6379');
+  console.log('Must have mongodb listening on port 27017');
+});

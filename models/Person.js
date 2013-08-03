@@ -9,7 +9,7 @@ var mongoose = require('mongoose')
 var PersonSchema = new Schema({
     email: { type: String, unique: true, sparse: true }
   , avatar: {
-      url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
+      url: { type: String, default: '/img/user-avatar.png' }
     }
   , bio: { type: String, default: '' }
   , profiles: {
@@ -21,6 +21,15 @@ PersonSchema.plugin(passportLocalMongoose);
 
 PersonSchema.virtual('isoDate').get(function() {
   return this.created.toISOString();
+});
+
+PersonSchema.post('init', function (doc) {
+  if (this.avatar && this.avatar.url == 'http://coursefork.org/img/user-avatar.png') {
+    this.avatar.url = '/img/user-avatar.png';
+    this.save(function(err) {
+
+    });
+  }
 });
 
 PersonSchema.plugin( slug('username') );

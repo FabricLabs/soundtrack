@@ -1,6 +1,9 @@
 module.exports = {
+  app: {
+    port: process.env.SOUNDTRACK_APP_PORT || 13000
+  },
   database: {
-      name: 'soundtrack'
+      name: process.env.SOUNDTRACK_DB_NAME || 'soundtrack'
     , host: 'localhost'
   },
   sessions: {
