@@ -1,3 +1,4 @@
+// Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
     notifications: $.cookie('notificationsEnabled')
@@ -14,6 +15,8 @@ Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   }
 }
 Soundtrack.prototype.notify = function(img, title, content, callback) {
+  if (!this.settings.notifications) { return false; }
+
   var notification = window.webkitNotifications.createNotification( img , title , content );
   notification.ondisplay = function(e) {
     setTimeout(function() {
@@ -26,6 +29,9 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
+
+deferred = new $.Deferred();
+promise = deferred.promise();
 
 $(document).ready(function(){
 
@@ -81,9 +87,11 @@ $(document).ready(function(){
             $('#track-curator').html('the machine');
           }
 
-          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-          ytplayer.seekTo( msg.seekTo );
-          ytplayer.playVideo();
+          promise.done(function() {
+            ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
+            ytplayer.seekTo( msg.seekTo );
+            ytplayer.playVideo();
+          });
 
           if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
             $('#playlist-list li:first').slideUp('slow', function() {
@@ -141,9 +149,7 @@ $(document).ready(function(){
 
 });
 
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-
+promise.done(function() {
   restartSockJs = function(){
     sockjs = null;
     startSockJs();
@@ -179,7 +185,11 @@ function onYouTubePlayerReady(playerId) {
     $('#track-progress').attr('title', progress + '%');
 
   }, 1000);
+});
 
+function onYouTubePlayerReady(playerId) {
+  ytplayer = document.getElementById("ytPlayer");
+  deferred.resolve();
 };
 
 function mutePlayer() {
@@ -268,7 +278,6 @@ $(window).on('load', function() {
 
     return false;
   });
-
 
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;
@@ -524,7 +533,7 @@ $(window).on('load', function() {
     e.preventDefault();
     $('#search-results').html('');
 
-    $.getJSON('http://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
+    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
       console.log(data.data.items);
 
       data.data.items.forEach(function(item) {
@@ -616,12 +625,12 @@ $(window).on('load', function() {
   });
 
   $(document).on('click', '*[data-action=toggle-video]', function(e) {
-    if (parseInt($('#messages').css('height')) != 230) {
-      $('#screen-one *').css('height', '295px'); $('#messages').css('height', '230px');
+    if ([256,262].indexOf(parseInt($('#messages').css('height'))) == -1) {
+      $('#screen-one *').css('height', '300px'); $('#messages').css('height', '256px');
       $(this).children('i').replaceWith($('<i class="icon-chevron-up"></i>'));
       $("#messages").scrollTop($("#messages")[0].scrollHeight);
     } else {
-      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '511px');
+      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '541px');
       $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
     }
   });
@@ -646,7 +655,7 @@ $(window).on('load', function() {
     $('.bio').replaceWith( $('#profile-editor').show() );
   });
 
-  $('*[data-action=toggle-notifications').on('click', function(e) {
+  $('*[data-action=toggle-notifications]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
       soundtrack.settings.notifications = true;
