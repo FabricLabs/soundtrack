@@ -1,4 +1,5 @@
 var _ = require('underscore')
+  , async = require('async');
 
 module.exports = {
   view: function(req, res, next) {
@@ -41,12 +42,16 @@ module.exports = {
     });
   },
   create: function(req, res, next) {
+  
     var playlist = new Playlist({
         name: req.param('name')
+      , description: req.param('description')
       , _creator: req.user._id
       , public: (req.param('public') == 'true') ? true : false
     });
 
+    // Search for the trackID, if not found proceed to next route
+    // otherwise create the playlist
     Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
       if (!track) { return next(); }
 
@@ -58,6 +63,7 @@ module.exports = {
           , results: {
                 _id: playlist._id
               , name: playlist.name
+              , description: playlist.description
               , tracks: [ track ]
             }
         });
@@ -109,5 +115,27 @@ module.exports = {
       });
 
     });
-  }
+  },
+  getPlaylists: function(req, res, next) {
+    Playlist.find({ _creator: req.user._id }).lean().exec(function(err, playlists) {
+      if (!playlists.length) { return next(); }
+      
+      async.map(playlists, function(playlist, callback) {
+        Track.find({ _id: {$in : playlist._tracks }}).populate('_artist').exec(function(err, tracks) {
+          playlist._tracks = tracks;
+          callback(err, playlist);
+        });
+      }
+      , function(err, results) {
+        console.log(playlists);
+        res.send({
+           status: 'success'
+          , results: {
+              playlists: results
+            }
+        });
+      });
+
+    });
+  },
 };

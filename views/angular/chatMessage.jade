@@ -1,0 +1,4 @@
+abbr.timestamp.pull-right(title="{{message.created}}") {{message.created | date:'mediumTime'}}
+img.user-avatar-small(ng-src="{{message._author.avatar.url}}")
+strong(data-role="author", data-user-username="{{message._author.username}}") {{message._author.username}}
+span(ng-bind-html-unsafe="message.formatted")
