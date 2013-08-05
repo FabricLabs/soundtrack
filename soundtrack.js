@@ -17,7 +17,7 @@ var config = require('./config')
   , LocalStrategy = require('passport-local').Strategy
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
-  , sessionStore = new RedisStore({ client: database.client })
+  , sessionStore = new RedisStore()
   , cachify = require('connect-cachify')
   , crypto = require('crypto')
   , marked = require('marked')
@@ -40,6 +40,7 @@ app.use(express.session({
     key: 'sid'
   , secret: config.sessions.key
   , store: sessionStore
+  , cookie: { maxAge : 604800000 }
 }));
 
 app.use(passport.initialize());
@@ -188,7 +189,7 @@ app.forEachClient = function(fn) {
   }
 }
 
-function getYoutubeVideo(videoID, callback) {
+function getYoutubeVideo(videoID, internalCallback) {
   rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data) {
     if (data && data.data) {
       var video = data.data;
@@ -268,7 +269,7 @@ function getYoutubeVideo(videoID, callback) {
                 Artist.populate(track, {
                   path: '_artist'
                 }, function(err, track) {
-                  callback( track );
+                  internalCallback( track );
                 });
 
               });
@@ -280,7 +281,7 @@ function getYoutubeVideo(videoID, callback) {
       console.log('waaaaaaaaaaat  videoID: ' + videoID);
       console.log(data);
 
-      callback();
+      internalCallback();
     }
   });
 };
