@@ -13,7 +13,11 @@ var PersonSchema = new Schema({
     }
   , bio: { type: String, default: '' }
   , profiles: {
-
+      lastfm: {
+          id: Number
+        , username: String
+        , key: String
+      }
     }
 });
 
@@ -32,7 +36,9 @@ PersonSchema.post('init', function (doc) {
   }
 });
 
-PersonSchema.plugin( slug('username') );
+PersonSchema.plugin( slug('username'), {
+  required: true
+} );
 PersonSchema.index({ slug: 1 });
 
 var Person = mongoose.model('Person', PersonSchema);
