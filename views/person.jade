@@ -1,22 +1,30 @@
 extends layout
 
 block content
-  - if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
-    a.btn.pull-right(data-action="enable-profile-editor") EDIT!
+  .well.content-well
+    - if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
+      .pull-right
+        a.btn(data-action="enable-profile-editor") EDIT!
+        if (!person.profiles || !person.profiles.lastfm || !person.profiles.lastfm.username)
+          a.btn.btn-mini(href="/auth/lastfm") add last.fm &raquo;
 
-    form#profile-editor(action="/#{user.slug}", method="post", style="display:none;")
-      textarea.input-block-level(name="bio", rows="3") #{person.bio}
-      button.btn.btn-primary(type="submit") Make Changes &raquo;
+      form#profile-editor(action="/#{user.slug}", method="post", style="display:none;")
+        textarea.input-block-level(name="bio", rows="3") #{person.bio}
+        button.btn.btn-primary(type="submit") Make Changes &raquo;
 
-  h1 #{person.username}
-  .bio
-    | !{marked(person.bio)}
+    h1 #{person.username} 
+      if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
+        a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
+          img(src="http://last.fm/favicon.ico", title="#{person.profiles.lastfm.username}")
 
-  h3 Public Playlists 
-    ul.nav.nav-list
-      for playlist in playlists
-        li
-          h4
-            a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
-          p #{playlist.description}
+    .bio
+      | !{marked(person.bio)}
+
+    h3 Public Playlists 
+      ul.nav.nav-list
+        for playlist in playlists
+          li
+            h4
+              a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+            p #{playlist.description}
 
