@@ -23,4 +23,4 @@ You will need to fetch the dependencies and then you can start up the server.
 
 ## Contributing
 
-You know the drill.
+[Fork. Commit. Pull request.](https://help.github.com/articles/fork-a-repo)
