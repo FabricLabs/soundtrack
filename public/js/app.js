@@ -33,9 +33,108 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
+function volumeChangeHandler(e) {
+  var self = this;
+
+  console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
+  console.log( typeof($(self).val()) )
+
+  soundtrack.player.volume( $(self).val() / 100 );
+  $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
+};
+
+function mutePlayer() {
+  // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
+  soundtrack.player.volume( 0.00001 );
+  $('.slider[data-for=volume]').slider('setValue', 0).val(0);
+}
+function unmutePlayer() {
+  if ($.cookie('lastVolume')) {
+    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+  } else {
+    soundtrack.player.volume( 0.8 );
+    $('.slider[data-for=volume]').slider('setValue', 80).val(80);
+    $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
+  }
+}
+function ensureVolumeCorrect() {
+  if ($.cookie('lastVolume')) {
+
+    console.log('last volume... ' + $.cookie('lastVolume') + ' => '  +  ($.cookie('lastVolume') / 100) );
+
+    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
+  } else {
+    mutePlayer();
+  }
+}
+function updateUserlist() {
+  $.get('/listeners.json', function(data) {
+    $('#userlist').html('');
+    $('.user-count').html('<strong>'+data.length+'</strong> online');
+    data.forEach(function(user) {
+      // TODO: use template (Blade?)
+      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+    });
+  });
+}
+function AppController($scope, $http) {
+  window.updatePlaylist = function(){
+    $http.get('/playlist.json').success(function(data){
+      $scope.tracks = data;
+    });
+  }
+
+  updatePlaylist();
+}
+
+String.prototype.toHHMMSS = function () {
+  var sec_num = parseInt(this, 10); // don't forget the second parm
+  var hours   = Math.floor(sec_num / 3600);
+  var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+  var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+  if (hours   < 10) {hours   = "0"+hours;}
+  if (minutes < 10) {minutes = "0"+minutes;}
+  if (seconds < 10) {seconds = "0"+seconds;}
+
+  if (hours != '00') {
+    var time    = hours+':'+minutes+':'+seconds;
+  } else {
+    var time    = minutes+':'+seconds;
+  }
+  return time;
+}
+Number.prototype.toHHMMSS = String.prototype.toHHMMSS;
 
 deferred = new $.Deferred();
 promise = deferred.promise();
+
+promise.done(function() {
+
+  soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
+  soundtrack.controls.volume.on('slide', volumeChangeHandler);
+  soundtrack.controls.volume.on('click', volumeChangeHandler);
+
+  if (!registered) {
+    introJs().start();
+    mutePlayer();
+  } else {
+    ensureVolumeCorrect();
+  }
+
+  setInterval(function() {
+    // TODO: use angularJS for this
+    var time = soundtrack.player.currentTime().toString().toHHMMSS();
+    var total = soundtrack.player.duration().toString().toHHMMSS();
+    $('#current-track #time').html( time + '/' + total);
+
+    var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
+    $('#track-progress .bar').css('width', progress + '%');
+    $('#track-progress').attr('title', progress + '%');
+  }, 1000);
+});
 
 $(window).load(function(){
 
@@ -94,11 +193,16 @@ $(window).load(function(){
               $('#track-curator').html('the machine');
             }
 
-
-
             promise.done(function() {
-              soundtrack.player.src([ { type:'video/youtube', src: 'http://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id } ]);
+              var sources = [];
+
+              msg.data.sources.youtube.forEach(function( item ) {
+                sources.push( { type:'video/youtube', src: 'http://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id } );
+              });
+
+              soundtrack.player.src( sources );
               soundtrack.player.currentTime( msg.seekTo );
+              ensureVolumeCorrect();
 
               /*/soundtrack.player.src([
                 { type: 'video/youtube', src: 'https://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id }
@@ -173,102 +277,6 @@ $(window).load(function(){
 
   $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
-});
-
-promise.done(function() {
-  if (!registered) {
-    introJs().start();
-    mutePlayer();
-  } else {
-    if ($.cookie('lastVolume')) {
-      soundtrack.player.volume( $.cookie('lastVolume') / 100 );
-      $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
-    } else {
-      mutePlayer();
-    }
-  }
-
-  soundtrack.player.play();
-
-  setInterval(function() {
-    // TODO: use angularJS for this
-    var time = soundtrack.player.currentTime().toString().toHHMMSS();
-    var total = soundtrack.player.duration().toString().toHHMMSS();
-    $('#current-track #time').html( time + '/' + total);
-
-    var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
-    $('#track-progress .bar').css('width', progress + '%');
-    $('#track-progress').attr('title', progress + '%');
-
-  }, 1000);
-});
-
-function volumeChangeHandler(e) {
-  var self = this;
-
-  console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
-
-
-  soundtrack.player.volume( $(self).val() / 100 );
-  $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
-};
-
-function mutePlayer() {
-  soundtrack.player.volume( 0 );
-  $('.slider[data-for=volume]').slider('setValue', 0).val(0);
-}
-function unmutePlayer() {
-  if ($.cookie('lastVolume')) {
-    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
-    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
-  } else {
-    soundtrack.player.volume( 0.8 );
-    $('.slider[data-for=volume]').slider('setValue', 80).val(80);
-    $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
-  }
-}
-
-String.prototype.toHHMMSS = function () {
-  var sec_num = parseInt(this, 10); // don't forget the second parm
-  var hours   = Math.floor(sec_num / 3600);
-  var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-  var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-  if (hours   < 10) {hours   = "0"+hours;}
-  if (minutes < 10) {minutes = "0"+minutes;}
-  if (seconds < 10) {seconds = "0"+seconds;}
-
-  if (hours != '00') {
-    var time    = hours+':'+minutes+':'+seconds;
-  } else {
-    var time    = minutes+':'+seconds;
-  }
-  return time;
-}
-
-function AppController($scope, $http) {
-  window.updatePlaylist = function(){
-    $http.get('/playlist.json').success(function(data){
-      $scope.tracks = data;
-    });
-  }
-
-  updatePlaylist();
-}
-Number.prototype.toHHMMSS = String.prototype.toHHMMSS;
-
-function updateUserlist() {
-  $.get('/listeners.json', function(data) {
-    $('#userlist').html('');
-    $('.user-count').html('<strong>'+data.length+'</strong> online');
-    data.forEach(function(user) {
-      // TODO: use template (Blade?)
-      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
-    });
-  });
-}
-
-$(window).on('load', function() {
   updatePlaylist();
   updateUserlist();
 
@@ -292,10 +300,6 @@ $(window).on('load', function() {
 
     return false;
   });
-
-  soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
-  soundtrack.controls.volume.on('slide', volumeChangeHandler);
-  soundtrack.controls.volume.on('click', volumeChangeHandler);
 
   OutgoingChatHandler = (function(){
     var listeners = {};
