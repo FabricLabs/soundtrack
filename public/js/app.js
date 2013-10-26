@@ -60,9 +60,10 @@ function unmutePlayer() {
   }
 }
 function ensureVolumeCorrect() {
-  if ($.cookie('lastVolume') && registered) {
+  if (registered) {
     console.log('last volume... ' + $.cookie('lastVolume') + ' => '  +  ($.cookie('lastVolume') / 100) );
-    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+    // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
+    soundtrack.player.volume( ($.cookie('lastVolume') + 0.001) / 100 );
     $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
   } else {
     mutePlayer();
@@ -116,12 +117,9 @@ promise.done(function() {
   soundtrack.controls.volume.on('slide', volumeChangeHandler);
   soundtrack.controls.volume.on('click', volumeChangeHandler);
 
-  if (!registered) {
-    introJs().start();
-    mutePlayer();
-  } else {
-    ensureVolumeCorrect();
-  }
+  if (!registered) { introJs().start(); }
+
+  ensureVolumeCorrect();
 
   setInterval(function() {
     // TODO: use angularJS for this
@@ -201,6 +199,7 @@ $(window).load(function(){
 
               soundtrack.player.src( sources );
               soundtrack.player.currentTime( msg.seekTo );
+
               ensureVolumeCorrect();
 
             });
