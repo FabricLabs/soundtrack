@@ -210,14 +210,14 @@ app.markAndSweep = function(){
       client.close('', 'Timeout');
       // TODO: broadcast part message
 
-      app.broadcast({
+      /* app.broadcast({
           type: 'part'
         , data: {
               id: id
             , _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
           }
       });
-      delete app.clients[id];
+      delete app.clients[id]; */
 
       /*/app.broadcast({
           type: 'part'
@@ -369,7 +369,7 @@ function startMusic() {
     app.broadcast({
         type: 'announcement'
       , data: {
-            formatted: 'No tracks in playlist.  Please add at least one!  Waiting 5 seconds...'
+            formatted: '<div class="message">No tracks in playlist.  Please add at least one!  Waiting 5 seconds...</div>'
           , created: new Date()
         }
     });

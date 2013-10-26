@@ -1,39 +1,40 @@
 extends layout
 
 block content
-  h1
-    a(href="/#{track._artist.slug}") #{track._artist.name}
-    |  &mdash; 
-    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-    |  
 
-  h2 played #{history.length} times
+  .well.content-well
+    h1
+      a(href="/#{track._artist.slug}") #{track._artist.name}
+      |  &mdash; 
+      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+    p <strong>#{track.duration}</strong> seconds of brain-melting audio
+    h2 played #{history.length} times
 
-  #track-stats
+    #track-stats
 
-  ul
-    for play in history
-      li
-        a(href="#") #{play.timestamp}
-        |  by 
-        if (play._curator)
-          a(href="/#{play._curator.slug}") #{play._curator.username}
-        else
-          strong THE MACHINE
-        | .
-
-  h2 Available Sources
-  each list, key in track.sources.toObject()
-    h2 #{key}
     ul
-      if (list)
-        each link in list
-          case key
-            when 'youtube'
-              li
-                a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
-            default
-              li #{link}
+      for play in history
+        li
+          a(href="#") #{play.timestamp}
+          |  by 
+          if (play._curator)
+            a(href="/#{play._curator.slug}") #{play._curator.username}
+          else
+            strong THE MACHINE
+          | .
+
+    h2 Available Sources
+    each list, key in track.sources.toObject()
+      h2 #{key}
+      ul
+        if (list)
+          each link in list
+            case key
+              when 'youtube'
+                li
+                  a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
+              default
+                li #{link}
 
 block scripts
   style
