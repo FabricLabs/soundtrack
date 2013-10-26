@@ -47,7 +47,6 @@ function mutePlayer() {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
   soundtrack.player.volume( 0.00001 );
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
-  $.cookie('lastVolume', '0', { expires: COOKIE_EXPIRES });
 }
 function unmutePlayer() {
   if ($.cookie('lastVolume')) {
