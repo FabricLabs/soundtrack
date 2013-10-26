@@ -1,16 +1,16 @@
 extends layout
 
 block content
+  .well.content-well
+    h1 Register
 
-  h1 Register
+    form(action="/register", method="post")
 
-  form(action="/register", method="post")
+      label(for="username") Username
+      input(type="text", name="username", placeholder="e.g., yourname")
+      label(for="password") Password
+      input(type="password", name="password")
+      label(for="passwordAgain") Password (again)
+      input(type="password", name="passwordAgain")
 
-    label(for="username") Username
-    input(type="text", name="username", placeholder="e.g., yourname")
-    label(for="password") Password
-    input(type="password", name="password")
-    label(for="passwordAgain") Password (again)
-    input(type="password", name="passwordAgain")
-
-    input.btn.btn-primary(type="submit")
+      input.btn.btn-primary(type="submit")

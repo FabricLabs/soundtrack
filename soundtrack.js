@@ -217,6 +217,7 @@ app.markAndSweep = function(){
             , _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
           }
       });
+
       delete app.clients[id];
 
       /*/app.broadcast({
@@ -369,7 +370,7 @@ function startMusic() {
     app.broadcast({
         type: 'announcement'
       , data: {
-            formatted: 'No tracks in playlist.  Please add at least one!  Waiting 5 seconds...'
+            formatted: '<div class="message">No tracks in playlist.  Please add at least one!  Waiting 5 seconds...</div>'
           , created: new Date()
         }
     });
@@ -378,7 +379,7 @@ function startMusic() {
 
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
-  
+
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
     if (track) {
       app.broadcast({
