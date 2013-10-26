@@ -9,6 +9,7 @@ var config = require('./config')
   , async = require('async')
   , redis = require('redis')
   , sockjs = require('sockjs')
+  , LastFM = require('lastfmapi')
   , _ = require('underscore')
   , mongoose = require('mongoose')
   , flashify = require('flashify')
@@ -17,7 +18,7 @@ var config = require('./config')
   , LocalStrategy = require('passport-local').Strategy
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
-  , sessionStore = new RedisStore({ client: database.client })
+  , sessionStore = new RedisStore()
   , cachify = require('connect-cachify')
   , crypto = require('crypto')
   , marked = require('marked')
@@ -40,6 +41,7 @@ app.use(express.session({
     key: 'sid'
   , secret: config.sessions.key
   , store: sessionStore
+  , cookie: { maxAge : 604800000 }
 }));
 
 app.use(passport.initialize());
@@ -66,6 +68,11 @@ passport.deserializeUser(function(userID, done) {
 app.use(function(req, res, next) {
   res.setHeader("X-Powered-By", 'beer.');
   app.locals.user = req.user;
+
+  if (req.user && !req.user.username) {
+    return res.redirect('/set-username');
+  }
+
   next();
 });
 app.use( flashify );
@@ -94,6 +101,50 @@ String.prototype.capitalize = function(){
   return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
 
+if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
+  var lastfm = new LastFM({
+      api_key: config.lastfm.key
+    , secret:  config.lastfm.secret
+  });
+  app.get('/auth/lastfm', function(req, res) {
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    res.redirect(authUrl);
+  });
+  app.get('/auth/lastfm/callback', function(req, res) {
+    lastfm.authenticate( req.param('token') , function(err, session) {
+      console.log(session);
+
+      if (err) {
+        console.log(err);
+        req.flash('error', 'Something went wrong with authentication.');
+        return res.redirect('/');
+      }
+
+      Person.findOne({ $or: [
+          { _id: (req.user) ? req.user._id : undefined }
+        , { 'profiles.lastfm.username': session.username }
+      ]}).exec(function(err, person) {
+
+        if (!person) {
+          var person = new Person({ username: 'reset this later ' });
+        }
+
+        person.profiles.lastfm = {
+            username: session.username
+          , key: session.key
+        };
+
+        person.save(function(err) {
+          if (err) { console.log(err); }
+          req.session.passport.user = person._id;
+          res.redirect('/');
+        });
+
+      });
+
+    });
+  });
+}
 
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
@@ -120,14 +171,12 @@ var server = http.createServer(app);
 app.clients = {};
 
 var backupTracks = [];
-var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
-
 app.redis = redis.createClient();
 app.redis.get(config.database.name + ':playlist', function(err, playlist) {
   playlist = JSON.parse(playlist);
 
   if (!playlist || !playlist.length) {
-    playlist = ['ONyAv1HWDo0'];
+    playlist = [];
   }
 
   app.room = {
@@ -136,18 +185,8 @@ app.redis.get(config.database.name + ':playlist', function(err, playlist) {
     , listeners: {}
   };
 
-  async.series(fallbackVideos.map(function(videoID) {
-    return function(callback) {
-      getYoutubeVideo(videoID, function(track) {
-        if (track) { backupTracks.push( track.toObject() ); }
-        callback();
-      });
-    };
-  }), function(err, results) {
-    // start streaming. :)
-    startMusic();
-  });
-  
+  startMusic();
+
 });
 app.socketAuthTokens = [];
 
@@ -170,6 +209,16 @@ app.markAndSweep = function(){
     if (client.pongTime < time - config.connection.clientTimeout) {
       client.close('', 'Timeout');
       // TODO: broadcast part message
+
+      app.broadcast({
+          type: 'part'
+        , data: {
+              id: id
+            , _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
+          }
+      });
+      delete app.clients[id];
+
       /*/app.broadcast({
           type: 'part'
         , data: {
@@ -188,7 +237,7 @@ app.forEachClient = function(fn) {
   }
 }
 
-function getYoutubeVideo(videoID, callback) {
+function getYoutubeVideo(videoID, internalCallback) {
   rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data) {
     if (data && data.data) {
       var video = data.data;
@@ -268,7 +317,7 @@ function getYoutubeVideo(videoID, callback) {
                 Artist.populate(track, {
                   path: '_artist'
                 }, function(err, track) {
-                  callback( track );
+                  internalCallback( track );
                 });
 
               });
@@ -280,7 +329,7 @@ function getYoutubeVideo(videoID, callback) {
       console.log('waaaaaaaaaaat  videoID: ' + videoID);
       console.log(data);
 
-      callback();
+      internalCallback();
     }
   });
 };
@@ -316,15 +365,30 @@ function nextSong() {
 function startMusic() {
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
+  if (!app.room.playlist[0]) {
+    app.broadcast({
+        type: 'announcement'
+      , data: {
+            formatted: 'No tracks in playlist.  Please add at least one!  Waiting 5 seconds...'
+          , created: new Date()
+        }
+    });
+    return setTimeout(startMusic, 5000);
+  }
+
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
   
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
-    app.broadcast({
-        type: 'track'
-      , data: _.extend( track.toObject(), app.room.playlist[0] )
-      , seekTo: seekTo
-    });
+    if (track) {
+      app.broadcast({
+          type: 'track'
+        , data: _.extend( track.toObject(), app.room.playlist[0] )
+        , seekTo: seekTo
+      });
+    } else {
+      console.log('uhhh... broken: ' + app.room.playlist[0].sources['youtube'][0].id + ' and ' +track);
+    }
   });
 
   clearTimeout( app.timeout );
@@ -351,7 +415,7 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   //Announce who skipped this song
   res.render('partials/announcement', {
       message: {
-          message: "'" + app.room.track.title + "' was skipped by " + req.user.username + "."
+          message: "&ldquo;" + app.room.track.title + "&rdquo; was skipped by " + req.user.username + "."
         , created: new Date()
       }
     }, function(err, html) {
@@ -456,11 +520,13 @@ sock.on('connection', function(conn) {
     }
   });
 
-  conn.write(JSON.stringify({
-      type: 'track'
-    , data: app.room.playlist[0]
-    , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
-  }));
+  if (app.room.playlist[0]) {
+    conn.write(JSON.stringify({
+        type: 'track'
+      , data: app.room.playlist[0]
+      , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+    }));
+  }
 
   conn.on('close', function() {
     if (conn.user) {
@@ -472,14 +538,14 @@ sock.on('connection', function(conn) {
       };
     }
     
-    app.broadcast({
+    /*app.broadcast({
         type: 'part'
       , data: {
             id: conn.id
           , _id: (conn.user) ? conn.user._id : undefined
         }
     });
-    delete app.clients[conn.id];
+    delete app.clients[conn.id];*/
   });
 });
 sock.installHandlers(server, {prefix:'/stream'});
@@ -631,6 +697,9 @@ app.post('/register', function(req, res) {
     });
   });
 });
+
+app.get('/set-username', requireLogin, people.setUsernameForm);
+app.post('/set-username', requireLogin, people.setUsername);
 
 app.get('/login', function(req, res) {
   res.render('login', {

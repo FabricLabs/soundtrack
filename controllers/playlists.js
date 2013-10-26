@@ -7,7 +7,10 @@ module.exports = {
 
       // TODO: use $or to allow user to view non-public
       var slug = req.param('playlistSlug').split('.')[0];
-      Playlist.findOne({ _creator: person._id, slug: slug, public: true }).populate('_tracks _creator').exec(function(err, playlist) {
+      Playlist.findOne({ $or: [
+            { _creator: person._id, public: true }
+          , { _creator: (req.user) ? req.user._id : person._id }
+        ], slug: slug }).populate('_tracks _creator').exec(function(err, playlist) {
         if (!playlist) { return next(); }
 
         Artist.populate(playlist, {

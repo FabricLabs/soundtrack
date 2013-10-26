@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  h2 Set Username
+  p You'll need to choose a username.
+
+  form(action="/set-username", method="POST")
+    input(type="text", name="username")
+
+    button.btn(type="submit") Set Username &raquo;
