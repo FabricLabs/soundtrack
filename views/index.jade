@@ -4,68 +4,69 @@ block content
 
   #stage
     .row-fluid
-      .span3
-        #current-track
-          input(type="hidden", name="current-track-id")
+      .span3.padded-left
+        .well
+          #current-track
+            input(type="hidden", name="current-track-id")
 
-          //h2#track-title #{room.playlist[0].title}
-          #track-info
-            #attribution
-              #track-curator.pull-right
-              a#track-artist(href="#", data-for="current-track-artist") Artist Name
-            marquee
-              a#track-title(href="#") foo
-          #track-progress.progress.active
-            .bar(style="width: 0%;")
-            span#time 00:00
+            //h2#track-title #{room.playlist[0].title}
+            #track-info
+              #attribution
+                #track-curator.pull-right
+                a#track-artist(href="#", data-for="current-track-artist") Artist Name
+              marquee
+                a#track-title(href="#") foo
+            #track-progress.progress.active
+              .bar(style="width: 0%;")
+              span#time 00:00
 
-        .row-fluid
-          .span2
-            a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
-              i.icon-volume-up
-          .span9
-            input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
+          .row-fluid
+            .span2
+              a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
+                i.icon-white.icon-volume-up
+            .span9
+              input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
-        if (user)
-          .btn-group
-            a.btn(href="#", onclick="$.post('/skip'); return false;") skip
-
-          .btn-group.pull-right
-            a.btn(href="#playlist-modal", data-toggle="modal") your playlists
-            a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
-              span.caret
-            ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
-              for playlist in playlists
-                li(data-playlist-id="#{playlist._id}")
-                  a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
-              li(data-action="new-playlist")
-                a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
-
-        //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
-        #playlist
-          ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
-            li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
-              .playlist-controls
-                .score.badge {{track.score}}
-                i.icon-chevron-up(data-action="upvote-track", data-track-id="{{track._id}}")
-                i.icon-chevron-down(data-action="downvote-track", data-track-id="{{track._id}}")
-              img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
-              span(style="font-size: 0.75em;") {{track.curator.username}} wants to play 
-              a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}")
-                small.pull-right {{track.duration.toString().toHHMMSS()}}
-                span {{track._artist.name}} &mdash; {{track.title}}
-
-        h5 Add Track
-        form#search-form.input-append(style="display:block;")
           if (user)
-            input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
-            button.btn(type="submit")
-              i.icon-share-alt
-          else
-            input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
-        #search-results
+            .btn-group
+              a.btn(href="#", onclick="$.post('/skip'); return false;") skip
 
-      .span6
+            .btn-group.pull-right
+              a.btn(href="#playlist-modal", data-toggle="modal") your playlists
+              a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
+                span.caret
+              ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
+                for playlist in playlists
+                  li(data-playlist-id="#{playlist._id}")
+                    a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
+                li(data-action="new-playlist")
+                  a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
+
+          //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
+          #playlist
+            ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
+              li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
+                .playlist-controls
+                  .score.badge {{track.score}}
+                  i.icon-chevron-up.icon-white(data-action="upvote-track", data-track-id="{{track._id}}")
+                  i.icon-chevron-down.icon-white(data-action="downvote-track", data-track-id="{{track._id}}")
+                img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
+                span(style="font-size: 0.75em;") {{track.curator.username}} wants to play 
+                a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}")
+                  small.pull-right {{track.duration.toString().toHHMMSS()}}
+                  span {{track._artist.name}} &mdash; {{track.title}}
+
+          h5 Add Track
+          form#search-form.input-append(style="display:block;")
+            if (user)
+              input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
+              button.btn(type="submit")
+                i.icon-share-alt
+            else
+              input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
+          ul.nav.nav-list#search-results
+
+      .span6.unpadded
         #screen-one
           .screen-inner#screen-inner
         .chat-container
@@ -89,13 +90,15 @@ block content
         #slot-4
         #slot-5
 
-      .span3(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
-        #audience
-          h3 
-            small.pull-right.user-count
-            | Users
-          ul.nav.nav-list#userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="left")
+      .span3.padded-right
+        .well(data-intro="<h5>Music is social!</h5>You can chat with all the other listeners here.  They're listening to the same exact music, at the same time!", data-step="4", data-position="left")
+          #audience
+            h3 
+              small.pull-right.user-count
+              | Users
+            ul.nav.nav-list#userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="left")
 
+block scripts
   if (!user)
     script.
       registered = false;

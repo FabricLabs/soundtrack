@@ -36,7 +36,9 @@ html(lang="en-US", ng-app)
             i.icon-bar
             i.icon-bar
             i.icon-bar
-          a.brand(href="/") soundtrack.io
+          a.brand(href="/")
+            img(src="/favicon.ico")
+            | soundtrack.io
           .nav-collapse.collapse
             ul.nav
               li.active
@@ -83,22 +85,29 @@ html(lang="en-US", ng-app)
 
       block content
 
-    footer
-      .container
-        h5 About
-        p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
-
-        a(href="/enabled-notifications", data-action="ding") ding
+      footer
+        .container
+          p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
 
     #settings-modal.modal.hide.fade
       .modal-header
         button.close(data-dismiss="modal") &times;
         h3 Settings
       .modal-body
-        label
+        h4 Content
+        label(title="Prefer SFW videos / audio sources for the currently playing track.")
+          input(type="checkbox", data-action="toggle-avoid-ads")
+          |  Avoid NSFW Content
+        label(title="Prefer videos / audio sources that don't have ads.")
+          input(type="checkbox", data-action="toggle-avoid-ads")
+          |  Avoid Ads Where Possible
+
+        h4 Notifications
+        label(title="Enable desktop notifications on mention.")
           input(type="checkbox", data-action="toggle-notifications")
           |  Enable Notifications
 
+        h4 Behavior
         label
           input(type="checkbox", data-action="toggle-target-blank")
           |  Always Open Links in New Window

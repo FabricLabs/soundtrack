@@ -1,13 +1,20 @@
 extends layout
 
 block content
-  h1 People on soundtrack.io
 
-  ul
-    each person in people
-      li
-        a(href="/#{person.slug}")
-          img.user-avatar-small(src="#{person.avatar.url}")
-          | #{person.username}
-          - if (person.bio.length)
-            .badge has bio
+  .well.content-well
+    h1 #{people.length} People on soundtrack.io
+
+    ul
+      each person in people
+        li
+          a(href="/#{person.slug}")
+            img.user-avatar-small(src="#{person.avatar.url}")
+            | #{person.username}
+            - if (person.bio.length)
+              | 
+              i.icon-user
+          if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
+            | 
+            a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
+              img(src="http://last.fm/favicon.ico", title="#{person.profiles.lastfm.username}")

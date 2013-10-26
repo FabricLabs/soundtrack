@@ -1,15 +1,137 @@
 body {
-  padding-top: 60px;
+  padding-top: 41px;
   padding-bottom: 40px;
+  background: url('/img/binding_dark.png') rgb(22,22,22);
+  color: rgb(208,208,208);
+}
+textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input {
+  background: rgb(33,33,33);
+  border-radius: 0;
+  border: 0;
+  color: rgb(208,208,208);
+}
+.nav-list {
+  border: 1px solid rgb(33,33,33);
+  padding: 0;
+}
+.nav-list>li {
+  border-top: 1px solid rgb(33,33,33);
+  border-bottom: 1px solid black;
+}
+.nav-list>li:hover {
+  border-bottom: 1px solid rgb(22,22,22);
+}
+.nav-list>li>a {
+  text-shadow: none;
+  padding: 3px 15px 3px 22px;
+}
+.nav-list>li:hover {
+  background: rgb(33,33,33);
+}
+.module {
+  background: rgb(22,22,22);
+  padding-top: 19px;
+}
+.container.module {
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0 1px 7px 0px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.8) 0 1px 7px 0px;
+  box-shadow: rgba(0, 0, 0, 0.8) 0 1px 7px 0px;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+.row-fluid [class*="span"].module-left {
+  margin: 0;
+  padding: 3px;
+  border-right: 1px solid rgb(33,33,33);
+  border-left: 1px solid rgb(22,22,22);
+}
+.row-fluid [class*="span"].module-center {
+  margin: 0;
+  padding: 3px;
+  border-right: 1px solid rgb(33,33,33);
+  border-left: 1px solid rgb(22,22,22);
+}
+.row-fluid [class*="span"].module-right {
+  margin: 0;
+  padding: 3px;
+  border-right: 1px solid rgb(33,33,33);
+  border-left: 1px solid rgb(22,22,22);
+}
+.modal {
+  background: rgb(33,33,33);
+}
+.modal-header, .modal-body {
+  border-bottom: 1px solid rgb(11,11,11);
+}
+.modal-body, .modal-footer {
+  border-top: 1px solid rgb(44,44,44);
+}
+.modal-footer {
+  background: rgb(22,22,22);
+  box-shadow: none;
+}
+.dropdown-menu {
+  color: rgb(208,208,208);
+  background-color: rgb(11,11,11);
+}
+.well {
+  padding: 12px;
+}
+.row-fluid [class*="span"].unpadded {
+  padding: 0;
+  margin: 0;
+  width: 541px;
+  margin: 0 12px;
+}
+.row-fluid [class*="span"].padded-left {
+  padding-left: 12px;
+  width: 302px;
+}
+.row-fluid [class*="span"].padded-right {
+  padding-right: 12px;
+  margin-left: 0;
+  width: 302px;
+}
+.stage {
+  border-bottom: 1px solid rgb(22,22,22);
+}
+footer {
+  font-size: 0.9em;
+  -webkit-box-shadow: 0px -1px 10px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow:    0px -1px 10px rgba(0, 0, 0, 0.75);
+  box-shadow:         0px -1px 10px rgba(0, 0, 0, 0.75);
+  border-top: 1px solid rgb(44,44,44);
+  padding: 24px;
+  background: url('/img/txture.png') rgb(22,22,22);
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  margin: -5px;
+}
+.navbar a.brand {
+  padding-left: 12px;
+  margin-left: 0;
+  /* width: 258px; /* remove to align the navbar controls with left column */
+}
+.navbar a.brand img {
+  max-height: 1em;
+  padding-right: 0.5em;
+  margin-bottom: -0.2em;
+  vertical-align: top;
+}
+.content-well {
+  margin: 0 12px 12px;
 }
 
 #chat-form .input-block-level {
-  width: 492px;
+  width: 464px;
 }
 
 @media (max-width: 1199px) {
   #chat-form .input-block-level {
     width: 382px;
+  }
+  .span6.unpadded {
+    width: 460px;
   }
 }
 
@@ -52,28 +174,29 @@ body {
   height: 1.5em;
   font-size: 1.5em;
 }
-#track-artist
+#track-artist {
 
+}
 #search-results li {
   cursor: pointer;
 }
-#search-results li:hover {
-  background: #ccc;
-}
 #search-form .input-block-level {
-  width: 230px;
+  width: 227px;
 }
 #messages, #playlist, #userlist {
-  height: 230px;
+  height: 262px;
   overflow-y: scroll;
   overflow-x: hidden;
+}
+#messages {
+  padding-bottom: 0.2em;
 }
 #playlist {
   height: 338px;
   clear: both;
 }
 #userlist {
-  height: 500px;
+  height: 508px;
 }
 #user-playlists-dropdown {
   max-height: 300px;
@@ -97,7 +220,7 @@ body {
   clear: both;
 }
 
-.message abbr.timestamp {
+.message abbr.timestamp, abbr.track-length {
   font-size: 0.75em;
 }
 .message strong[data-role=author] {
@@ -105,7 +228,7 @@ body {
 }
 
 .highlight {
-  background: #ffffd5;
+  background: rgb(33,33,33);
 }
 
 .user-avatar-small, .avatar-small {
@@ -139,6 +262,7 @@ body {
 .playlist-controls {
   float:left;
   padding-right: 5px;
+  padding-left: 5px;
 }
 .active .playlist-controls {
   visibility: hidden;
@@ -177,7 +301,7 @@ body {
   text-align: center;
   font-weight: bold;
   display: block;
-  text-shadow: 1px 1px 1px #aaa;
+  /*text-shadow: 1px 1px 1px #aaa;*/
 }
 
 .fadeout-top {

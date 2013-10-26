@@ -5,6 +5,7 @@ module.exports = {
     crypto.randomBytes(32, function(ex, buf){
       var authData = buf.toString('hex');
       var token = {token: authData, user: req.user, time: (new Date()).getTime()};
+      console.log('has token: ' + token);
       req.app.socketAuthTokens.push(token);
       res.send({authData: authData});
     });

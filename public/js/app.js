@@ -1,3 +1,4 @@
+// Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
     notifications: $.cookie('notificationsEnabled')
@@ -14,6 +15,9 @@ Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   }
 }
 Soundtrack.prototype.notify = function(img, title, content, callback) {
+
+  if (!this.settings.notifications) { return false; }
+
   var notification = window.webkitNotifications.createNotification( img , title , content );
   notification.ondisplay = function(e) {
     setTimeout(function() {
@@ -26,6 +30,9 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
+
+deferred = new $.Deferred();
+promise = deferred.promise();
 
 $(document).ready(function(){
 
@@ -81,9 +88,11 @@ $(document).ready(function(){
             $('#track-curator').html('the machine');
           }
 
-          ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-          ytplayer.seekTo( msg.seekTo );
-          ytplayer.playVideo();
+          promise.done(function() {
+            ytplayer.loadVideoById( msg.data.sources.youtube[0].id , msg.seekTo );
+            //ytplayer.seekTo( msg.seekTo );
+            //ytplayer.playVideo();
+          });
 
           if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
             $('#playlist-list li:first').slideUp('slow', function() {
@@ -115,7 +124,6 @@ $(document).ready(function(){
           if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
             soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
           }
-
         break;
         case 'ping':
           sockjs.send(JSON.stringify({type: 'pong'}));
@@ -139,11 +147,6 @@ $(document).ready(function(){
     };
   }
 
-});
-
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-
   restartSockJs = function(){
     sockjs = null;
     startSockJs();
@@ -151,6 +154,9 @@ function onYouTubePlayerReady(playerId) {
 
   restartSockJs();
 
+});
+
+promise.done(function() {
   ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
   ytplayer.addEventListener("onError", "onPlayerError");
 
@@ -179,7 +185,11 @@ function onYouTubePlayerReady(playerId) {
     $('#track-progress').attr('title', progress + '%');
 
   }, 1000);
+});
 
+function onYouTubePlayerReady(playerId) {
+  ytplayer = document.getElementById("ytPlayer");
+  deferred.resolve();
 };
 
 function mutePlayer() {
@@ -224,6 +234,7 @@ function AppController($scope, $http) {
 
   updatePlaylist();
 }
+Number.prototype.toHHMMSS = String.prototype.toHHMMSS;
 
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
@@ -268,7 +279,6 @@ $(window).on('load', function() {
 
     return false;
   });
-
 
   volume = $('.slider').slider().on('slide', function(e) {
     var self = this;
@@ -524,11 +534,11 @@ $(window).on('load', function() {
     e.preventDefault();
     $('#search-results').html('');
 
-    $.getJSON('http://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
+    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
       console.log(data.data.items);
 
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" /><abbr class="pull-right track-length">'+item.duration.toHHMMSS()+'</abbr>' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
@@ -616,12 +626,12 @@ $(window).on('load', function() {
   });
 
   $(document).on('click', '*[data-action=toggle-video]', function(e) {
-    if (parseInt($('#messages').css('height')) != 230) {
-      $('#screen-one *').css('height', '295px'); $('#messages').css('height', '230px');
+    if ([256,262].indexOf(parseInt($('#messages').css('height'))) == -1) {
+      $('#screen-one *').css('height', '300px'); $('#messages').css('height', '256px');
       $(this).children('i').replaceWith($('<i class="icon-chevron-up"></i>'));
       $("#messages").scrollTop($("#messages")[0].scrollHeight);
     } else {
-      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '511px');
+      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '541px');
       $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
     }
   });
@@ -646,7 +656,7 @@ $(window).on('load', function() {
     $('.bio').replaceWith( $('#profile-editor').show() );
   });
 
-  $('*[data-action=toggle-notifications').on('click', function(e) {
+  $('*[data-action=toggle-notifications]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
       soundtrack.settings.notifications = true;

@@ -1,16 +1,16 @@
 extends layout
 
 block content
+  .well.content-well
+    h1 Login
 
-  h1 Login
+    form(action="/login", method="post")
+      label(for="username") Username
+      input(type="text", name="username", placeholder="Username")
 
-  form(action="/login", method="post")
-    label(for="username") Username
-    input(type="text", name="username", placeholder="Username")
+      label(for="password") Password
+      input(type="password", name="password")
 
-    label(for="password") Password
-    input(type="password", name="password")
-
-    p
-      input.btn.btn-primary(type="submit")
-      a(href="/forgot-password", style="margin-left: 2em") Forgot Password?
+      p
+        input.btn.btn-primary(type="submit")
+        a(href="/forgot-password", style="margin-left: 2em") Forgot Password?
