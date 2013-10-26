@@ -218,7 +218,7 @@ app.markAndSweep = function(){
           }
       });
 
-      delete app.clients[id]; */
+      delete app.clients[id];
 
       /*/app.broadcast({
           type: 'part'
