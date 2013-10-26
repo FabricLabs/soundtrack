@@ -204,11 +204,6 @@ $(window).load(function(){
               soundtrack.player.currentTime( msg.seekTo );
               ensureVolumeCorrect();
 
-              /*/soundtrack.player.src([
-                { type: 'video/youtube', src: 'https://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id }
-              ]);
-              soundtrack.player.play();/**/
-
             });
 
             if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
