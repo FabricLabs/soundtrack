@@ -6,6 +6,9 @@ var Soundtrack = function() {
   this.user = {
     username: $('a[data-for=user-model]').data('username')
   };
+  this.controls = {
+    volume: {}
+  }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   if (window.webkitNotifications.checkPermission() != 0) {
@@ -34,7 +37,7 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
 deferred = new $.Deferred();
 promise = deferred.promise();
 
-$(document).ready(function(){
+$(window).load(function(){
 
   var sockjs = null;
   var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
@@ -43,166 +46,184 @@ $(document).ready(function(){
 
   // must be after DOM loads so we have access to the user-model
   soundtrack = new Soundtrack();
+  soundtrack.player = videojs('#main-player', {
+    techOrder: ['html5', 'flash', 'youtube']
+  });
+  soundtrack.player.ready(function() {
+    console.log('player loaded. :)');
 
-  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+    startSockJs = function(){
+      sockjs = new SockJS('/stream');
 
-  startSockJs = function(){
-    sockjs = new SockJS('/stream');
+      sockjs.onopen = function(){
+        //sockjs connection has been opened!
+        $.post('/socket-auth', {}, function(data){
+          sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+        });
+      }
 
-    sockjs.onopen = function(){
-      //sockjs connection has been opened!
-      $.post('/socket-auth', {}, function(data){
-        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
-      });
+      sockjs.onmessage = function(e) {
+        retryIdx = 0; //reset our retry timeouts
+
+        var msg = JSON.parse(e.data);
+
+        console.log(msg);
+
+        switch (msg.type) {
+          default: console.log('unhandled message: ' + msg); break;
+          case 'track':
+            if (msg.data._artist) {
+              $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
+
+              $('#track-artist').attr('href', '/'+msg.data._artist.slug);
+              $('#track-artist').html( msg.data._artist.name );
+            } else {
+              $('#track-artist').html( 'unknown' );
+            }
+            
+            $('#track-title').html( msg.data.title );
+
+
+            $('input[name=current-track-id]').val( msg.data._id );
+            if (msg.data.curator) {
+              $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
+            
+              $('#userlist li').removeClass('current-curator');
+              $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
+            } else {
+              $('#track-curator').html('the machine');
+            }
+
+
+
+            promise.done(function() {
+              soundtrack.player.src([ { type:'video/youtube', src: 'http://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id } ]);
+              soundtrack.player.currentTime( msg.seekTo );
+
+              /*/soundtrack.player.src([
+                { type: 'video/youtube', src: 'https://www.youtube.com/watch?v=' + msg.data.sources.youtube[0].id }
+              ]);
+              soundtrack.player.play();/**/
+
+            });
+
+            if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
+              $('#playlist-list li:first').slideUp('slow', function() {
+                $('#playlist-list li:first').attr('style', 'display: none;');
+                updatePlaylist();
+              });
+            } else {
+              updatePlaylist();
+            }
+
+          break;
+          case 'playlist:add':
+            updatePlaylist();
+          break;
+          case 'playlist:update':
+            updatePlaylist();
+          break;
+          case 'join':
+            updateUserlist();
+          break;
+          case 'part':
+            $('#userlist li[data-user-id='+msg.data._id+']').remove();
+          break;
+          case 'chat':
+            $( msg.data.formatted ).appendTo('#messages');
+            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+            $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+          
+            if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
+              soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
+            }
+          break;
+          case 'ping':
+            sockjs.send(JSON.stringify({type: 'pong'}));
+            console.log("Ping Pong\'d");
+          break;
+          case 'announcement':
+            $( msg.data.formatted ).appendTo('#messages');
+            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+          break;
+        }
+      };
+
+      sockjs.onclose = function() { 
+        console.log('Lost our connection, lets retry!');
+        if (retryIdx < retryTimes.length) {
+          console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
+          setTimeout(restartSockJs, retryTimes[retryIdx++]);
+        } else {
+          alert('Bummer. We lost connection.');
+        }
+      };
     }
 
-    sockjs.onmessage = function(e) {
-      retryIdx = 0; //reset our retry timeouts
+    restartSockJs = function(){
+      sockjs = null;
+      startSockJs();
+    }
 
-      var msg = JSON.parse(e.data);
+    restartSockJs();
 
-      console.log(msg);
+    deferred.resolve();
 
-      switch (msg.type) {
-        default: console.log('unhandled message: ' + msg); break;
-        case 'track':
-          if (msg.data._artist) {
-            $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
+  });
 
-            $('#track-artist').attr('href', '/'+msg.data._artist.slug);
-            $('#track-artist').html( msg.data._artist.name );
-          } else {
-            $('#track-artist').html( 'unknown' );
-          }
-          
-          $('#track-title').html( msg.data.title );
-
-
-          $('input[name=current-track-id]').val( msg.data._id );
-          if (msg.data.curator) {
-            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
-          
-            $('#userlist li').removeClass('current-curator');
-            $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
-          } else {
-            $('#track-curator').html('the machine');
-          }
-
-          promise.done(function() {
-            ytplayer.loadVideoById( msg.data.sources.youtube[0].id , msg.seekTo );
-            //ytplayer.seekTo( msg.seekTo );
-            //ytplayer.playVideo();
-          });
-
-          if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
-            $('#playlist-list li:first').slideUp('slow', function() {
-              $('#playlist-list li:first').attr('style', 'display: none;');
-              updatePlaylist();
-            });
-          } else {
-            updatePlaylist();
-          }
-
-        break;
-        case 'playlist:add':
-          updatePlaylist();
-        break;
-        case 'playlist:update':
-          updatePlaylist();
-        break;
-        case 'join':
-          updateUserlist();
-        break;
-        case 'part':
-          $('#userlist li[data-user-id='+msg.data._id+']').remove();
-        break;
-        case 'chat':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-        
-          if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
-            soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
-          }
-        break;
-        case 'ping':
-          sockjs.send(JSON.stringify({type: 'pong'}));
-          console.log("Ping Pong\'d");
-        break;
-        case 'announcement':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
-      }
-    };
-
-    sockjs.onclose = function() { 
-      console.log('Lost our connection, lets retry!');
-      if (retryIdx < retryTimes.length) {
-        console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
-        setTimeout(restartSockJs, retryTimes[retryIdx++]);
-      } else {
-        alert('Bummer. We lost connection.');
-      }
-    };
-  }
-
-  restartSockJs = function(){
-    sockjs = null;
-    startSockJs();
-  }
-
-  restartSockJs();
+  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
 });
 
 promise.done(function() {
-  ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
-  ytplayer.addEventListener("onError", "onPlayerError");
-
   if (!registered) {
     introJs().start();
     mutePlayer();
   } else {
     if ($.cookie('lastVolume')) {
-      ytplayer.setVolume( $.cookie('lastVolume') );
-      volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+      soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+      $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
     } else {
       mutePlayer();
     }
   }
 
-  ytplayer.playVideo();
+  soundtrack.player.play();
 
   setInterval(function() {
     // TODO: use angularJS for this
-    var time = ytplayer.getCurrentTime().toString().toHHMMSS();
-    var total = ytplayer.getDuration().toString().toHHMMSS();
+    var time = soundtrack.player.currentTime().toString().toHHMMSS();
+    var total = soundtrack.player.duration().toString().toHHMMSS();
     $('#current-track #time').html( time + '/' + total);
 
-    var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
+    var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
     $('#track-progress .bar').css('width', progress + '%');
     $('#track-progress').attr('title', progress + '%');
 
   }, 1000);
 });
 
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-  deferred.resolve();
+function volumeChangeHandler(e) {
+  var self = this;
+
+  console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
+
+
+  soundtrack.player.volume( $(self).val() / 100 );
+  $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer() {
-  ytplayer.setVolume(0);
-  volume.slider('setValue', 0).val(0);
+  soundtrack.player.volume( 0 );
+  $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
   if ($.cookie('lastVolume')) {
-    ytplayer.setVolume( $.cookie('lastVolume') );
-    volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
   } else {
-    ytplayer.setVolume(80);
-    volume.slider('setValue', 80).val(80);
+    soundtrack.player.volume( 0.8 );
+    $('.slider[data-for=volume]').slider('setValue', 80).val(80);
     $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
   }
 }
@@ -254,18 +275,10 @@ $(window).on('load', function() {
   // breaks javascript if page doesn't have #messages
   //$("#messages").scrollTop($("#messages")[0].scrollHeight);
 
-  // Lets Flash from another domain call JavaScript
-  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
-  // The element id of the Flash embed
-  var atts = { id: "ytPlayer" };
-
-  // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("https://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
-
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
-    var currentVolume = parseInt(volume.slider('getValue').val());
+    var currentVolume = parseInt( $('.slider[data-for=volume]').slider('getValue').val() );
 
     console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
 
@@ -280,11 +293,9 @@ $(window).on('load', function() {
     return false;
   });
 
-  volume = $('.slider').slider().on('slide', function(e) {
-    var self = this;
-    ytplayer.setVolume( $(self).val() );
-    $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
-  });
+  soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
+  soundtrack.controls.volume.on('slide', volumeChangeHandler);
+  soundtrack.controls.volume.on('click', volumeChangeHandler);
 
   OutgoingChatHandler = (function(){
     var listeners = {};
@@ -323,10 +334,10 @@ $(window).on('load', function() {
 
   // /reset -> reset the video player
   OutgoingChatHandler.addListener('reset', function(msg){
-    var cur = ytplayer.getCurrentTime();
-    ytplayer.stopVideo();
-    ytplayer.seekTo(cur);
-    ytplayer.playVideo();
+    var cur = soundtrack.player.currentTime();
+    soundtrack.player.stop();
+    soundtrack.player.currentTime(cur);
+    soundtrack.player.play();
   });
 
   partying = false;

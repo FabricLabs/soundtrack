@@ -379,7 +379,7 @@ function startMusic() {
 
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
-  
+
   getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
     if (track) {
       app.broadcast({

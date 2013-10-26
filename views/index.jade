@@ -9,7 +9,7 @@ block content
           #current-track
             input(type="hidden", name="current-track-id")
 
-            //h2#track-title #{room.playlist[0].title}
+            //-h2#track-title #{room.playlist[0].title}
             #track-info
               #attribution
                 #track-curator.pull-right
@@ -25,7 +25,7 @@ block content
               a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
                 i.icon-white.icon-volume-up
             .span9
-              input.slider(type="text", name="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
+              input.slider(type="text", name="volume", data-for="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
           if (user)
             .btn-group
@@ -68,7 +68,7 @@ block content
 
       .span6.unpadded
         #screen-one
-          .screen-inner#screen-inner
+          video(id="main-player", src="", class="video-js vjs-default-skin", width="100%", height="295", preload="auto")
         .chat-container
           #messages.fadeout-top
             each message in messages
