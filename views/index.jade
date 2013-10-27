@@ -138,8 +138,10 @@ block scripts
             a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
             a.btn(data-for="track-search-select-source", data-data="playlists") Playlists
           
-          input(type="text", data-for="track-search-query")
-
+          .input-append
+            input(type="text", data-for="track-search-query")
+            .add-on.btn(data-for="track-search-reset")
+              i.icon-remove
 
 
         ul.nav.nav-list.search-results(data-for="track-search-results")
