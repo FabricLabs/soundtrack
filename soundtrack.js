@@ -380,7 +380,7 @@ function startMusic() {
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
 
-  getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
+  Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
     if (track) {
       app.broadcast({
           type: 'track'
@@ -555,7 +555,7 @@ app.get('/', pages.index);
 app.get('/about', pages.about);
 
 app.get('/playlist.json', function(req, res) {
-  res.send(app.room.playlist);
+  res.send( app.room.playlist );
 });
 
 app.get('/listeners.json', function(req, res) {
@@ -630,43 +630,153 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
 });
 
-app.post('/playlist', requireLogin, function(req, res) {
-  switch(req.param('source')) {
+function queueTrack(track, curator, queueCallback) {
+  app.room.playlist.push( _.extend( track.toObject() , {
+      score: 0
+    , votes: {} // TODO: auto-upvote?
+    , timestamp: new Date()
+    , curator: {
+          _id: curator._id
+        , id: (app.room.listeners[ curator._id.toString() ]) ? app.room.listeners[ curator._id.toString() ].connId : undefined
+        , username: curator.username
+        , slug: curator.slug
+      }
+  } ) );
+
+  sortPlaylist();
+
+  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+
+  app.broadcast({
+      type: 'playlist:add'
+    , data: track
+  });
+
+  queueCallback();
+}
+
+function parseTitleString(string, partsCallback) {
+  var artist, title, credits = [];
+
+  // TODO: load from datafile
+  var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]',
+    '[glitch hop]', '[video]', '[official video]', '(official video)',
+    '[ official video ]', '[official music video]', '[free download]',
+    '[free DL]', '( 1080p )', '(with lyrics)', '(High Res / Official video)',
+    '[monstercat release]'];
+  baddies.forEach(function(token) {
+    string = string.replace(token + ' - ', '').trim();
+    string = string.replace(token.toUpperCase() + ' - ', '').trim();
+    string = string.replace(token.capitalize() + ' - ', '').trim();
+
+    string = string.replace(token, '').trim();
+    string = string.replace(token.toUpperCase(), '').trim();
+    string = string.replace(token.capitalize(), '').trim();
+  });
+
+  var parts = string.split(' - ');
+
+  if (parts.length == 2) {
+    artist = parts[0];
+    title = parts[1];
+  } else if (parts.length > 2) {
+    // uh...
+    artist = parts[0];
+    title = parts[1];
+  } else {
+    artist = parts[0];
+    title = parts[1];
+  }
+
+  // look for certain patterns in the string
+  credits.push(  title.replace(/(.*)\((.*) remix\)/i, '$2') );
+  credits.push( artist.replace(/ ft\. (.*)/i,         '$1') );
+  credits.push( artist.replace(/ feat\. (.*)/i,       '$1') );
+
+  partsCallback({
+      artist: artist
+    , title: title
+    , credits: credits
+  });
+}
+
+function trackFromSource(source, id, sourceCallback) {
+  switch (source) {
     default:
-      console.log('unrecognized source: ' + req.param('source'));
+      callback('Unknown source: ' + source);
+    break;
+    case 'soundcloud':
+      console.log(config.soundcloud.id);
+      rest.get('https://api.soundcloud.com/tracks/'+parseInt(id)+'.json?client_id='+config.soundcloud.id).on('complete', function(data) {
+        if (!data.title) { return sourceCallback('No video found.'); }
+
+        parseTitleString( data.title , function(parts) {
+
+          Track.findOne({ $or: [
+            { 'sources.soundcloud.id': data.id }
+          ] }).exec(function(err, track) {
+            if (!track) { var track = new Track({}); }
+
+            Artist.findOne({ $or: [
+                  { _id: track._artist }
+                , { slug: slug( parts.artist ) }
+            ] }).exec(function(err, artist) {
+              if (!artist) { var artist = new Artist({}); }
+
+              artist.name = artist.name || parts.artist;
+
+              artist.save(function(err) {
+
+                track.title    = track.title    || parts.title;
+                track._artist  = track._artist  || artist._id;
+                track.duration = track.duration || data.duration / 1000;
+
+                var sourceIDs = track.sources[ source ].map(function(x) { return x.id; });
+                var index = sourceIDs.indexOf( data.id );
+                if (index == -1) {
+                  track.sources[ source ].push({
+                    id: data.id
+                  });
+                }
+
+                track.save(function(err) {
+                  Artist.populate(track, {
+                    path: '_artist'
+                  }, function(err, track) {
+                    sourceCallback(err, track);
+                  });
+                });
+
+              });
+
+            });
+
+          });
+        });
+      });
     break;
     case 'youtube':
-      getYoutubeVideo(req.param('id'), function(track) {
+      getYoutubeVideo( id , function(track) {
         if (track) {
-          console.log('HEYYYYY');
-          console.log(track);
-
-          app.room.playlist.push( _.extend( track.toObject() , {
-              score: 0
-            , votes: {} // TODO: auto-upvote?
-            , timestamp: new Date()
-            , curator: {
-                  _id: req.user._id
-                , id: (req.app.room.listeners[ req.user._id.toString() ]) ? req.app.room.listeners[ req.user._id.toString() ].connId : undefined
-                , username: req.user.username
-                , slug: req.user.slug
-              }
-          } ) );
-
-          sortPlaylist();
-
-          app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
-
-          app.broadcast({
-              type: 'playlist:add'
-            , data: track
-          });
+          sourceCallback(null, track);
+        } else {
+          sourceCallback('No track returned.');
         }
-
-        res.send({ status: 'success' });
       });
     break;
   }
+}
+
+app.post('/playlist', requireLogin, function(req, res) {
+  trackFromSource( req.param('source') , req.param('id') , function(err, track) {
+    if (!err && track) {
+      queueTrack(track, req.user, function() {
+        res.send({ status: 'success', message: 'Track added successfully!' });
+      });
+    } else {
+      res.send({ status: 'error', message: 'Could not add that track.' });
+    }
+  });
 });
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
