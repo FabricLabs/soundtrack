@@ -133,6 +133,28 @@ footer {
   .span6.unpadded {
     width: 460px;
   }
+  .row-fluid [class*="span"].unpadded {
+    width: 614px;
+  }
+  .row-fluid .span3.padded-right {
+    margin-left: 1em;
+    width: calc(100% - 1em);
+  }
+  .row-fluid .span3.padded-right .nav-list {
+    border: 0;
+  }
+  .row-fluid .span3.padded-right .nav-list > li {
+    display: inline-block;
+    margin: 1.5em;
+    border: 0;
+  }
+  .row-fluid .span3.padded-right .nav-list > li a {
+    padding: 0.5em;
+  }
+  .row-fluid .span3.padded-right #userlist {
+    height: auto;
+  }
+
 }
 
 @media (max-width: 979px) {
