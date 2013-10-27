@@ -607,7 +607,7 @@ $(window).load(function(){
     // TODO: execute search queries in parallel
     $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
@@ -633,7 +633,7 @@ $(window).load(function(){
       if (!tracks.length) { return false; }
       console.log('soundcloud iterating...');
       tracks.forEach(function(track) {
-        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+' </li>').on('click', function(e) {
+        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'</li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
