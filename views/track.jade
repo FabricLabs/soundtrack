@@ -23,18 +23,18 @@ block content
             strong THE MACHINE
           | .
 
-    h2 Available Sources
+    h3 Available Sources
     each list, key in track.sources.toObject()
       h2 #{key}
-      ul
-        if (list)
-          each link in list
-            case key
-              when 'youtube'
-                li
-                  a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
-              default
-                li #{link}
+      if (list)
+        each link in list
+          case key
+            when 'youtube'
+              iframe(width="540", height="295", src="https://www.youtube.com/embed/#{link.id}?enablejsapi=1", frameborder="0")
+            when 'soundcloud'
+              iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{link.id}", frameborder="0")
+            default
+              li #{link}
 
 block scripts
   style
