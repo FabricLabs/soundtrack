@@ -384,7 +384,7 @@ function startMusic() {
     if (track) {
       app.broadcast({
           type: 'track'
-        , data: _.extend( track.toObject(), app.room.playlist[0] )
+        , data: track
         , seekTo: seekTo
       });
     } else {
@@ -522,11 +522,13 @@ sock.on('connection', function(conn) {
   });
 
   if (app.room.playlist[0]) {
-    conn.write(JSON.stringify({
-        type: 'track'
-      , data: app.room.playlist[0]
-      , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
-    }));
+    Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
+      conn.write(JSON.stringify({
+          type: 'track'
+        , data: track
+        , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+      }));
+    });
   }
 
   conn.on('close', function() {
