@@ -59,12 +59,11 @@ block content
           h5 Add Track
           form#search-form.input-append(style="display:block;")
             if (user)
-              input.input-block-level(type="text", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
+              input.input-block-level(type="text", data-for="track-search-query", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
               button.btn(type="submit")
                 i.icon-share-alt
             else
-              input.input-block-level(type="text", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
-          ul.nav.nav-list#search-results
+              input.input-block-level(type="text", data-for="track-search-query", disabled, placeholder="you must be registered to do this!", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="top")#search-query
 
       .span6.unpadded
         #screen-one
@@ -123,6 +122,27 @@ block scripts
                     |  #{playlist.name}
           .span8
             h4 Tracks
+
+      .modal-footer
+        button.btn.btn(data-dismiss="modal") Cancel
+        button.btn.btn-primary.btn-large(data-dismiss="modal") Done
+
+    #search-modal.modal.hide.fade
+      .modal-header
+        button.close(data-dismiss="modal") &times;
+        h3 Track Search
+      .modal-body
+        form#search-form(data-for="track-search")
+          .btn-group.pull-right
+            a.btn(data-for="track-search-select-source", data-data="youtube") YouTube
+            a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
+            a.btn(data-for="track-search-select-source", data-data="playlists") Playlists
+          
+          input(type="text", data-for="track-search-query")
+
+
+
+        ul.nav.nav-list.search-results(data-for="track-search-results")
 
       .modal-footer
         button.btn.btn(data-dismiss="modal") Cancel

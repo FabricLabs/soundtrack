@@ -565,15 +565,37 @@ $(window).load(function(){
     return false;
   });
 
-  $('#search-form').on('submit', function(e) {
+  $(document).on('click', '*[data-for=track-search-select-source]', function(e) {
     e.preventDefault();
-    $('#search-results').html('');
+    var self = this;
 
-    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
-      console.log(data.data.items);
+    if ($(self).data('data') == 'all') {
+      $('*[data-for=track-search-results] li').slideDown();
+    } else {
+      $('*[data-for=track-search-results] li:not(*[data-source='+ $(self).data('data') +'])').slideUp();
+      $('*[data-for=track-search-results] li[data-source='+ $(self).data('data') +']').slideDown();
+    }
 
+
+    return false;
+  });
+
+  $(document).on('submit', '#search-form', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $('*[data-for=track-search-results]').html('');
+    $('#search-modal').modal();
+    $('#search-modal *[data-for=track-search-query]').focus();
+
+    var query = $( self ).children('*[data-for=track-search-query]').val();
+    console.log( $( self ).children('*[data-for=track-search-query]') )
+    $('*[data-for=track-search-query]').val( query );
+
+    // TODO: execute search queries in parallel
+    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" /><abbr class="pull-right track-length">'+item.duration.toHHMMSS()+'</abbr>' +item.title+' </li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
@@ -584,11 +606,37 @@ $(window).load(function(){
             console.log(response);
           });
 
-          $('#search-results').html('');
-          $('#search-query').val('');
+          $('#search-modal').modal('hide');
+          $('*[data-for=track-search-results]').html('');
+          $('*[data-for=track-search-query]').val('');
 
           return false;
-        }).appendTo('#search-results');
+        }).appendTo('*[data-for=track-search-results]');
+      });
+    });
+
+    $.getJSON('https://api.soundcloud.com/tracks.json?client_id=7fbc3f4099d3390415d4c95f16f639ae', { q: query }, function(tracks) {
+      console.log('soundcloud returned: ' + tracks);
+      if (!tracks.length) { return false; }
+      console.log('soundcloud iterating...');
+      tracks.forEach(function(track) {
+        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+' </li>').on('click', function(e) {
+          e.preventDefault();
+          var self = this;
+
+          $.post('/playlist', {
+              source: $(self).data('source')
+            , id: $(self).data('id')
+          }, function(response) {
+            console.log(response);
+          });
+
+          $('#search-modal').modal('hide');
+          $('*[data-for=track-search-results]').html('');
+          $('*[data-for=track-search-query]').val('');
+
+          return false;
+        }).appendTo('*[data-for=track-search-results]');
       });
     });
 
