@@ -189,50 +189,48 @@ $(window).load(function(){
               $('#track-curator').html('the machine');
             }
 
-            promise.done(function() {
-              var sources = [];
+            var sources = [];
 
-              msg.data.sources.youtube.forEach(function( item ) {
-                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
-              });
-
-              msg.data.sources.soundcloud.forEach(function( item ) {
-                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
-              });
-
-              soundtrack.player.src( sources );
-
-              // YouTube doesn't behave well without these two lines...
-              soundtrack.player.pause();
-              soundtrack.player.currentTime( msg.seekTo );
-              soundtrack.player.play();
-
-              // ...and SoundCloud doesn't behave well without these. :/
-              var bufferEvaluator = function() {
-                console.log('evaluating buffer...');
-
-                var now = new Date();
-                var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
-                var estimatedProgress = estimatedSeekTo / msg.data.duration / 1000;
-
-                if (soundtrack.player.bufferedPercent() > estimatedProgress) {
-                  soundtrack.player.off('progress', bufferEvaluator);
-                  console.log('jumping to ' + msg.seekTo + '...');
-                  soundtrack.player.pause(); // this breaks soundcloud, wat?
-                  soundtrack.player.currentTime( msg.seekTo );
-                  soundtrack.player.play();
-                } else {
-                  console.log('estimated progress: ' + estimatedProgress );
-                  console.log( soundtrack.player.bufferedPercent() )
-                }
-              };
-              //soundtrack.player.off('progress', bufferEvaluator);
-              soundtrack.player.on('progress', bufferEvaluator);
-              soundtrack.player.on('loadeddata', bufferEvaluator);
-
-              ensureVolumeCorrect();
-
+            msg.data.sources.youtube.forEach(function( item ) {
+              sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
             });
+
+            msg.data.sources.soundcloud.forEach(function( item ) {
+              sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+            });
+
+            soundtrack.player.src( sources );
+
+            // YouTube doesn't behave well without these two lines...
+            soundtrack.player.pause();
+            soundtrack.player.currentTime( msg.seekTo );
+            soundtrack.player.play();
+
+            // ...and SoundCloud doesn't behave well without these. :/
+            var bufferEvaluator = function() {
+              console.log('evaluating buffer...');
+
+              var now = new Date();
+              var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
+              var estimatedProgress = estimatedSeekTo / msg.data.duration / 1000;
+
+              if (soundtrack.player.bufferedPercent() > estimatedProgress) {
+                soundtrack.player.off('progress', bufferEvaluator);
+                soundtrack.player.off('loadeddata', bufferEvaluator);
+                console.log('jumping to ' + msg.seekTo + '...');
+                soundtrack.player.pause(); // this breaks soundcloud, wat?
+                soundtrack.player.currentTime( msg.seekTo );
+                soundtrack.player.play();
+              } else {
+                console.log('estimated progress: ' + estimatedProgress );
+                console.log( soundtrack.player.bufferedPercent() )
+              }
+            };
+            //soundtrack.player.off('progress', bufferEvaluator);
+            soundtrack.player.on('progress', bufferEvaluator);
+            soundtrack.player.on('loadeddata', bufferEvaluator);
+
+            ensureVolumeCorrect();
 
             if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
               $('#playlist-list li:first').slideUp('slow', function() {
