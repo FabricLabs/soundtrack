@@ -29,7 +29,7 @@ block content
 
           if (user)
             .btn-group
-              a.btn(href="#", onclick="$.post('/skip'); return false;") skip
+              a.btn(href="#", data-action="skip-track") skip
 
             .btn-group.pull-right
               a.btn(href="#playlist-modal", data-toggle="modal") your playlists

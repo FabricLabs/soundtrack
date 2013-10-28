@@ -203,10 +203,11 @@ $(window).load(function(){
               soundtrack.player.src( sources );
 
               // YouTube doesn't behave well without these two lines...
+              soundtrack.player.pause();
               soundtrack.player.currentTime( msg.seekTo );
               soundtrack.player.play();
 
-              // ...and SoundCloud doesn't behave well without these.
+              // ...and SoundCloud doesn't behave well without these. :/
               var bufferEvaluator = function() {
                 console.log('evaluating buffer...');
 
@@ -217,6 +218,7 @@ $(window).load(function(){
                 if (soundtrack.player.bufferedPercent() > estimatedProgress) {
                   soundtrack.player.off('progress', bufferEvaluator);
                   console.log('jumping to ' + msg.seekTo + '...');
+                  soundtrack.player.pause(); // this breaks soundcloud, wat?
                   soundtrack.player.currentTime( msg.seekTo );
                   soundtrack.player.play();
                 } else {
@@ -226,6 +228,7 @@ $(window).load(function(){
               };
               //soundtrack.player.off('progress', bufferEvaluator);
               soundtrack.player.on('progress', bufferEvaluator);
+              soundtrack.player.on('loadeddata', bufferEvaluator);
 
               ensureVolumeCorrect();
 
@@ -562,6 +565,13 @@ $(window).load(function(){
       OutgoingChatHandler.chatSubmit(msg);
     }
 
+    return false;
+  });
+
+  $(document).on('click', '*[data-action=skip-track]', function(e) {
+    e.preventDefault();
+    soundtrack.player.pause();
+    $.post('/skip');
     return false;
   });
 
