@@ -212,7 +212,7 @@ $(window).load(function(){
 
               var now = new Date();
               var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
-              var estimatedProgress = estimatedSeekTo / msg.data.duration / 1000;
+              var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
 
               if (soundtrack.player.bufferedPercent() > estimatedProgress) {
                 soundtrack.player.off('progress', bufferEvaluator);
