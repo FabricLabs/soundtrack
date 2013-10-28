@@ -6,6 +6,9 @@ var Soundtrack = function() {
   this.user = {
     username: $('a[data-for=user-model]').data('username')
   };
+  this.controls = {
+    volume: {}
+  }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   if (window.webkitNotifications.checkPermission() != 0) {
@@ -15,6 +18,7 @@ Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   }
 }
 Soundtrack.prototype.notify = function(img, title, content, callback) {
+
   if (!this.settings.notifications) { return false; }
 
   var notification = window.webkitNotifications.createNotification( img , title , content );
@@ -29,182 +33,59 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
+function volumeChangeHandler(e) {
+  var self = this;
 
-deferred = new $.Deferred();
-promise = deferred.promise();
+  console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
+  console.log( typeof($(self).val()) )
 
-$(document).ready(function(){
-
-  var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
-  var retryIdx = 0;
-  COOKIE_EXPIRES = 30;
-
-  // must be after DOM loads so we have access to the user-model
-  soundtrack = new Soundtrack();
-
-  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-
-  startSockJs = function(){
-    sockjs = new SockJS('/stream');
-
-    sockjs.onopen = function(){
-      //sockjs connection has been opened!
-      $.post('/socket-auth', {}, function(data){
-        sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
-      });
-    }
-
-    sockjs.onmessage = function(e) {
-      retryIdx = 0; //reset our retry timeouts
-
-      var msg = JSON.parse(e.data);
-
-      console.log(msg);
-
-      switch (msg.type) {
-        default: console.log('unhandled message: ' + msg); break;
-        case 'track':
-          if (msg.data._artist) {
-            $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
-
-            $('#track-artist').attr('href', '/'+msg.data._artist.slug);
-            $('#track-artist').html( msg.data._artist.name );
-          } else {
-            $('#track-artist').html( 'unknown' );
-          }
-          
-          $('#track-title').html( msg.data.title );
-
-
-          $('input[name=current-track-id]').val( msg.data._id );
-          if (msg.data.curator) {
-            $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
-          
-            $('#userlist li').removeClass('current-curator');
-            $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
-          } else {
-            $('#track-curator').html('the machine');
-          }
-
-          promise.done(function() {
-            ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-            ytplayer.seekTo( msg.seekTo );
-            ytplayer.playVideo();
-          });
-
-          if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
-            $('#playlist-list li:first').slideUp('slow', function() {
-              $('#playlist-list li:first').attr('style', 'display: none;');
-              updatePlaylist();
-            });
-          } else {
-            updatePlaylist();
-          }
-
-        break;
-        case 'playlist:add':
-          updatePlaylist();
-        break;
-        case 'playlist:update':
-          updatePlaylist();
-        break;
-        case 'join':
-          updateUserlist();
-        break;
-        case 'part':
-          $('#userlist li[data-user-id='+msg.data._id+']').remove();
-        break;
-        case 'chat':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-          $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-        
-          if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
-            soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
-          }
-
-        break;
-        case 'ping':
-          sockjs.send(JSON.stringify({type: 'pong'}));
-          console.log("Ping Pong\'d");
-        break;
-        case 'announcement':
-          $( msg.data.formatted ).appendTo('#messages');
-          $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
-      }
-    };
-
-    sockjs.onclose = function() { 
-      console.log('Lost our connection, lets retry!');
-      if (retryIdx < retryTimes.length) {
-        console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
-        setTimeout(restartSockJs, retryTimes[retryIdx++]);
-      } else {
-        alert('Bummer. We lost connection.');
-      }
-    };
-  }
-
-  restartSockJs = function(){
-    sockjs = null;
-    startSockJs();
-  }
-
-  restartSockJs();
-
-});
-
-promise.done(function() {
-  ytplayer.addEventListener("onStateChange", "onPlayerStateChange");
-  ytplayer.addEventListener("onError", "onPlayerError");
-
-  if (!registered) {
-    introJs().start();
-    mutePlayer();
-  } else {
-    if ($.cookie('lastVolume')) {
-      ytplayer.setVolume( $.cookie('lastVolume') );
-      volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
-    } else {
-      mutePlayer();
-    }
-  }
-
-  ytplayer.playVideo();
-
-  setInterval(function() {
-    // TODO: use angularJS for this
-    var time = ytplayer.getCurrentTime().toString().toHHMMSS();
-    var total = ytplayer.getDuration().toString().toHHMMSS();
-    $('#current-track #time').html( time + '/' + total);
-
-    var progress = ((ytplayer.getCurrentTime() / ytplayer.getDuration()) * 100);
-    $('#track-progress .bar').css('width', progress + '%');
-    $('#track-progress').attr('title', progress + '%');
-
-  }, 1000);
-});
-
-function onYouTubePlayerReady(playerId) {
-  ytplayer = document.getElementById("ytPlayer");
-  deferred.resolve();
+  soundtrack.player.volume( $(self).val() / 100 );
+  $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer() {
-  ytplayer.setVolume(0);
-  volume.slider('setValue', 0).val(0);
+  // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
+  soundtrack.player.volume( 0.00001 );
+  $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
   if ($.cookie('lastVolume')) {
-    ytplayer.setVolume( $.cookie('lastVolume') );
-    volume.slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
+    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
   } else {
-    ytplayer.setVolume(80);
-    volume.slider('setValue', 80).val(80);
+    soundtrack.player.volume( 0.8 );
+    $('.slider[data-for=volume]').slider('setValue', 80).val(80);
     $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
   }
+}
+function ensureVolumeCorrect() {
+  if (registered) {
+    console.log('last volume... ' + $.cookie('lastVolume') + ' => '  +  ($.cookie('lastVolume') / 100) );
+    // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
+    soundtrack.player.volume( ($.cookie('lastVolume') + 0.001) / 100 );
+    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
+  } else {
+    mutePlayer();
+  }
+}
+function updateUserlist() {
+  $.get('/listeners.json', function(data) {
+    $('#userlist').html('');
+    $('.user-count').html('<strong>'+data.length+'</strong> online');
+    data.forEach(function(user) {
+      // TODO: use template (Blade?)
+      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+    });
+  });
+}
+function AppController($scope, $http) {
+  window.updatePlaylist = function(){
+    $http.get('/playlist.json').success(function(data){
+      $scope.tracks = data;
+    });
+  }
+
+  updatePlaylist();
 }
 
 String.prototype.toHHMMSS = function () {
@@ -224,47 +105,208 @@ String.prototype.toHHMMSS = function () {
   }
   return time;
 }
+Number.prototype.toHHMMSS = String.prototype.toHHMMSS;
 
-function AppController($scope, $http) {
-  window.updatePlaylist = function(){
-    $http.get('/playlist.json').success(function(data){
-      $scope.tracks = data;
-    });
-  }
+deferred = new $.Deferred();
+promise = deferred.promise();
 
-  updatePlaylist();
-}
+promise.done(function() {
 
-function updateUserlist() {
-  $.get('/listeners.json', function(data) {
-    $('#userlist').html('');
-    $('.user-count').html('<strong>'+data.length+'</strong> online');
-    data.forEach(function(user) {
-      // TODO: use template (Blade?)
-      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
-    });
+  soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
+  soundtrack.controls.volume.on('slide', volumeChangeHandler);
+  soundtrack.controls.volume.on('click', volumeChangeHandler);
+
+  if (!registered) { introJs().start(); }
+
+  ensureVolumeCorrect();
+
+  setInterval(function() {
+    // TODO: use angularJS for this
+    var time = soundtrack.player.currentTime().toString().toHHMMSS();
+    var total = soundtrack.player.duration().toString().toHHMMSS();
+    $('#current-track #time').html( time + '/' + total);
+
+    var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
+    $('#track-progress .bar').css('width', progress + '%');
+    $('#track-progress').attr('title', progress + '%');
+  }, 1000);
+});
+
+$(window).load(function(){
+
+  var sockjs = null;
+  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
+  var retryIdx = 0;
+  COOKIE_EXPIRES = 30;
+
+  // must be after DOM loads so we have access to the user-model
+  soundtrack = new Soundtrack();
+  soundtrack.player = videojs('#main-player', {
+    techOrder: ['html5', 'flash', 'youtube']
   });
-}
+  soundtrack.player.ready(function() {
+    console.log('player loaded. :)');
 
-$(window).on('load', function() {
+    startSockJs = function(){
+      sockjs = new SockJS('/stream');
+
+      sockjs.onopen = function(){
+        //sockjs connection has been opened!
+        $.post('/socket-auth', {}, function(data){
+          sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+        });
+      }
+
+      sockjs.onmessage = function(e) {
+        retryIdx = 0; //reset our retry timeouts
+        var received = new Date();
+
+        var msg = JSON.parse(e.data);
+        console.log(msg);
+
+        switch (msg.type) {
+          default: console.log('unhandled message: ' + msg); break;
+          case 'track':
+            if (msg.data._artist) {
+              $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
+
+              $('#track-artist').attr('href', '/'+msg.data._artist.slug);
+              $('#track-artist').html( msg.data._artist.name );
+            } else {
+              $('#track-artist').html( 'unknown' );
+            }
+            
+            $('#track-title').html( msg.data.title );
+
+
+            $('input[name=current-track-id]').val( msg.data._id );
+            if (msg.data.curator) {
+              $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
+            
+              $('#userlist li').removeClass('current-curator');
+              $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
+            } else {
+              $('#track-curator').html('the machine');
+            }
+
+            promise.done(function() {
+              var sources = [];
+
+              msg.data.sources.youtube.forEach(function( item ) {
+                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
+              });
+
+              msg.data.sources.soundcloud.forEach(function( item ) {
+                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+              });
+
+              soundtrack.player.src( sources );
+
+              // YouTube doesn't behave well without these two lines...
+              soundtrack.player.currentTime( msg.seekTo );
+              soundtrack.player.play();
+
+              // ...and SoundCloud doesn't behave well without these.
+              var bufferEvaluator = function() {
+                console.log('evaluating buffer...');
+
+                var now = new Date();
+                var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
+                var estimatedProgress = estimatedSeekTo / msg.data.duration / 1000;
+
+                if (soundtrack.player.bufferedPercent() > estimatedProgress) {
+                  soundtrack.player.off('progress', bufferEvaluator);
+                  console.log('jumping to ' + msg.seekTo + '...');
+                  soundtrack.player.currentTime( msg.seekTo );
+                  soundtrack.player.play();
+                } else {
+                  console.log('estimated progress: ' + estimatedProgress );
+                  console.log( soundtrack.player.bufferedPercent() )
+                }
+              };
+              //soundtrack.player.off('progress', bufferEvaluator);
+              soundtrack.player.on('progress', bufferEvaluator);
+
+              ensureVolumeCorrect();
+
+            });
+
+            if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
+              $('#playlist-list li:first').slideUp('slow', function() {
+                $('#playlist-list li:first').attr('style', 'display: none;');
+                updatePlaylist();
+              });
+            } else {
+              updatePlaylist();
+            }
+
+          break;
+          case 'playlist:add':
+            updatePlaylist();
+          break;
+          case 'playlist:update':
+            updatePlaylist();
+          break;
+          case 'join':
+            updateUserlist();
+          break;
+          case 'part':
+            $('#userlist li[data-user-id='+msg.data._id+']').remove();
+          break;
+          case 'chat':
+            $( msg.data.formatted ).appendTo('#messages');
+            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+            $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+          
+            if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
+              soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
+            }
+          break;
+          case 'ping':
+            sockjs.send(JSON.stringify({type: 'pong'}));
+            console.log("Ping Pong\'d");
+          break;
+          case 'announcement':
+            $( msg.data.formatted ).appendTo('#messages');
+            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+          break;
+        }
+      };
+
+      sockjs.onclose = function() { 
+        console.log('Lost our connection, lets retry!');
+        if (retryIdx < retryTimes.length) {
+          console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
+          setTimeout(restartSockJs, retryTimes[retryIdx++]);
+        } else {
+          alert('Bummer. We lost connection.');
+        }
+      };
+    }
+
+    restartSockJs = function(){
+      sockjs = null;
+      startSockJs();
+    }
+
+    restartSockJs();
+
+    deferred.resolve();
+
+  });
+
+  $('.message .message-content').filter('.message-content:contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
+
   updatePlaylist();
   updateUserlist();
 
   // breaks javascript if page doesn't have #messages
   //$("#messages").scrollTop($("#messages")[0].scrollHeight);
 
-  // Lets Flash from another domain call JavaScript
-  var params = { allowScriptAccess: 'always', 'wmode' : 'transparent' };
-  // The element id of the Flash embed
-  var atts = { id: "ytPlayer" };
-
-  // All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
-  swfobject.embedSWF("https://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=player1", "screen-inner", "100%", "295", "9", null, null, params, atts);
-
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
-    var currentVolume = parseInt(volume.slider('getValue').val());
+    var currentVolume = parseInt( $('.slider[data-for=volume]').slider('getValue').val() );
 
     console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
 
@@ -277,12 +319,6 @@ $(window).on('load', function() {
     }
 
     return false;
-  });
-
-  volume = $('.slider').slider().on('slide', function(e) {
-    var self = this;
-    ytplayer.setVolume( $(self).val() );
-    $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
   });
 
   OutgoingChatHandler = (function(){
@@ -322,10 +358,10 @@ $(window).on('load', function() {
 
   // /reset -> reset the video player
   OutgoingChatHandler.addListener('reset', function(msg){
-    var cur = ytplayer.getCurrentTime();
-    ytplayer.stopVideo();
-    ytplayer.seekTo(cur);
-    ytplayer.playVideo();
+    var cur = soundtrack.player.currentTime();
+    soundtrack.player.stop();
+    soundtrack.player.currentTime(cur);
+    soundtrack.player.play();
   });
 
   partying = false;
@@ -529,15 +565,49 @@ $(window).on('load', function() {
     return false;
   });
 
-  $('#search-form').on('submit', function(e) {
+  $(document).on('click', '*[data-for=track-search-reset]', function(e) {
     e.preventDefault();
-    $('#search-results').html('');
+    $('*[data-for=track-search-results]').html('');
+    $('*[data-for=track-search-query]').val('');
+    $('#search-modal *[data-for=track-search-query]').focus();
+    $('*[data-for=track-search-select-source]').removeClass('btn-primary');
+    return false;
+  });
 
-    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + $('#search-query').val(), function(data) {
-      console.log(data.data.items);
+  $(document).on('click', '*[data-for=track-search-select-source]', function(e) {
+    e.preventDefault();
+    var self = this;
 
+    $('*[data-for=track-search-select-source]').removeClass('btn-primary');
+    $( self ).addClass('btn-primary');
+
+    if ($(self).data('data') == 'all') {
+      $('*[data-for=track-search-results] li').slideDown();
+    } else {
+
+      $('*[data-for=track-search-results] li:not(*[data-source='+ $(self).data('data') +'])').slideUp();
+      $('*[data-for=track-search-results] li[data-source='+ $(self).data('data') +']').slideDown();
+    }
+
+    return false;
+  });
+
+  $(document).on('submit', '#search-form', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $('*[data-for=track-search-results]').html('');
+    $('#search-modal').modal();
+    $('#search-modal *[data-for=track-search-query]').focus();
+
+    var query = $( self ).children('*[data-for=track-search-query]').val();
+    console.log( $( self ).children('*[data-for=track-search-query]') )
+    $('*[data-for=track-search-query]').val( query );
+
+    // TODO: execute search queries in parallel
+    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
@@ -548,11 +618,39 @@ $(window).on('load', function() {
             console.log(response);
           });
 
-          $('#search-results').html('');
-          $('#search-query').val('');
+          $('#search-modal').modal('hide');
+          $('*[data-for=track-search-results]').html('');
+          $('*[data-for=track-search-query]').val('');
+          $('*[data-for=track-search-select-source]').removeClass('btn-primary');
 
           return false;
-        }).appendTo('#search-results');
+        }).appendTo('*[data-for=track-search-results]');
+      });
+    });
+
+    $.getJSON('https://api.soundcloud.com/tracks.json?client_id=7fbc3f4099d3390415d4c95f16f639ae', { q: query }, function(tracks) {
+      console.log('soundcloud returned: ' + tracks);
+      if (!tracks.length) { return false; }
+      console.log('soundcloud iterating...');
+      tracks.forEach(function(track) {
+        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'</li>').on('click', function(e) {
+          e.preventDefault();
+          var self = this;
+
+          $.post('/playlist', {
+              source: $(self).data('source')
+            , id: $(self).data('id')
+          }, function(response) {
+            console.log(response);
+          });
+
+          $('#search-modal').modal('hide');
+          $('*[data-for=track-search-results]').html('');
+          $('*[data-for=track-search-query]').val('');
+          $('*[data-for=track-search-select-source]').removeClass('btn-primary');
+
+          return false;
+        }).appendTo('*[data-for=track-search-results]');
       });
     });
 

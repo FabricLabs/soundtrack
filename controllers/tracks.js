@@ -18,6 +18,7 @@ module.exports = {
     });
   },
   view: function(req, res, next) {
+    // TODO: use artist in the lookup
     Track.findOne({ $or: [
         { _id: req.param('trackID') }
       , { slug: req.param('trackSlug') }

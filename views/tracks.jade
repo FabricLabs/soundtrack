@@ -1,14 +1,16 @@
 extends layout
 
 block content
-  h1 Tracks
 
-  ul
-    for track in tracks
-      li
-        if (track._artist)
-          a(href="/#{track._artist.slug}") #{track._artist.name}
-          |  &mdash; 
-          a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-        else
-          h5 ಠ_ಠ #{track}
+  .well.content-well
+    h1 Tracks
+
+    ul
+      for track in tracks
+        li
+          if (track._artist)
+            a(href="/#{track._artist.slug}") #{track._artist.name}
+            |  &mdash; 
+            a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+          else
+            h5 ಠ_ಠ #{track}

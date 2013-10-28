@@ -1,14 +1,15 @@
 extends layout
 
 block content
+  .well.content-well
+    img.avatar-large.pull-left(src="#{artist.image.url}")
 
-  img.avatar-large.pull-left(src="#{artist.image.url}")
+    h1 #{artist.name}
+    .artist-bio !{artist.bio}
 
-  h1 #{artist.name}
-  .artist-bio !{artist.bio}
-
-  h5 #{tracks.length} known tracks
-  ul
-    for track in tracks
-      li
-        a(href="/#{artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+    h5 #{tracks.length} known tracks
+    ul
+      for track in tracks
+        li
+          a(href="/#{artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+          |  played <strong>#{track.plays}</strong> times
