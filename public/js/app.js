@@ -9,6 +9,14 @@ var Soundtrack = function() {
   this.controls = {
     volume: {}
   }
+  this.player = {
+    ready: function(callback) {
+      callback();
+    },
+    src: function(src) {
+      return src;
+    }
+  }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   if (window.webkitNotifications.checkPermission() != 0) {
@@ -46,10 +54,11 @@ function volumeChangeHandler(e) {
 function mutePlayer() {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
   soundtrack.player.volume( 0.00001 );
+  $.cookie('lastVolume', '0');
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
-  if ($.cookie('lastVolume')) {
+  if (parseInt($.cookie('lastVolume'))) {
     soundtrack.player.volume( $.cookie('lastVolume') / 100 );
     $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
   } else {
@@ -141,9 +150,15 @@ $(window).load(function(){
 
   // must be after DOM loads so we have access to the user-model
   soundtrack = new Soundtrack();
-  soundtrack.player = videojs('#main-player', {
-    techOrder: ['html5', 'flash', 'youtube']
-  });
+  if ($('#main-player').length) {
+    soundtrack.player = videojs('#main-player', {
+      techOrder: ['html5', 'flash', 'youtube']
+    });
+  } else {
+    soundtrack.player = videojs('#secondary-player', {
+      techOrder: ['html5', 'flash', 'youtube']
+    });
+  }
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
 
@@ -167,6 +182,8 @@ $(window).load(function(){
         switch (msg.type) {
           default: console.log('unhandled message: ' + msg); break;
           case 'track':
+            updatePlaylist();
+
             if (msg.data._artist) {
               $('#track-title').attr('href', '/'+msg.data._artist.slug+'/'+msg.data.slug+'/'+msg.data._id);
 
@@ -600,17 +617,19 @@ $(window).load(function(){
     return false;
   });
 
-  $(document).on('submit', '#search-form', function(e) {
+  $(document).on('submit', 'form[data-for=track-search]', function(e) {
     e.preventDefault();
     var self = this;
 
     $('*[data-for=track-search-results]').html('');
     $('#search-modal').modal();
-    $('#search-modal *[data-for=track-search-query]').focus();
 
-    var query = $( self ).children('*[data-for=track-search-query]').val();
-    console.log( $( self ).children('*[data-for=track-search-query]') )
+    var query = $( self ).find('*[data-for=track-search-query]').val();
+    console.log( $( self ).find('*[data-for=track-search-query]') )
     $('*[data-for=track-search-query]').val( query );
+
+    var $input = $( self ).find('*[data-for=track-search-query]');
+    $input.selectionStart = $input.selectionEnd = $input.val().length;
 
     // TODO: execute search queries in parallel
     $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
