@@ -55,6 +55,8 @@ html(lang="en-US", ng-app)
               if (user)
                 li
                   a(href="/people") People
+              li(style="margin-left: 10px;")
+                video(id="secondary-player", src="", class="video-js vjs-default-skin", width="75", height="40", preload="auto")
 
             ul.nav.pull-right
               if (user)
@@ -121,3 +123,10 @@ html(lang="en-US", ng-app)
         button.btn.btn-primary.btn-large(data-dismiss="modal") Done
 
     block scripts
+
+    if (!user)
+      script.
+        registered = false;
+    else
+      script.
+        registered = true;

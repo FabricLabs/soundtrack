@@ -57,7 +57,7 @@ block content
                   span {{track._artist.name}} &mdash; {{track.title}}
 
           h5 Add Track
-          form#search-form.input-append(style="display:block;")
+          form#search-form.input-append(style="display:block;", data-for="track-search")
             if (user)
               input.input-block-level(type="text", data-for="track-search-query", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
               button.btn(type="submit")
@@ -98,12 +98,6 @@ block content
             ul.nav.nav-list#userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="left")
 
 block scripts
-  if (!user)
-    script.
-      registered = false;
-  else
-    script.
-      registered = true;
 
     #playlist-modal.modal.hide.fade
       .modal-header
@@ -132,7 +126,7 @@ block scripts
         button.close(data-dismiss="modal") &times;
         h3 Track Search
       .modal-body
-        form#search-form(data-for="track-search")
+        form(data-for="track-search")
           .btn-group.pull-right
             a.btn(data-for="track-search-select-source", data-data="youtube") YouTube
             a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
@@ -150,30 +144,31 @@ block scripts
         button.btn.btn(data-dismiss="modal") Cancel
         button.btn.btn-primary.btn-large(data-dismiss="modal") Done
 
-    form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
-      #create-playlist-modal.modal.hide.fade
-        .modal-header
-          button.close(data-dismiss="modal") &times;
-          h3 Create Playlist
-        .modal-body
-          label(required="required") Name
-          input(type="text", name="name")
+    if (user)
+      form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
+        #create-playlist-modal.modal.hide.fade
+          .modal-header
+            button.close(data-dismiss="modal") &times;
+            h3 Create Playlist
+          .modal-body
+            label(required="required") Name
+            input(type="text", name="name")
 
-          label(required="required") Description
-          textarea(type="text", name="description")
+            label(required="required") Description
+            textarea(type="text", name="description")
 
-          label
-            input(type="checkbox", name="public", value="true", checked)
-            |  
-            i.icon-globe
-            |  Public
+            label
+              input(type="checkbox", name="public", value="true", checked)
+              |  
+              i.icon-globe
+              |  Public
 
-          h4 You'll be adding the following track:
-          h5
-            span.track-artist foo
-            |  &mdash; 
-            span.track-title bar
+            h4 You'll be adding the following track:
+            h5
+              span.track-artist foo
+              |  &mdash; 
+              span.track-title bar
 
-        .modal-footer
-          button.btn.btn(data-dismiss="modal") Cancel
-          button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
+          .modal-footer
+            button.btn.btn(data-dismiss="modal") Cancel
+            button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
