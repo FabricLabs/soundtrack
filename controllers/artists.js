@@ -24,7 +24,8 @@ module.exports = {
           res.render('artist', {
               artist: artist
             , tracks: tracks.map(function(track) {
-                track.plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } ).count;
+                var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
+                track.plays = (plays) ? plays.count : 0;
                 return track;
               })
           });

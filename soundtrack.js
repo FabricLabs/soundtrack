@@ -380,11 +380,11 @@ function startMusic() {
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
 
-  Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
+  Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').lean().exec(function(err, track) {
     if (track) {
       app.broadcast({
           type: 'track'
-        , data: track
+        , data: _.extend( app.room.playlist[0] , track )
         , seekTo: seekTo
       });
     } else {
@@ -525,7 +525,7 @@ sock.on('connection', function(conn) {
     Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
       conn.write(JSON.stringify({
           type: 'track'
-        , data: track
+        , data: _.extend( app.room.playlist[0] , track )
         , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
       }));
     });
@@ -659,13 +659,14 @@ function queueTrack(track, curator, queueCallback) {
 
 function parseTitleString(string, partsCallback) {
   var artist, title, credits = [];
+  var string = string || '';
 
   // TODO: load from datafile
   var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]',
     '[glitch hop]', '[video]', '[official video]', '(official video)',
     '[ official video ]', '[official music video]', '[free download]',
     '[free DL]', '( 1080p )', '(with lyrics)', '(High Res / Official video)',
-    '[monstercat release]'];
+    '[monstercat release]', '(hd)'];
   baddies.forEach(function(token) {
     string = string.replace(token + ' - ', '').trim();
     string = string.replace(token.toUpperCase() + ' - ', '').trim();
@@ -708,11 +709,13 @@ function trackFromSource(source, id, sourceCallback) {
       callback('Unknown source: ' + source);
     break;
     case 'soundcloud':
-      console.log(config.soundcloud.id);
       rest.get('https://api.soundcloud.com/tracks/'+parseInt(id)+'.json?client_id='+config.soundcloud.id).on('complete', function(data) {
+        console.log(data);
         if (!data.title) { return sourceCallback('No video found.'); }
 
         parseTitleString( data.title , function(parts) {
+
+          console.log('parts: ' + JSON.stringify(parts) );
 
           Track.findOne({ $or: [
             { 'sources.soundcloud.id': data.id }
@@ -723,11 +726,13 @@ function trackFromSource(source, id, sourceCallback) {
                   { _id: track._artist }
                 , { slug: slug( parts.artist ) }
             ] }).exec(function(err, artist) {
+              if (err) { console.log(err); }
               if (!artist) { var artist = new Artist({}); }
 
               artist.name = artist.name || parts.artist;
 
               artist.save(function(err) {
+                if (err) { console.log(err); }
 
                 track.title    = track.title    || parts.title;
                 track._artist  = track._artist  || artist._id;
