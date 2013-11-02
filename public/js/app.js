@@ -628,8 +628,8 @@ $(window).load(function(){
     console.log( $( self ).find('*[data-for=track-search-query]') )
     $('*[data-for=track-search-query]').val( query );
 
-    var $input = $( self ).find('*[data-for=track-search-query]');
-    $input.selectionStart = $input.selectionEnd = $input.val().length;
+    var $input = $('#search-modal *[data-for=track-search-query]');
+    $input[0].selectionStart = $input[0].selectionEnd = $input.val().length;
 
     // TODO: execute search queries in parallel
     $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
