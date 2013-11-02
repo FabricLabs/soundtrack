@@ -87,6 +87,29 @@ function updateUserlist() {
     });
   });
 }
+var videoToggled = false; //TODO: Should this use Cookie?
+
+function toggleVideo() {
+  if(videoToggled)
+    toggleVideoOn();
+  else
+    toggleVideoOff();
+}
+
+function toggleVideoOn() {
+  $('#screen-one *').css('height', '300px'); $('#messages').css('height', '256px');
+  $(this).children('i').replaceWith($('<i class="icon-chevron-up"></i>'));
+  $("#messages").scrollTop($("#messages")[0].scrollHeight);
+
+  videoToggled = false;
+}
+
+function toggleVideoOff() {
+  $('#screen-one *').css('height', '0px'); $('#messages').css('height', '541px');
+  $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
+  
+  videoToggled = true;
+}
 function AppController($scope, $http) {
   window.updatePlaylist = function(){
     $http.get('/playlist.json').success(function(data){
@@ -380,6 +403,21 @@ $(window).load(function(){
     soundtrack.player.stop();
     soundtrack.player.currentTime(cur);
     soundtrack.player.play();
+  });
+
+  // /video -> toggle video
+  OutgoingChatHandler.addListener('video', function(msg) {
+    switch((msg.split(' ')[1] || '').toLowerCase()) {
+      case 'on':
+        toggleVideoOn();
+      break;
+      case 'off':
+        toggleVideoOff();
+      break;
+      default:
+        toggleVideo();
+      break;
+    }
   });
 
   partying = false;
@@ -750,14 +788,7 @@ $(window).load(function(){
   });
 
   $(document).on('click', '*[data-action=toggle-video]', function(e) {
-    if ([256,262].indexOf(parseInt($('#messages').css('height'))) == -1) {
-      $('#screen-one *').css('height', '300px'); $('#messages').css('height', '256px');
-      $(this).children('i').replaceWith($('<i class="icon-chevron-up"></i>'));
-      $("#messages").scrollTop($("#messages")[0].scrollHeight);
-    } else {
-      $('#screen-one *').css('height', '0px'); $('#messages').css('height', '541px');
-      $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
-    }
+    toggleVideo();
   });
 
   $('*[data-action=ding]').click(function(e) {
