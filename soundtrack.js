@@ -344,8 +344,8 @@ function nextSong() {
     Play.findOne({
         _curator: { $exists: true }
       , timestamp: { $gte: Math.floor((new Date()).getTime() / 1000) - 604800 }
-    }).sort('timestamp').lean().exec(function(err, track) {
-      app.room.playlist.push( _.extend( track , {
+    }).sort('timestamp').populate('_track').lean().exec(function(err, play) {
+      app.room.playlist.push( _.extend( play._track , {
           score: 0
         , votes: {}
       } ) );
