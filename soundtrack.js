@@ -335,38 +335,59 @@ function getYoutubeVideo(videoID, internalCallback) {
   });
 };
 
-
-function nextSong() {
+function ensureQueue(callback) {
   // remove the first track in the playlist...
   var lastTrack = app.room.playlist.shift();
+  console.log(app.room.playlist.length);
 
   if (app.room.playlist.length == 0) {
-    Play.findOne({
+    var query = {
         _curator: { $exists: true }
-      , timestamp: { $gte: Math.floor((new Date()).getTime() / 1000) - 604800 }
-    }).sort('timestamp').populate('_track').lean().exec(function(err, play) {
-      app.room.playlist.push( _.extend( play._track , {
-          score: 0
-        , votes: {}
-      } ) );
+      , timestamp: { $gte: new Date((Math.floor((new Date()).getTime() / 1000) - 604800) * 1000) }
+    };
+    console.log('!!!!!!!!!!!!!!!!!!!!! QUERY !!!!!!!!!!!!!!!!!!!!!')
+    console.log( query );
+
+    Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
+      console.log('plays are ' + plays.length + ' long.');
+
+      var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
+      console.log('random selection is ')
+      console.log(randomSelection);
+
+      Track.findOne({ _id: randomSelection._track }).populate('_artist').exec(function(err, track) {
+
+        console.log('track is: ')
+        console.log( track );
+
+        app.room.playlist.push( _.extend( track , {
+            score: 0
+          , votes: {}
+        } ) );
+        callback();
+      });
     });
-    return nextSong();
+  } else {
+    callback();
   }
+}
 
-  app.room.playlist[0].startTime = Date.now();
-  app.room.track = app.room.playlist[0];
+function nextSong() {
+  ensureQueue(function() {
+    app.room.playlist[0].startTime = Date.now();
+    app.room.track = app.room.playlist[0];
 
-  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+    app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
-  var play = new Play({
-      _track: app.room.playlist[0]._id
-    , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
+    var play = new Play({
+        _track: app.room.playlist[0]._id
+      , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
+    });
+    play.save(function(err) {
+      // ...then start the music.
+      startMusic();
+    });
   });
-  play.save(function(err) {
-    // ...then start the music.
-    startMusic();
-  });
-
 }
 
 function startMusic() {
