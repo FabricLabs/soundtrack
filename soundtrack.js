@@ -341,10 +341,16 @@ function nextSong() {
   var lastTrack = app.room.playlist.shift();
 
   if (app.room.playlist.length == 0) {
-    app.room.playlist.push( _.extend( backupTracks[ _.random(0, backupTracks.length - 1 ) ] , {
-        score: 0
-      , votes: {}
-    } ) );
+    Play.findOne({
+        _curator: { $exists: true }
+      , timestamp: { $gte: Math.floor((new Date()).getTime() / 1000) - 604800 }
+    }).sort('timestamp').lean().exec(function(err, track) {
+      app.room.playlist.push( _.extend( track , {
+          score: 0
+        , votes: {}
+      } ) );
+    });
+    return nextSong();
   }
 
   app.room.playlist[0].startTime = Date.now();
