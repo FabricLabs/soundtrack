@@ -88,9 +88,9 @@ $(document).ready(function(){
           }
 
           promise.done(function() {
-            ytplayer.cueVideoById( msg.data.sources.youtube[0].id );
-            ytplayer.seekTo( msg.seekTo );
-            ytplayer.playVideo();
+            ytplayer.loadVideoById( msg.data.sources.youtube[0].id , msg.seekTo );
+            //ytplayer.seekTo( msg.seekTo );
+            //ytplayer.playVideo();
           });
 
           if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
@@ -123,7 +123,6 @@ $(document).ready(function(){
           if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
             soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
           }
-
         break;
         case 'ping':
           sockjs.send(JSON.stringify({type: 'pong'}));
@@ -234,6 +233,7 @@ function AppController($scope, $http) {
 
   updatePlaylist();
 }
+Number.prototype.toHHMMSS = String.prototype.toHHMMSS;
 
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
@@ -576,7 +576,7 @@ $(window).on('load', function() {
       console.log(data.data.items);
 
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
+        $('<li data-source="youtube" data-id="'+item.id+'"><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" /><abbr class="pull-right track-length">'+item.duration.toHHMMSS()+'</abbr>' +item.title+' </li>').on('click', function(e) {
           e.preventDefault();
           var self = this;
 
