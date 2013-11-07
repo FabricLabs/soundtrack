@@ -684,9 +684,12 @@ function queueTrack(track, curator, queueCallback) {
   queueCallback();
 }
 
+var TRACK_SEPARATOR = ' - ';
 function parseTitleString(string, partsCallback) {
   var artist, title, credits = [];
   var string = string || '';
+
+  console.log('parseTitleString(): ' + string);
 
   // TODO: load from datafile
   var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]',
@@ -703,8 +706,9 @@ function parseTitleString(string, partsCallback) {
     string = string.replace(token.toUpperCase(), '').trim();
     string = string.replace(token.capitalize(), '').trim();
   });
+  console.log('baddies parsed: ' + string);
 
-  var parts = string.split(' - ');
+  var parts = string.split( TRACK_SEPARATOR );
 
   if (parts.length == 2) {
     artist = parts[0];
@@ -715,7 +719,7 @@ function parseTitleString(string, partsCallback) {
     title = parts[1];
   } else {
     artist = parts[0];
-    title = parts[1];
+    title = parts[0];
   }
 
   // look for certain patterns in the string
@@ -723,11 +727,18 @@ function parseTitleString(string, partsCallback) {
   credits.push( artist.replace(/ ft\. (.*)/i,         '$1') );
   credits.push( artist.replace(/ feat\. (.*)/i,       '$1') );
 
-  partsCallback({
+  var output = {
       artist: artist
     , title: title
     , credits: credits
-  });
+  };
+
+  console.log('output parts: ' + output);
+  console.log('artist: ' + artist);
+  console.log('title: ' + title);
+  console.log('credits: ' + credits);
+
+  partsCallback(output);
 }
 
 function trackFromSource(source, id, sourceCallback) {
@@ -740,9 +751,11 @@ function trackFromSource(source, id, sourceCallback) {
         console.log(data);
         if (!data.title) { return sourceCallback('No video found.'); }
 
-        parseTitleString( data.title , function(parts) {
+        var stringToParse = (data.title.split( TRACK_SEPARATOR ).length > 1) ? data.title : data.user.username + ' - ' + data.title;
 
-          console.log('parts: ' + JSON.stringify(parts) );
+        parseTitleString( stringToParse , function(parts) {
+
+          //console.log('parts: ' + JSON.stringify(parts) );
 
           Track.findOne({ $or: [
             { 'sources.soundcloud.id': data.id }

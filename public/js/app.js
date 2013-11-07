@@ -655,12 +655,35 @@ $(window).load(function(){
     return false;
   });
 
+  var selectTrack = _.debounce(function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $( self ).slideUp(function() {
+      $( this ).remove();
+    });
+
+    $.post('/playlist', {
+        source: $(self).data('source')
+      , id: $(self).data('id')
+    }, function(response) {
+      console.log(response);
+    });
+
+    return false;
+  }, 200, true);
+
   $(document).on('submit', 'form[data-for=track-search]', function(e) {
     e.preventDefault();
     var self = this;
 
     $('*[data-for=track-search-results]').html('');
-    $('#search-modal').modal();
+    $('#search-modal').modal().on('hidden', function () {
+      $('*[data-for=track-search-results]').html('');
+      $('*[data-for=track-search-query]').val('');
+      $('*[data-for=track-search-select-source]').removeClass('btn-primary');
+    });
+
 
     var query = $( self ).find('*[data-for=track-search-query]').val();
     console.log( $( self ).find('*[data-for=track-search-query]') )
@@ -672,24 +695,7 @@ $(window).load(function(){
     // TODO: execute search queries in parallel
     $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+' </li>').on('click', function(e) {
-          e.preventDefault();
-          var self = this;
-
-          $.post('/playlist', {
-              source: $(self).data('source')
-            , id: $(self).data('id')
-          }, function(response) {
-            console.log(response);
-          });
-
-          $('#search-modal').modal('hide');
-          $('*[data-for=track-search-results]').html('');
-          $('*[data-for=track-search-query]').val('');
-          $('*[data-for=track-search-select-source]').removeClass('btn-primary');
-
-          return false;
-        }).appendTo('*[data-for=track-search-results]');
+        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
       });
     });
 
@@ -698,24 +704,7 @@ $(window).load(function(){
       if (!tracks.length) { return false; }
       console.log('soundcloud iterating...');
       tracks.forEach(function(track) {
-        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'</li>').on('click', function(e) {
-          e.preventDefault();
-          var self = this;
-
-          $.post('/playlist', {
-              source: $(self).data('source')
-            , id: $(self).data('id')
-          }, function(response) {
-            console.log(response);
-          });
-
-          $('#search-modal').modal('hide');
-          $('*[data-for=track-search-results]').html('');
-          $('*[data-for=track-search-query]').val('');
-          $('*[data-for=track-search-select-source]').removeClass('btn-primary');
-
-          return false;
-        }).appendTo('*[data-for=track-search-results]');
+        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
       });
     });
 
