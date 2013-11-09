@@ -165,6 +165,23 @@ function requireLogin(req, res, next) {
   }
 }
 
+function authorize(role) {
+  switch (role) {
+    case 'editor':
+      return function(req, res, next) {
+        if (!req.user || !req.user.roles || req.user.roles.indexOf( role ) == -1) {
+          res.status(401).send({
+              status: 'error'
+            , message: 'Not authorized.'
+          });
+        } else {
+          return next();
+        }
+      };
+    break;
+  }
+}
+
 var sock = sockjs.createServer();
 var server = http.createServer(app);
 
@@ -580,7 +597,11 @@ sock.on('connection', function(conn) {
 });
 sock.installHandlers(server, {prefix:'/stream'});
 
-app.get('/', pages.index);
+app.get('/', function(req, res, next) {
+  console.log( 'HOSTNAME: ' + req.headers.host );
+  console.log(req);
+  next();
+}, pages.index);
 app.get('/about', pages.about);
 
 app.get('/playlist.json', function(req, res) {
@@ -887,6 +908,9 @@ app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
 app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
+app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , tracks.edit);
+app.get('/tracks/:trackID', tracks.view );
+app.post('/tracks/:trackID',                 authorize('editor') , tracks.edit);
 
 app.get('/:artistSlug', artists.view);
 

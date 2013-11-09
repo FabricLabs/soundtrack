@@ -132,3 +132,23 @@ html(lang="en-US", ng-app)
     else
       script.
         registered = true;
+
+      form#edit-track-modal.modal.hide.fade(data-for="edit-track")
+        .modal-header
+          button.close(data-dismiss="modal") &times;
+          h3 Edit Track
+        .modal-body
+          label(for="artist") Track Artist
+          input.input-block-level.disabled(type="text", name="artist", disabled, title="This feature isn't finished yet...")
+
+          label(for="title") Track Title
+          input.input-block-level(type="text", name="title")
+          //-.row-fluid
+            label.span3 Start
+            label.span3 End
+          //-.row-fluid
+            input.span3(type="number", name="startTime")
+            input.span3(type="number", name="endTime")
+        .modal-footer
+          button.btn.btn(data-dismiss="modal") Cancel
+          button.btn.btn-primary.btn-large(type="submit") Save Changes &raquo;

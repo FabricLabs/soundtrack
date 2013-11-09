@@ -6,6 +6,13 @@ var Soundtrack = function() {
   this.user = {
     username: $('a[data-for=user-model]').data('username')
   };
+  this.room = {
+      name: ''
+    , track: {
+          title: ''
+        , artist: ''
+      }
+  };
   this.controls = {
     volume: {}
   }
@@ -41,6 +48,22 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
+Soundtrack.prototype.editTrackID = function( trackID ) {
+  $editor = $('form[data-for=edit-track]');
+
+  $.getJSON('/tracks/'+encodeURIComponent(trackID), function(track) {
+    if (!track || !track._id) { return alert('No such track.'); }
+
+    $editor.data('track-id',    track._id );
+    $editor.data('artist-slug', track._artist.slug );
+    $editor.data('track-slug',  track.slug );
+
+    $editor.find('input[name=artist]').val( track._artist.name );
+    $editor.find('input[name=title]').val( track.title );
+
+    $editor.modal();
+  });
+}
 function volumeChangeHandler(e) {
   var self = this;
 
@@ -114,6 +137,7 @@ function AppController($scope, $http) {
   window.updatePlaylist = function(){
     $http.get('/playlist.json').success(function(data){
       $scope.tracks = data;
+      soundtrack.room.track = data[0];
     });
   }
 
@@ -727,6 +751,31 @@ $(window).load(function(){
       $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
 
     });
+    return false;
+  });
+
+  $(document).on('click', '*[data-action=launch-track-editor]', function(e) {
+    e.preventDefault();
+    var self = this;
+    soundtrack.editTrackID( $(self).data('track-id') );
+    return false;
+  });
+
+  $(document).on('submit', 'form[data-for=edit-track]', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    var trackID = $(self).data('track-id')
+      , artistSlug = $(self).data('artist-slug')
+      , trackSlug = $(self).data('track-slug');
+
+    $.post('/'+artistSlug+'/'+trackSlug+'/'+trackID, {
+      title: $(self).find('input[name=title]').val()
+    }, function(data) {
+      console.log(data);
+      $(self).modal('hide');
+    });
+
     return false;
   });
 

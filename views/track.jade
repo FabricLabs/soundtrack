@@ -3,6 +3,11 @@ extends layout
 block content
 
   .well.content-well
+    if (user && user.roles.indexOf('editor') >= 0)
+      .track-editing.pull-right
+        h4 Editor Controls
+        a.btn(data-action="launch-track-editor", data-track-id="#{track._id}") edit
+
     h1
       a(href="/#{track._artist.slug}") #{track._artist.name}
       |  &mdash; 

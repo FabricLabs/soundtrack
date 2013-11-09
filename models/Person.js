@@ -8,6 +8,7 @@ var mongoose = require('mongoose')
 // and moreover, their type.
 var PersonSchema = new Schema({
     email: { type: String, unique: true, sparse: true }
+  , roles: [ { type: String, enum: ['editor'] } ]
   , avatar: {
       url: { type: String, default: '/img/user-avatar.png' }
     }
