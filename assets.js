@@ -17,4 +17,4 @@ module.exports = {
     '/css/introjs.css',
     '/css/main.css'
   ]
-};
+}
