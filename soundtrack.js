@@ -410,6 +410,10 @@ function nextSong() {
 function startMusic() {
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
+  console.log('current playlist lead is...')
+  console.log( app.room.playlist[0] )
+  var firstTrack = app.room.playlist[0];
+
   if (!app.room.playlist[0]) {
     app.broadcast({
         type: 'announcement'
@@ -425,10 +429,16 @@ function startMusic() {
   app.room.track = app.room.playlist[0];
 
   Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').lean().exec(function(err, track) {
+
+    console.log('extending...')
+    console.log( app.room.playlist[0] )
+    console.log('with...');
+    console.log( track );
+
     if (track) {
       app.broadcast({
           type: 'track'
-        , data: _.extend( app.room.playlist[0] , track )
+        , data: _.extend( firstTrack , track )
         , seekTo: seekTo
       });
     } else {
@@ -440,6 +450,48 @@ function startMusic() {
 
   app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
 
+  scrobbleActive( app.room.playlist[0] , function() {
+    console.log('scrobbling complete!');
+  });
+
+}
+
+function scrobbleActive(track, cb) {
+  console.log('scrobbling to active listeners...');
+  console.log(track);
+
+  Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
+    _.filter( people , function(x) {
+      console.log('evaluating listener:');
+      console.log(x);
+      return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username);
+    } ).forEach(function(user) {
+      console.log('listener available:');
+      console.log(user);
+
+      var lastfm = new LastFM({
+          api_key: config.lastfm.key
+        , secret:  config.lastfm.secret
+      });
+
+      var creds = {
+          username: user.profiles.lastfm.username
+        , key: user.profiles.lastfm.key
+      };
+
+      lastfm.setSessionCredentials( creds.username , creds.key );
+      lastfm.track.scrobble({
+          artist: track._artist.name
+        , track: track.title
+        , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
+      }, function(err, scrobbles) {
+        if (err) { return console.log('le fail...', err); }
+
+        console.log(scrobbles);
+        cb();
+      });
+    });
+  });
 }
 
 function sortPlaylist() {
@@ -599,7 +651,7 @@ sock.installHandlers(server, {prefix:'/stream'});
 
 app.get('/', function(req, res, next) {
   console.log( 'HOSTNAME: ' + req.headers.host );
-  console.log(req);
+  //console.log(req);
   next();
 }, pages.index);
 app.get('/about', pages.about);
