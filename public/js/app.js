@@ -188,12 +188,13 @@ promise.done(function() {
   }, 1000);
 });
 
+COOKIE_EXPIRES = 604800;
+
 $(window).load(function(){
 
   var sockjs = null;
   var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
   var retryIdx = 0;
-  COOKIE_EXPIRES = 30;
 
   // must be after DOM loads so we have access to the user-model
   soundtrack = new Soundtrack();
@@ -868,6 +869,25 @@ $(window).load(function(){
     $('.bio').replaceWith( $('#profile-editor').show() );
   });
 
+  $('*[data-action=toggle-scrobble]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      $.cookie('scrobblingEnabled', true, { expires: COOKIE_EXPIRES });
+      $.post('/settings', {
+        scrobble: true
+      }, function(data) {
+        console.log(data);
+      });
+    } else {
+      $.cookie('scrobblingEnabled', false, { expires: COOKIE_EXPIRES });
+      $.post('/settings', {
+        scrobble: false
+      }, function(data) {
+        console.log(data);
+      });
+    }
+  });
+
   $('*[data-action=toggle-notifications]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
@@ -924,6 +944,10 @@ $(window).load(function(){
       $.cookie('openLinksInNewWindow', false, { expires: COOKIE_EXPIRES });
     }
   });
+
+  if ($.cookie('scrobblingEnabled') == 'true') {
+    $('*[data-action=toggle-scrobble]').prop('checked', true);
+  }
 
   if ($.cookie('notificationsEnabled') == 'true') {
     $('*[data-action=toggle-notifications]').prop('checked', true);

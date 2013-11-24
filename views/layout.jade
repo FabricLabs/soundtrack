@@ -120,6 +120,17 @@ html(lang="en-US", ng-app)
         button.close(data-dismiss="modal") &times;
         h3 Settings
       .modal-body
+        h4 Music
+        if (user && user.profiles && user.profiles.lastfm && user.profiles.lastfm.username && user.profiles.lastfm.updated)
+          if (user.preferences.scrobble)
+          script.
+            $.cookie('scrobblingEnabled', true, { expires: COOKIE_EXPIRES });
+          label
+            input(type="checkbox", data-action="toggle-scrobble", checked=user.preferences.scrobble)
+            |  Enable Scrobbling
+        else
+          a.btn.btn-danger(href="/auth/lastfm") Enable <img src="http://last.fm/favicon.ico" /> Scrobbling &raquo;
+
         h4 Content
         label(title="Prefer SFW videos / audio sources for the currently playing track.")
           input(type="checkbox", data-action="toggle-avoid-ads")

@@ -18,7 +18,11 @@ var PersonSchema = new Schema({
           id: Number
         , username: String
         , key: String
+        , updated: Date
       }
+    }
+  , preferences: {
+      scrobble: { type: Boolean, default: true }
     }
 });
 

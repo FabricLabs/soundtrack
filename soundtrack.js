@@ -107,7 +107,8 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
     , secret:  config.lastfm.secret
   });
   app.get('/auth/lastfm', function(req, res) {
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
     res.redirect(authUrl);
   });
   app.get('/auth/lastfm/callback', function(req, res) {
@@ -132,6 +133,7 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
         person.profiles.lastfm = {
             username: session.username
           , key: session.key
+          , updated: new Date()
         };
 
         person.save(function(err) {
@@ -459,12 +461,13 @@ function startMusic() {
 function scrobbleActive(track, cb) {
   console.log('scrobbling to active listeners...');
   console.log(track);
+  if (track._artist.name.toLowerCase() == 'gobbly') { return false; }
 
   Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
     _.filter( people , function(x) {
       console.log('evaluating listener:');
       console.log(x);
-      return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username);
+      return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
     } ).forEach(function(user) {
       console.log('listener available:');
       console.log(user);
@@ -633,7 +636,7 @@ sock.on('connection', function(conn) {
       
       //Remove user from listeners array if this is their connection
       if (app.room.listeners[conn.user._id] && app.room.listeners[conn.user._id].id == conn.id) {
-        delete app.room.listeners[conn.user._id];
+        //delete app.room.listeners[conn.user._id];
       };
     }
     
@@ -931,6 +934,19 @@ app.post('/register', function(req, res) {
 
 app.get('/set-username', requireLogin, people.setUsernameForm);
 app.post('/set-username', requireLogin, people.setUsername);
+
+app.post('/settings', requireLogin, function(req, res, next) {
+  Person.findOne({ _id: req.user._id }).exec(function(err, person) {
+    console.log(req.param('scrobble'));
+    person.preferences.scrobble = (req.param('scrobble')) ? true: false;
+    person.save(function(err) {
+      res.send({
+          status: 'success'
+        , message: 'Preferences updated successfully!'
+      });
+    });
+  });
+});
 
 app.get('/login', function(req, res) {
   res.render('login', {
