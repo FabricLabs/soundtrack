@@ -165,6 +165,23 @@ function requireLogin(req, res, next) {
   }
 }
 
+function authorize(role) {
+  switch (role) {
+    case 'editor':
+      return function(req, res, next) {
+        if (!req.user || !req.user.roles || req.user.roles.indexOf( role ) == -1) {
+          res.status(401).send({
+              status: 'error'
+            , message: 'Not authorized.'
+          });
+        } else {
+          return next();
+        }
+      };
+    break;
+  }
+}
+
 var sock = sockjs.createServer();
 var server = http.createServer(app);
 
@@ -217,6 +234,7 @@ app.markAndSweep = function(){
             , _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
           }
       });
+
       delete app.clients[id];
 
       /*/app.broadcast({
@@ -334,42 +352,73 @@ function getYoutubeVideo(videoID, internalCallback) {
   });
 };
 
-
-function nextSong() {
+function ensureQueue(callback) {
   // remove the first track in the playlist...
   var lastTrack = app.room.playlist.shift();
+  console.log(app.room.playlist.length);
 
   if (app.room.playlist.length == 0) {
-    app.room.playlist.push( _.extend( backupTracks[ _.random(0, backupTracks.length - 1 ) ] , {
-        score: 0
-      , votes: {}
-    } ) );
+    var query = {
+        _curator: { $exists: true }
+      , timestamp: { $gte: new Date((Math.floor((new Date()).getTime() / 1000) - 604800) * 1000) }
+    };
+    console.log('!!!!!!!!!!!!!!!!!!!!! QUERY !!!!!!!!!!!!!!!!!!!!!')
+    console.log( query );
+
+    Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
+      console.log('plays are ' + plays.length + ' long.');
+
+      var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
+      console.log('random selection is ')
+      console.log(randomSelection);
+
+      Track.findOne({ _id: randomSelection._track }).populate('_artist').exec(function(err, track) {
+
+        console.log('track is: ')
+        console.log( track );
+
+        app.room.playlist.push( _.extend( track , {
+            score: 0
+          , votes: {}
+        } ) );
+        callback();
+      });
+    });
+  } else {
+    callback();
   }
+}
 
-  app.room.playlist[0].startTime = Date.now();
-  app.room.track = app.room.playlist[0];
+function nextSong() {
+  ensureQueue(function() {
+    app.room.playlist[0].startTime = Date.now();
+    app.room.track = app.room.playlist[0];
 
-  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+    app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
-  var play = new Play({
-      _track: app.room.playlist[0]._id
-    , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
+    var play = new Play({
+        _track: app.room.playlist[0]._id
+      , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
+    });
+    play.save(function(err) {
+      // ...then start the music.
+      startMusic();
+    });
   });
-  play.save(function(err) {
-    // ...then start the music.
-    startMusic();
-  });
-
 }
 
 function startMusic() {
   console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
 
+  console.log('current playlist lead is...')
+  console.log( app.room.playlist[0] )
+  var firstTrack = app.room.playlist[0];
+
   if (!app.room.playlist[0]) {
     app.broadcast({
         type: 'announcement'
       , data: {
-            formatted: 'No tracks in playlist.  Please add at least one!  Waiting 5 seconds...'
+            formatted: '<div class="message">No tracks in playlist.  Please add at least one!  Waiting 5 seconds...</div>'
           , created: new Date()
         }
     });
@@ -378,12 +427,18 @@ function startMusic() {
 
   var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
   app.room.track = app.room.playlist[0];
-  
-  getYoutubeVideo(app.room.playlist[0].sources['youtube'][0].id, function(track) {
+
+  Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').lean().exec(function(err, track) {
+
+    console.log('extending...')
+    console.log( app.room.playlist[0] )
+    console.log('with...');
+    console.log( track );
+
     if (track) {
       app.broadcast({
           type: 'track'
-        , data: _.extend( track.toObject(), app.room.playlist[0] )
+        , data: _.extend( firstTrack , track )
         , seekTo: seekTo
       });
     } else {
@@ -395,6 +450,48 @@ function startMusic() {
 
   app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
 
+  scrobbleActive( app.room.playlist[0] , function() {
+    console.log('scrobbling complete!');
+  });
+
+}
+
+function scrobbleActive(track, cb) {
+  console.log('scrobbling to active listeners...');
+  console.log(track);
+
+  Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
+    _.filter( people , function(x) {
+      console.log('evaluating listener:');
+      console.log(x);
+      return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username);
+    } ).forEach(function(user) {
+      console.log('listener available:');
+      console.log(user);
+
+      var lastfm = new LastFM({
+          api_key: config.lastfm.key
+        , secret:  config.lastfm.secret
+      });
+
+      var creds = {
+          username: user.profiles.lastfm.username
+        , key: user.profiles.lastfm.key
+      };
+
+      lastfm.setSessionCredentials( creds.username , creds.key );
+      lastfm.track.scrobble({
+          artist: track._artist.name
+        , track: track.title
+        , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
+      }, function(err, scrobbles) {
+        if (err) { return console.log('le fail...', err); }
+
+        console.log(scrobbles);
+        cb();
+      });
+    });
+  });
 }
 
 function sortPlaylist() {
@@ -521,11 +618,13 @@ sock.on('connection', function(conn) {
   });
 
   if (app.room.playlist[0]) {
-    conn.write(JSON.stringify({
-        type: 'track'
-      , data: app.room.playlist[0]
-      , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
-    }));
+    Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
+      conn.write(JSON.stringify({
+          type: 'track'
+        , data: _.extend( app.room.playlist[0] , track )
+        , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+      }));
+    });
   }
 
   conn.on('close', function() {
@@ -550,11 +649,15 @@ sock.on('connection', function(conn) {
 });
 sock.installHandlers(server, {prefix:'/stream'});
 
-app.get('/', pages.index);
+app.get('/', function(req, res, next) {
+  console.log( 'HOSTNAME: ' + req.headers.host );
+  //console.log(req);
+  next();
+}, pages.index);
 app.get('/about', pages.about);
 
 app.get('/playlist.json', function(req, res) {
-  res.send(app.room.playlist);
+  res.send( app.room.playlist );
 });
 
 app.get('/listeners.json', function(req, res) {
@@ -629,43 +732,171 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
 });
 
-app.post('/playlist', requireLogin, function(req, res) {
-  switch(req.param('source')) {
+function queueTrack(track, curator, queueCallback) {
+  app.room.playlist.push( _.extend( track.toObject() , {
+      score: 0
+    , votes: {} // TODO: auto-upvote?
+    , timestamp: new Date()
+    , curator: {
+          _id: curator._id
+        , id: (app.room.listeners[ curator._id.toString() ]) ? app.room.listeners[ curator._id.toString() ].connId : undefined
+        , username: curator.username
+        , slug: curator.slug
+      }
+  } ) );
+
+  sortPlaylist();
+
+  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+
+  app.broadcast({
+      type: 'playlist:add'
+    , data: track
+  });
+
+  queueCallback();
+}
+
+var TRACK_SEPARATOR = ' - ';
+function parseTitleString(string, partsCallback) {
+  var artist, title, credits = [];
+  var string = string || '';
+
+  console.log('parseTitleString(): ' + string);
+
+  // TODO: load from datafile
+  var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]',
+    '[glitch hop]', '[video]', '[official video]', '(official video)',
+    '[ official video ]', '[official music video]', '[free download]',
+    '[free DL]', '( 1080p )', '(with lyrics)', '(High Res / Official video)',
+    '[monstercat release]', '(hd)'];
+  baddies.forEach(function(token) {
+    string = string.replace(token + ' - ', '').trim();
+    string = string.replace(token.toUpperCase() + ' - ', '').trim();
+    string = string.replace(token.capitalize() + ' - ', '').trim();
+
+    string = string.replace(token, '').trim();
+    string = string.replace(token.toUpperCase(), '').trim();
+    string = string.replace(token.capitalize(), '').trim();
+  });
+  console.log('baddies parsed: ' + string);
+
+  var parts = string.split( TRACK_SEPARATOR );
+
+  if (parts.length == 2) {
+    artist = parts[0];
+    title = parts[1];
+  } else if (parts.length > 2) {
+    // uh...
+    artist = parts[0];
+    title = parts[1];
+  } else {
+    artist = parts[0];
+    title = parts[0];
+  }
+
+  // look for certain patterns in the string
+  credits.push(  title.replace(/(.*)\((.*) remix\)/i, '$2') );
+  credits.push( artist.replace(/ ft\. (.*)/i,         '$1') );
+  credits.push( artist.replace(/ feat\. (.*)/i,       '$1') );
+
+  var output = {
+      artist: artist
+    , title: title
+    , credits: credits
+  };
+
+  console.log('output parts: ' + output);
+  console.log('artist: ' + artist);
+  console.log('title: ' + title);
+  console.log('credits: ' + credits);
+
+  partsCallback(output);
+}
+
+function trackFromSource(source, id, sourceCallback) {
+  switch (source) {
     default:
-      console.log('unrecognized source: ' + req.param('source'));
+      callback('Unknown source: ' + source);
+    break;
+    case 'soundcloud':
+      rest.get('https://api.soundcloud.com/tracks/'+parseInt(id)+'.json?client_id='+config.soundcloud.id).on('complete', function(data) {
+        console.log(data);
+        if (!data.title) { return sourceCallback('No video found.'); }
+
+        var stringToParse = (data.title.split( TRACK_SEPARATOR ).length > 1) ? data.title : data.user.username + ' - ' + data.title;
+
+        parseTitleString( stringToParse , function(parts) {
+
+          //console.log('parts: ' + JSON.stringify(parts) );
+
+          Track.findOne({ $or: [
+            { 'sources.soundcloud.id': data.id }
+          ] }).exec(function(err, track) {
+            if (!track) { var track = new Track({}); }
+
+            Artist.findOne({ $or: [
+                  { _id: track._artist }
+                , { slug: slug( parts.artist ) }
+            ] }).exec(function(err, artist) {
+              if (err) { console.log(err); }
+              if (!artist) { var artist = new Artist({}); }
+
+              artist.name = artist.name || parts.artist;
+
+              artist.save(function(err) {
+                if (err) { console.log(err); }
+
+                track.title    = track.title    || parts.title;
+                track._artist  = track._artist  || artist._id;
+                track.duration = track.duration || data.duration / 1000;
+
+                var sourceIDs = track.sources[ source ].map(function(x) { return x.id; });
+                var index = sourceIDs.indexOf( data.id );
+                if (index == -1) {
+                  track.sources[ source ].push({
+                    id: data.id
+                  });
+                }
+
+                track.save(function(err) {
+                  Artist.populate(track, {
+                    path: '_artist'
+                  }, function(err, track) {
+                    sourceCallback(err, track);
+                  });
+                });
+
+              });
+
+            });
+
+          });
+        });
+      });
     break;
     case 'youtube':
-      getYoutubeVideo(req.param('id'), function(track) {
+      getYoutubeVideo( id , function(track) {
         if (track) {
-          console.log('HEYYYYY');
-          console.log(track);
-
-          app.room.playlist.push( _.extend( track.toObject() , {
-              score: 0
-            , votes: {} // TODO: auto-upvote?
-            , timestamp: new Date()
-            , curator: {
-                  _id: req.user._id
-                , id: (req.app.room.listeners[ req.user._id.toString() ]) ? req.app.room.listeners[ req.user._id.toString() ].connId : undefined
-                , username: req.user.username
-                , slug: req.user.slug
-              }
-          } ) );
-
-          sortPlaylist();
-
-          app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
-
-          app.broadcast({
-              type: 'playlist:add'
-            , data: track
-          });
+          sourceCallback(null, track);
+        } else {
+          sourceCallback('No track returned.');
         }
-
-        res.send({ status: 'success' });
       });
     break;
   }
+}
+
+app.post('/playlist', requireLogin, function(req, res) {
+  trackFromSource( req.param('source') , req.param('id') , function(err, track) {
+    if (!err && track) {
+      queueTrack(track, req.user, function() {
+        res.send({ status: 'success', message: 'Track added successfully!' });
+      });
+    } else {
+      res.send({ status: 'error', message: 'Could not add that track.' });
+    }
+  });
 });
 
 app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
@@ -729,6 +960,9 @@ app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
 app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
+app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , tracks.edit);
+app.get('/tracks/:trackID', tracks.view );
+app.post('/tracks/:trackID',                 authorize('editor') , tracks.edit);
 
 app.get('/:artistSlug', artists.view);
 

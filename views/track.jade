@@ -1,37 +1,43 @@
 extends layout
 
 block content
-  h1
-    a(href="/#{track._artist.slug}") #{track._artist.name}
-    |  &mdash; 
-    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-    |  
 
-  h2 played #{history.length} times
+  .well.content-well
+    if (user && user.roles.indexOf('editor') >= 0)
+      .track-editing.pull-right
+        h4 Editor Controls
+        a.btn(data-action="launch-track-editor", data-track-id="#{track._id}") edit
 
-  #track-stats
+    h1
+      a(href="/#{track._artist.slug}") #{track._artist.name}
+      |  &mdash; 
+      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+    p <strong>#{track.duration}</strong> seconds of brain-melting audio
+    h2 played #{history.length} times
 
-  ul
-    for play in history
-      li
-        a(href="#") #{play.timestamp}
-        |  by 
-        if (play._curator)
-          a(href="/#{play._curator.slug}") #{play._curator.username}
-        else
-          strong THE MACHINE
-        | .
+    #track-stats
 
-  h2 Available Sources
-  each list, key in track.sources.toObject()
-    h2 #{key}
     ul
+      for play in history
+        li
+          a(href="#") #{play.timestamp}
+          |  by 
+          if (play._curator)
+            a(href="/#{play._curator.slug}") #{play._curator.username}
+          else
+            strong THE MACHINE
+          | .
+
+    h3 Available Sources
+    each list, key in track.sources.toObject()
+      h2 #{key}
       if (list)
         each link in list
           case key
             when 'youtube'
-              li
-                a(href="http://www.youtube.com/watch?v=#{link.id}") #{link}
+              iframe(width="540", height="295", src="https://www.youtube.com/embed/#{link.id}?enablejsapi=1", frameborder="0")
+            when 'soundcloud'
+              iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{link.id}", frameborder="0")
             default
               li #{link}
 
