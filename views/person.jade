@@ -20,11 +20,24 @@ block content
     .bio
       | !{marked(person.bio)}
 
-    h3 Public Playlists 
-      ul.nav.nav-list
-        for playlist in playlists
-          li
-            h4
-              a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
-            p #{playlist.description}
+    ul.nav.nav-tabs
+      li.active
+        a(href="#top-queues", data-toggle="tab") Top Plays
+      li
+        a(href="#playlists", data-toggle="tab") Playlists
+
+    .tab-content
+      .tab-pane.active#top-queues
+        ol
+          for track in tracks 
+            li
+              a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track._artist.name} &mdash; #{track.title} (played #{track.plays} times)
+
+      .tab-pane#playlists
+        ul.nav.nav-list
+          for playlist in playlists
+            li
+              h4
+                a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+              p #{playlist.description}
 
