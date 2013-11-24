@@ -368,9 +368,14 @@ function ensureQueue(callback) {
     console.log( query );
 
     Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
-      if (err || !plays) {
-        getYoutubeVideo( 'dQw4w9WgXcQ‎' , function(track) {
-          if (track) { backupTracks.push( track.toObject() ); }
+      if (err || plays.length == 0) {
+        return getYoutubeVideo( 'dQw4w9WgXcQ' , function(track) {
+          if (track) {
+            app.room.playlist.push( _.extend( track , {
+                score: 0
+              , votes: {}
+            } ) );
+          }
           callback();
         });
       }
