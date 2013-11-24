@@ -368,6 +368,13 @@ function ensureQueue(callback) {
     console.log( query );
 
     Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
+      if (err || !plays) {
+        getYoutubeVideo( 'dQw4w9WgXcQ‎' , function(track) {
+          if (track) { backupTracks.push( track.toObject() ); }
+          callback();
+        });
+      }
+
       console.log('plays are ' + plays.length + ' long.');
 
       var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
