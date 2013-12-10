@@ -30,7 +30,12 @@ Looking to contribute something to soundtrack.io? **Here's how you can help.**
 
 ### JS
 
-- No semicolons
-- Comma first
+- _Always_ semicolons/
+- Comma _first_ syntax when > 3 array elements.  See below about preferring legibility.
 - 2 spaces (no tabs)
-- "Attractive"
+- Legible code above all
+  - Use spaces between operators where it improves legibility.
+  - Use linebreaks where code is separated into logical components.
+- Be respectful of other devs' sanity:
+  - Use comments to describe non-intuitive code.
+  - If you leave a log event behind, make it _meaningful_.  No "wat lol" log events.
