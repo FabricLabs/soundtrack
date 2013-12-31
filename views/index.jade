@@ -45,7 +45,7 @@ block content
           //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
           #playlist
             ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
-              li(ng-repeat="track in tracks", ng-class="{active: $first}", data-track-id="{{track._id}}")
+              li(ng-repeat="track in tracks", ng-class="{active: $first}", ng-style="{top: ((track.order * 40) + 'px')}", data-track-id="{{track._id}}")
                 .playlist-controls
                   .score.badge {{track.score}}
                   i.icon-chevron-up.icon-white(data-action="upvote-track", data-track-id="{{track._id}}")

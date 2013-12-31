@@ -12,6 +12,7 @@ block content
       a(href="/#{track._artist.slug}") #{track._artist.name}
       |  &mdash; 
       a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+    h4 !{track._credits.map(function(x) { return '<a href="/'+x.slug+'">'+x.name+'</a>'; }).join(', ')}
     p <strong>#{track.duration}</strong> seconds of brain-melting audio
     h2 played #{history.length} times
 
@@ -40,6 +41,11 @@ block content
               iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{link.id}", frameborder="0")
             default
               li #{link}
+
+    h3 Conversation
+    each message in chats
+      include partials/message
+
 
 block scripts
   style

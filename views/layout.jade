@@ -9,6 +9,7 @@ html(lang="en-US", ng-app)
     link(rel="stylesheet", href="/css/darkstrap-v0.9.0.css")
     //-link(rel="stylesheet", href="/css/bootstrap-custom.css")
     link(rel="stylesheet", href="/css/bootstrap-responsive.min.css")
+    link(rel="stylesheet", href="/css/typeahead.js-bootstrap.css")
     link(rel="stylesheet", href="/css/slider.css")
     link(rel="stylesheet", href="/css/introjs.css")
     link(rel="stylesheet", href="/video-js/video-js.min.css")
@@ -20,6 +21,7 @@ html(lang="en-US", ng-app)
     script(src="/js/bootstrap.min.js")
     script(src="/js/angular.min.js")
     script(src="/js/d3.min.js")
+    script(src="/js/typeahead.min.js")
     script(src="/js/bootstrap.slider.js")
     script(src="/js/jquery.cookie.js")
     script(src="/js/intro.js")
@@ -114,6 +116,12 @@ html(lang="en-US", ng-app)
       footer
         .container
           p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
+          p
+            a(class="coinbase-button", data-code="316e0eac837e964996b403a0a6e04930", data-button-style="custom_small", href="https://coinbase.com/checkouts/316e0eac837e964996b403a0a6e04930") Donate 
+              i.glyiphicon.glyphicon-bitcoin
+              |  BitCoin
+            script(src="https://coinbase.com/assets/button.js", type="text/javascript")
+
 
     #settings-modal.modal.hide.fade
       .modal-header
@@ -166,12 +174,14 @@ html(lang="en-US", ng-app)
         registered = true;
 
       form#edit-track-modal.modal.hide.fade(data-for="edit-track")
+        input(type="hidden", name="trackArtistID")
+
         .modal-header
           button.close(data-dismiss="modal") &times;
           h3 Edit Track
-        .modal-body
+        .modal-body(style="min-height: 20em;")
           label(for="artist") Track Artist
-          input.input-block-level.disabled(type="text", name="artist", disabled, title="This feature isn't finished yet...")
+          input.input-block-level.typeahead(type="text", name="artist", data-remote="/artists?q=%QUERY")
 
           label(for="title") Track Title
           input.input-block-level(type="text", name="title")

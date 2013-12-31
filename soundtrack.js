@@ -1,5 +1,6 @@
 var config = require('./config')
   , database = require('./db')
+  , util = require('./util')
   , express = require('express')
   , app = express()
   , sys = require('sys')
@@ -67,7 +68,7 @@ passport.deserializeUser(function(userID, done) {
 });
 app.use(function(req, res, next) {
   res.setHeader("X-Powered-By", 'beer.');
-  app.locals.user = req.user;
+  res.locals.user = req.user;
 
   if (req.user && !req.user.username) {
     return res.redirect('/set-username');
@@ -257,103 +258,6 @@ app.forEachClient = function(fn) {
   }
 }
 
-function getYoutubeVideo(videoID, internalCallback) {
-  rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data) {
-    if (data && data.data) {
-      var video = data.data;
-      Track.findOne({
-        'sources.youtube.id': video.id
-      }).exec(function(err, track) {
-        if (!track) { var track = new Track({}); }
-
-        // this is bad for now, until we have an importer...
-        // it'll be slow.
-        rest.get('http://codingsoundtrack.org/songs/1:'+video.id+'.json').on('complete', function(data) {
-
-          // hack to allow title re-parsing
-          // be cautious here if we ever store the video titles
-          //video.title = track.title || video.title;
-
-          // TODO: load from datafile
-          var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]', '[glitch hop]', '[video]', '[official video]', '(official video)', '[ official video ]', '[free download]', '[free DL]', '[monstercat release]'];
-          baddies.forEach(function(token) {
-            video.title = video.title.replace(token + ' - ', '').trim();
-            video.title = video.title.replace(token.toUpperCase() + ' - ', '').trim();
-            video.title = video.title.replace(token.capitalize() + ' - ', '').trim();
-
-            video.title = video.title.replace(token, '').trim();
-            video.title = video.title.replace(token.toUpperCase(), '').trim();
-            video.title = video.title.replace(token.capitalize(), '').trim();
-          });
-
-          // if codingsoundtrack.org isn't aware of it...
-          if (!data.author) {
-            var parts = video.title.split(' - ');
-            data = {
-                author: parts[0].trim()
-              , title: (track.title) ? track.title : video.title
-            };
-            if (parts.length == 2) {
-              data.title = data.title.replace(data.author + ' - ', '').trim();
-
-            }
-          }
-
-          Artist.findOne({ $or: [
-                { _id: track._artist }
-              , { slug: slug( data.author ) }
-              , { name: data.author }
-          ] }).exec(function(err, artist) {
-
-            if (!artist) { var artist = new Artist({
-              name: data.author
-            }); }
-
-            track._artist = artist._id;
-
-            var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
-            var index = youtubeVideoIDs.indexOf( video.id );
-            if (index == -1) {
-              track.sources.youtube.push({
-                id: video.id
-              });
-            }
-
-            // if the track doesn't already have a title, set it from 
-            if (!track.title) {
-              track.title = data.title || video.title;
-            }
-
-            track.duration             = (track.duration) ? track.duration : video.duration;
-            track.images.thumbnail.url = video.thumbnail.hqDefault;
-
-            // TODO: use CodingSoundtrack.org's lookup for artist creation
-            //Author.findOne()
-            artist.save(function(err) {
-              if (err) { console.log(err); }
-              track.save(function(err) {
-                if (err) { console.log(err); }
-
-                Artist.populate(track, {
-                  path: '_artist'
-                }, function(err, track) {
-                  internalCallback( track );
-                });
-
-              });
-            });
-          });
-        });
-      });
-    } else {
-      console.log('waaaaaaaaaaat  videoID: ' + videoID);
-      console.log(data);
-
-      internalCallback();
-    }
-  });
-};
-
 function ensureQueue(callback) {
   // remove the first track in the playlist...
   var lastTrack = app.room.playlist.shift();
@@ -369,7 +273,7 @@ function ensureQueue(callback) {
 
     Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
       if (err || !plays) {
-        getYoutubeVideo( 'dQw4w9WgXcQ‎' , function(track) {
+        util.getYoutubeVideo( 'dQw4w9WgXcQ‎' , function(track) {
           if (track) { backupTracks.push( track.toObject() ); }
           callback();
         });
@@ -465,43 +369,46 @@ function startMusic() {
 
 }
 
-function scrobbleActive(track, cb) {
+function scrobbleActive(requestedTrack, cb) {
   console.log('scrobbling to active listeners...');
-  console.log(track);
-  if (track._artist.name.toLowerCase() == 'gobbly') { return false; }
 
-  Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
-    _.filter( people , function(x) {
-      console.log('evaluating listener:');
-      console.log(x);
-      return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
-    } ).forEach(function(user) {
-      console.log('listener available:');
-      console.log(user);
+  Track.findOne({ _id: requestedTrack._id }).populate('_artist').exec(function(err, track) {
+    if (!track || track._artist.name && track._artist.name.toLowerCase() == 'gobbly') { return false; }
 
-      var lastfm = new LastFM({
-          api_key: config.lastfm.key
-        , secret:  config.lastfm.secret
-      });
+    Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
+      _.filter( people , function(x) {
+        console.log('evaluating listener:');
+        console.log(x);
+        return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
+      } ).forEach(function(user) {
+        console.log('listener available:');
+        console.log(user);
 
-      var creds = {
-          username: user.profiles.lastfm.username
-        , key: user.profiles.lastfm.key
-      };
+        var lastfm = new LastFM({
+            api_key: config.lastfm.key
+          , secret:  config.lastfm.secret
+        });
 
-      lastfm.setSessionCredentials( creds.username , creds.key );
-      lastfm.track.scrobble({
-          artist: track._artist.name
-        , track: track.title
-        , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
-      }, function(err, scrobbles) {
-        if (err) { return console.log('le fail...', err); }
+        var creds = {
+            username: user.profiles.lastfm.username
+          , key: user.profiles.lastfm.key
+        };
 
-        console.log(scrobbles);
-        cb();
+        lastfm.setSessionCredentials( creds.username , creds.key );
+        lastfm.track.scrobble({
+            artist: track._artist.name
+          , track: track.title
+          , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
+        }, function(err, scrobbles) {
+          if (err) { return console.log('le fail...', err); }
+
+          console.log(scrobbles);
+          cb();
+        });
       });
     });
   });
+
 }
 
 function sortPlaylist() {
@@ -547,7 +454,7 @@ async.parallel([
     var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
     async.series(fallbackVideos.map(function(videoID) {
       return function(callback) {
-        getYoutubeVideo(videoID, function(track) {
+        util.getYoutubeVideo(videoID, function(track) {
           if (track) { backupTracks.push( track.toObject() ); }
           callback();
         });
@@ -603,6 +510,7 @@ sock.on('connection', function(conn) {
             , slug: matches[0].user.slug
             , username: matches[0].user.username
             , id: conn.id
+            , role: (matches[0].user.roles && matches[0].user.roles.indexOf('editor') >= 0) ? 'editor' : 'listener'
           };
           
           app.broadcast({
@@ -684,6 +592,7 @@ app.post('/chat', requireLogin, function(req, res) {
   var chat = new Chat({
       _author: req.user._id
     , message: req.param('message')
+    , _track: (app.room.playlist[0]) ? app.room.playlist[0]._id : undefined
   });
   chat.save(function(err) {
     res.render('partials/message', {
@@ -691,6 +600,7 @@ app.post('/chat', requireLogin, function(req, res) {
           _author: req.user
         , message: req.param('message')
         , created: chat.created
+        , _track: app.room.playlist[0]
       }
     }, function(err, html) {
       app.broadcast({
@@ -705,6 +615,7 @@ app.post('/chat', requireLogin, function(req, res) {
             , message: req.param('message')
             , formatted: html
             , created: new Date()
+            , _track: app.room.playlist[0]
           }
       });
       res.send({ status: 'success' });
@@ -743,162 +654,51 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 });
 
 function queueTrack(track, curator, queueCallback) {
-  app.room.playlist.push( _.extend( track.toObject() , {
-      score: 0
-    , votes: {} // TODO: auto-upvote?
-    , timestamp: new Date()
-    , curator: {
-          _id: curator._id
-        , id: (app.room.listeners[ curator._id.toString() ]) ? app.room.listeners[ curator._id.toString() ].connId : undefined
-        , username: curator.username
-        , slug: curator.slug
+  Track.findOne({ _id: track._id }).populate('_artist _credits').exec(function(err, realTrack) {
+
+    var playlistItem = realTrack.toObject();
+
+    playlistItem._artist = {
+        _id: playlistItem._artist._id
+      , name: playlistItem._artist.name
+      , slug: playlistItem._artist.slug
+    };
+
+    for (var source in playlistItem.sources) {
+      console.log(source);
+      console.log(playlistItem.sources[ source ]);
+      for (var i = 0; i<playlistItem.sources[ source ].length; i++) {
+        delete playlistItem.sources[ source ][ i ].data;
       }
-  } ) );
+    }
 
-  sortPlaylist();
-
-  app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
-
-  app.broadcast({
-      type: 'playlist:add'
-    , data: track
-  });
-
-  queueCallback();
-}
-
-var TRACK_SEPARATOR = ' - ';
-function parseTitleString(string, partsCallback) {
-  var artist, title, credits = [];
-  var string = string || '';
-
-  console.log('parseTitleString(): ' + string);
-
-  // TODO: load from datafile
-  var baddies = ['[hd]', '[dubstep]', '[electro]', '[edm]', '[house music]',
-    '[glitch hop]', '[video]', '[official video]', '(official video)',
-    '[ official video ]', '[official music video]', '[free download]',
-    '[free DL]', '( 1080p )', '(with lyrics)', '(High Res / Official video)',
-    '[monstercat release]', '(hd)'];
-  baddies.forEach(function(token) {
-    string = string.replace(token + ' - ', '').trim();
-    string = string.replace(token.toUpperCase() + ' - ', '').trim();
-    string = string.replace(token.capitalize() + ' - ', '').trim();
-
-    string = string.replace(token, '').trim();
-    string = string.replace(token.toUpperCase(), '').trim();
-    string = string.replace(token.capitalize(), '').trim();
-  });
-  console.log('baddies parsed: ' + string);
-
-  var parts = string.split( TRACK_SEPARATOR );
-
-  if (parts.length == 2) {
-    artist = parts[0];
-    title = parts[1];
-  } else if (parts.length > 2) {
-    // uh...
-    artist = parts[0];
-    title = parts[1];
-  } else {
-    artist = parts[0];
-    title = parts[0];
-  }
-
-  // look for certain patterns in the string
-  credits.push(  title.replace(/(.*)\((.*) remix\)/i, '$2') );
-  credits.push( artist.replace(/ ft\. (.*)/i,         '$1') );
-  credits.push( artist.replace(/ feat\. (.*)/i,       '$1') );
-
-  var output = {
-      artist: artist
-    , title: title
-    , credits: credits
-  };
-
-  console.log('output parts: ' + output);
-  console.log('artist: ' + artist);
-  console.log('title: ' + title);
-  console.log('credits: ' + credits);
-
-  partsCallback(output);
-}
-
-function trackFromSource(source, id, sourceCallback) {
-  switch (source) {
-    default:
-      callback('Unknown source: ' + source);
-    break;
-    case 'soundcloud':
-      rest.get('https://api.soundcloud.com/tracks/'+parseInt(id)+'.json?client_id='+config.soundcloud.id).on('complete', function(data) {
-        console.log(data);
-        if (!data.title) { return sourceCallback('No video found.'); }
-
-        var stringToParse = (data.title.split( TRACK_SEPARATOR ).length > 1) ? data.title : data.user.username + ' - ' + data.title;
-
-        parseTitleString( stringToParse , function(parts) {
-
-          //console.log('parts: ' + JSON.stringify(parts) );
-
-          Track.findOne({ $or: [
-            { 'sources.soundcloud.id': data.id }
-          ] }).exec(function(err, track) {
-            if (!track) { var track = new Track({}); }
-
-            Artist.findOne({ $or: [
-                  { _id: track._artist }
-                , { slug: slug( parts.artist ) }
-            ] }).exec(function(err, artist) {
-              if (err) { console.log(err); }
-              if (!artist) { var artist = new Artist({}); }
-
-              artist.name = artist.name || parts.artist;
-
-              artist.save(function(err) {
-                if (err) { console.log(err); }
-
-                track.title    = track.title    || parts.title;
-                track._artist  = track._artist  || artist._id;
-                track.duration = track.duration || data.duration / 1000;
-
-                var sourceIDs = track.sources[ source ].map(function(x) { return x.id; });
-                var index = sourceIDs.indexOf( data.id );
-                if (index == -1) {
-                  track.sources[ source ].push({
-                    id: data.id
-                  });
-                }
-
-                track.save(function(err) {
-                  Artist.populate(track, {
-                    path: '_artist'
-                  }, function(err, track) {
-                    sourceCallback(err, track);
-                  });
-                });
-
-              });
-
-            });
-
-          });
-        });
-      });
-    break;
-    case 'youtube':
-      getYoutubeVideo( id , function(track) {
-        if (track) {
-          sourceCallback(null, track);
-        } else {
-          sourceCallback('No track returned.');
+    app.room.playlist.push( _.extend( playlistItem , {
+        score: 0
+      , votes: {} // TODO: auto-upvote?
+      , timestamp: new Date()
+      , curator: {
+            _id: curator._id
+          , id: (app.room.listeners[ curator._id.toString() ]) ? app.room.listeners[ curator._id.toString() ].connId : undefined
+          , username: curator.username
+          , slug: curator.slug
         }
-      });
-    break;
-  }
+    } ) );
+
+    sortPlaylist();
+
+    app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+
+    app.broadcast({
+        type: 'playlist:add'
+      , data: track
+    });
+
+    queueCallback();
+  });
 }
 
 app.post('/playlist', requireLogin, function(req, res) {
-  trackFromSource( req.param('source') , req.param('id') , function(err, track) {
+  util.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
     if (!err && track) {
       queueTrack(track, req.user, function() {
         res.send({ status: 'success', message: 'Track added successfully!' });
@@ -944,7 +744,6 @@ app.post('/set-username', requireLogin, people.setUsername);
 
 app.post('/settings', requireLogin, function(req, res, next) {
   Person.findOne({ _id: req.user._id }).exec(function(err, person) {
-    console.log(req.param('scrobble'));
     person.preferences.scrobble = (req.param('scrobble')) ? true: false;
     person.save(function(err) {
       res.send({
@@ -998,7 +797,7 @@ function getTop100FromCodingSoundtrack(done) {
     async.parallel(data.map(function(song) {
       return function(callback) {
         if (song.format == '1') {
-          getYoutubeVideo( song.cid , function(track) {
+          util.getYoutubeVideo( song.cid , function(track) {
             if (track) {
               callback( track.toObject() );
             } else {

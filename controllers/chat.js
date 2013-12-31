@@ -2,9 +2,13 @@ var async = require('async');
 
 module.exports = {
   view: function(req, res, next) {
-    Chat.find({}).sort('timestamp').populate('_author').limit(20).exec(function(err, chats) {
-      res.render('chats', {
-        chats: chats
+    Chat.find({}).sort('-_id').populate('_author _track _play').limit(20).exec(function(err, chats) {
+      Artist.populate( chats , {
+        path: '_track._artist'
+      }, function(err, chats) {
+        res.render('chats', {
+          chats: chats
+        });
       });
     });
   },

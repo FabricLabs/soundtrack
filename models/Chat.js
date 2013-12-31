@@ -6,6 +6,8 @@ var ChatSchema = new Schema({
     _author: { type: ObjectId, required: true, ref: 'Person' }
   , created: { type: Date, default: Date.now }
   , message: { type: String }
+  , _track:  { type: ObjectId, ref: 'Track' }
+  , _play:   { type: ObjectId, ref: 'Play' }
 });
 
 ChatSchema.virtual('isoDate').get(function() {

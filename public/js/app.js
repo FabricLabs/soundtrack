@@ -56,10 +56,17 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
 
     $editor.data('track-id',    track._id );
     $editor.data('artist-slug', track._artist.slug );
+    $editor.data('artist-id', track._artist._d );
     $editor.data('track-slug',  track.slug );
 
+    $editor.find('input[name=trackArtistID]').val( track._artist._id );
     $editor.find('input[name=artist]').val( track._artist.name );
     $editor.find('input[name=title]').val( track.title );
+
+    $editor.find('input.typeahead').typeahead({
+        name: 'artists'
+      , remote: '/artists?q=%QUERY'
+    });
 
     $editor.modal();
   });
@@ -106,7 +113,12 @@ function updateUserlist() {
     $('.user-count').html('<strong>'+data.length+'</strong> online');
     data.forEach(function(user) {
       // TODO: use template (Blade?)
-      $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+      if (user.role != 'listener') {
+        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+' <span class="badge pull-right" title="editors can fix track titles and artist names.  ping @martindale if you want to help.">'+user.role+'</span></a></li>').appendTo('#userlist');
+      } else {
+        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+      }
+      
     });
   });
 }
@@ -206,6 +218,7 @@ $(window).load(function(){
     soundtrack.player = videojs('#secondary-player', {
       techOrder: ['html5', 'flash', 'youtube']
     });
+    mutePlayer();
   }
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
@@ -787,10 +800,13 @@ $(window).load(function(){
 
     var trackID = $(self).data('track-id')
       , artistSlug = $(self).data('artist-slug')
+      , artistID = $(self).data('artist-id')
       , trackSlug = $(self).data('track-slug');
 
     $.post('/'+artistSlug+'/'+trackSlug+'/'+trackID, {
-      title: $(self).find('input[name=title]').val()
+        title: $(self).find('input[name=title]').val()
+      , artistName: $(self).find('input[name=artist]').val()
+      , artistID: $(self).find('input[name=trackArtistID]').val()
     }, function(data) {
       console.log(data);
       $(self).modal('hide');

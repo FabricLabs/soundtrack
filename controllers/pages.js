@@ -1,17 +1,19 @@
 module.exports = {
   index: function(req, res, next) {
-    Chat.find({}).limit(10).sort('-created').populate('_author').exec(function(err, messages) {
+    Chat.find({}).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
       Playlist.find({ _creator: ((req.user) ? req.user._id : undefined) }).sort('name').exec(function(err, playlists) {
-
         if (err) { console.log(err); }
-        console.log(playlists);
 
-        res.render('index', {
-            messages: messages.reverse()
-          , backup: []
-          , playlists: playlists
-          , room: req.app.room
-        });
+        Artist.populate( messages, {
+          path: '_track._artist'
+        }, function(err, messages) {
+          res.render('index', {
+              messages: messages.reverse()
+            , backup: []
+            , playlists: playlists
+            , room: req.app.room
+          });
+        })
       });
 
     });
@@ -24,8 +26,6 @@ module.exports = {
       Artist.populate(plays, {
         path: '_track._artist'
       }, function(err, plays) {
-        console.log(plays);
-
         res.render('history', {
           plays: plays
         });

@@ -8,7 +8,8 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var ArtistSchema = new Schema({
-    name: { type: String, required: true, unique: true }
+    name: { type: String, required: true, unique: true } // canonical name
+  , names: [ { type: String } ] // known names
   , image: {
       url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
     }

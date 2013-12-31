@@ -8,9 +8,11 @@ var mongoose = require('mongoose')
 // and moreover, their type.
 var TrackSchema = new Schema({
     title: { type: String, required: true }
+  , titles: [ { type: String } ]
   , _artist: { type: ObjectId, ref: 'Artist' }
   , _credits: [ { type: ObjectId, ref: 'Artist' } ]
-  , duration: { type: Number }
+  , duration: { type: Number } // time in seconds
+  , description: { type: String }
   , images: {
       thumbnail: { url: { type: String } }
     }
@@ -19,12 +21,15 @@ var TrackSchema = new Schema({
           id: { type: String, required: true }
         , start: { type: Number, default: 0 }
         , duration: { type: Number }
+        , data: {}
       })],
       soundcloud: [ new Schema({
-        id: { type: String, required: true }
+          id: { type: String, required: true }
+        , data: {}
       })],
       vimeo: [ new Schema({
-        id: { type: String, required: true }
+          id: { type: String, required: true }
+        , data: {}
       })]
     }
   , _remixes: [ new Schema({
