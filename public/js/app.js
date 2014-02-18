@@ -667,13 +667,11 @@ $(window).load(function(){
 
   $(document).on('click', '*[data-action=skip-track]', function(e) {
     e.preventDefault();
-    if (!confirm("Are you sure you want to skip?") === true) {
+    if (confirm("Are you sure you want to skip?")) {
       soundtrack.player.pause();
       $.post('/skip');
-      return false;
-    } else {
-      return true;
     }
+    return false;
   });
 
   $(document).on('click', '*[data-for=track-search-reset]', function(e) {
