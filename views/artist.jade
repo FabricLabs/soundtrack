@@ -11,5 +11,11 @@ block content
     ul
       for track in tracks
         li
+          a(href="/#{track._artist.slug}") #{track._artist.name}
+          |  &mdash; 
           a(href="/#{artist.slug}/#{track.slug}/#{track._id}") #{track.title}
           |  played <strong>#{track.plays}</strong> times
+          if (user && user.roles.indexOf('editor') >= 0)
+            |  
+            a.btn.btn-mini(href="#", data-action="launch-track-editor", data-track-id="#{track._id}")
+              | edit

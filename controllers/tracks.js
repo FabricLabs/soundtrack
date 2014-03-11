@@ -42,8 +42,24 @@ module.exports = {
                 status: 'success'
               , message: 'Track edited successfully.'
             });
+
+            track = track.toObject();
+            track._artist = artist;
+
+            req.app.broadcast({
+                type: 'edit'
+              , track: track
+            });
+
           });
         });
+      });
+    });
+  },
+  merge: function(req, res, next) {
+    Track.findOne({ _id: req.param('from') }).exec(function(err, from) {
+      Track.findOne({ _id: req.param('to') }).exec(function(err, to) {
+
       });
     });
   },
@@ -89,11 +105,19 @@ module.exports = {
                 queries.map(function(q) {
                   return function(done) { Play.count( _.extend({ _track: track._id }, q) ).exec(done); };
                 }), function(err, playsPerDay) {
-                  res.render('track', {
-                      track: track
-                    , history: history
-                    , playsPerDay: playsPerDay
-                    , chats: chats
+
+                  Track.find({
+                      _artist: track._artist._id
+                    , slug: track.slug
+                  }).exec(function(err, dupes) {
+
+                    res.render('track', {
+                        track: track
+                      , history: history
+                      , playsPerDay: playsPerDay
+                      , chats: chats
+                      , dupes: dupes
+                    });
                   });
                 }
               );

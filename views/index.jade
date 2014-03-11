@@ -50,11 +50,20 @@ block content
                   .score.badge {{track.score}}
                   i.icon-chevron-up.icon-white(data-action="upvote-track", data-track-id="{{track._id}}")
                   i.icon-chevron-down.icon-white(data-action="downvote-track", data-track-id="{{track._id}}")
-                img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
-                span(style="font-size: 0.75em;") {{track.curator.username}} wants to play 
-                a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}")
-                  small.pull-right {{track.duration.toString().toHHMMSS()}}
-                  span {{track._artist.name}} &mdash; {{track.title}}
+                  if (user && user.roles.indexOf('editor') >= 0)
+                    .editor-controls
+                      a.btn.btn-mini(href="#", data-action="launch-track-editor", data-track-id="{{track._id}}")
+                        | edit
+                div(style="font-size: 0.75em;")
+                  span.pull-right {{track.duration | toHHMMSS }}
+                  a(href="{{track.curator.slug}}") {{track.curator.username}}
+                  |  wants to play 
+                .track-details(style="font-size: 1.1em;")
+                  img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
+                  a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}") {{track.title}}
+                .track-details.text-right
+                  | by 
+                  a(href="/{{track._artist.slug}}") {{track._artist.name}}
 
           h5 Add Track
           form#search-form.input-append(style="display:block;", data-for="track-search")

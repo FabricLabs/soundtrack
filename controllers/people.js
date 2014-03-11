@@ -16,7 +16,14 @@ module.exports = {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      person.bio = (req.param('bio')) ? req.param('bio') : person.bio;
+      person.bio    = (req.param('bio'))   ? req.param('bio')   : person.bio;
+      person.email  = (req.param('email')) ? req.param('email') : person.email;
+
+      if (typeof(person.email) == 'string') {
+        var hash = require('crypto').createHash('md5').update( person.email ).digest('hex');
+        person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=https://soundtrack.io/img/user-avatar.png';
+      }
+
       person.save(function(err) {
         req.flash('info', 'Profile saved successfully!');
         res.redirect('/' + person.slug );

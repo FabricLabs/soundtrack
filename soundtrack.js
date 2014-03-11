@@ -2,7 +2,7 @@ var config = require('./config')
   , database = require('./db')
   , util = require('./util')
   , express = require('express')
-  , app = express()
+//  , app = express()
   , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
@@ -24,6 +24,8 @@ var config = require('./config')
   , crypto = require('crypto')
   , marked = require('marked')
   , validator = require('validator');
+
+app = express();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -107,46 +109,11 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
       api_key: config.lastfm.key
     , secret:  config.lastfm.secret
   });
-  app.get('/auth/lastfm', function(req, res) {
-    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
-    res.redirect(authUrl);
-  });
-  app.get('/auth/lastfm/callback', function(req, res) {
-    lastfm.authenticate( req.param('token') , function(err, session) {
-      console.log(session);
 
-      if (err) {
-        console.log(err);
-        req.flash('error', 'Something went wrong with authentication.');
-        return res.redirect('/');
-      }
-
-      Person.findOne({ $or: [
-          { _id: (req.user) ? req.user._id : undefined }
-        , { 'profiles.lastfm.username': session.username }
-      ]}).exec(function(err, person) {
-
-        if (!person) {
-          var person = new Person({ username: 'reset this later ' });
-        }
-
-        person.profiles.lastfm = {
-            username: session.username
-          , key: session.key
-          , updated: new Date()
-        };
-
-        person.save(function(err) {
-          if (err) { console.log(err); }
-          req.session.passport.user = person._id;
-          res.redirect('/');
-        });
-
-      });
-
-    });
-  });
+  app.lastfm = require('./lib/last.fm.js');
+ 
+  app.get('/auth/lastfm', app.lastfm.authSetup );
+  app.get('/auth/lastfm/callback', app.lastfm.authCallback );
 }
 
 var auth = require('./controllers/auth')
@@ -191,235 +158,25 @@ var server = http.createServer(app);
 app.clients = {};
 
 var backupTracks = [];
-app.redis = redis.createClient();
-app.redis.get(config.database.name + ':playlist', function(err, playlist) {
-  playlist = JSON.parse(playlist);
-
-  if (!playlist || !playlist.length) {
-    playlist = [];
-  }
-
-  app.room = {
-      track: undefined
-    , playlist: playlist
-    , listeners: {}
-  };
-
-  startMusic();
-
-});
 app.socketAuthTokens = [];
 
-app.broadcast = function(msg) {
-  var json = JSON.stringify(msg);
-  for (var id in app.clients) {
-    app.clients[id].write(json);
-  }
-};
+app.config = config;
 
-app.whisper = function(id, msg) {
-  var json = JSON.stringify(msg);
-  app.clients[id].write(json);
-}
 
-app.markAndSweep = function(){
-  app.broadcast({type: 'ping'}); // we should probably not do this globally... instead, start interval after client connect?
-  var time = (new Date()).getTime();
-  app.forEachClient(function(client, id){
-    if (client.pongTime < time - config.connection.clientTimeout) {
-      client.close('', 'Timeout');
-      // TODO: broadcast part message
+var soundtrackController = require('./lib/soundtrack');
 
-      app.broadcast({
-          type: 'part'
-        , data: {
-              id: id
-            , _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
-          }
-      });
+app.sortPlaylist  = soundtrackController.sortPlaylist;
 
-      delete app.clients[id];
+app.broadcast     = soundtrackController.broadcast;
+app.whisper       = soundtrackController.whisper;
+app.markAndSweep  = soundtrackController.markAndSweep;
+app.forEachClient = soundtrackController.forEachClient;
 
-      /*/app.broadcast({
-          type: 'part'
-        , data: {
-            id: conn.id
-          }
-      });/**/
-    }
-  });
-}
+app.ensureQueue   = soundtrackController.ensureQueue;
+app.nextSong      = soundtrackController.nextSong;
+app.startMusic    = soundtrackController.startMusic;
 
 setInterval(app.markAndSweep, config.connection.checkInterval);
-
-app.forEachClient = function(fn) {
-  for (var id in app.clients) {
-    fn(app.clients[id], id)
-  }
-}
-
-function ensureQueue(callback) {
-  // remove the first track in the playlist...
-  var lastTrack = app.room.playlist.shift();
-  console.log(app.room.playlist.length);
-
-  if (app.room.playlist.length == 0) {
-    var query = {
-        _curator: { $exists: true }
-      , timestamp: { $gte: new Date((Math.floor((new Date()).getTime() / 1000) - 604800) * 1000) }
-    };
-    console.log('!!!!!!!!!!!!!!!!!!!!! QUERY !!!!!!!!!!!!!!!!!!!!!')
-    console.log( query );
-
-    Play.find( query ).limit(100).sort('timestamp').exec(function(err, plays) {
-      if (err || !plays) {
-        util.getYoutubeVideo( 'dQw4w9WgXcQ‎' , function(track) {
-          if (track) { backupTracks.push( track.toObject() ); }
-          callback();
-        });
-      }
-
-      console.log('plays are ' + plays.length + ' long.');
-
-      var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
-      console.log('random selection is ')
-      console.log(randomSelection);
-
-      Track.findOne({ _id: randomSelection._track }).populate('_artist').exec(function(err, track) {
-
-        console.log('track is: ')
-        console.log( track );
-
-        app.room.playlist.push( _.extend( track , {
-            score: 0
-          , votes: {}
-        } ) );
-        callback();
-      });
-    });
-  } else {
-    callback();
-  }
-}
-
-function nextSong() {
-  ensureQueue(function() {
-    app.room.playlist[0].startTime = Date.now();
-    app.room.track = app.room.playlist[0];
-
-    app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
-
-    var play = new Play({
-        _track: app.room.playlist[0]._id
-      , _curator: (app.room.playlist[0].curator) ? app.room.playlist[0].curator._id : undefined
-    });
-    play.save(function(err) {
-      // ...then start the music.
-      startMusic();
-    });
-  });
-}
-
-function startMusic() {
-  console.log('startMusic() called, current playlist is: ' + JSON.stringify(app.room.playlist));
-
-  console.log('current playlist lead is...')
-  console.log( app.room.playlist[0] )
-  var firstTrack = app.room.playlist[0];
-
-  if (!app.room.playlist[0]) {
-    app.broadcast({
-        type: 'announcement'
-      , data: {
-            formatted: '<div class="message">No tracks in playlist.  Please add at least one!  Waiting 5 seconds...</div>'
-          , created: new Date()
-        }
-    });
-    return setTimeout(startMusic, 5000);
-  }
-
-  var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
-  app.room.track = app.room.playlist[0];
-
-  Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').lean().exec(function(err, track) {
-
-    console.log('extending...')
-    console.log( app.room.playlist[0] )
-    console.log('with...');
-    console.log( track );
-
-    if (track) {
-      app.broadcast({
-          type: 'track'
-        , data: _.extend( firstTrack , track )
-        , seekTo: seekTo
-      });
-    } else {
-      console.log('uhhh... broken: ' + app.room.playlist[0].sources['youtube'][0].id + ' and ' +track);
-    }
-  });
-
-  clearTimeout( app.timeout );
-
-  app.timeout = setTimeout( nextSong , (app.room.playlist[0].duration - seekTo) * 1000 );
-
-  scrobbleActive( app.room.playlist[0] , function() {
-    console.log('scrobbling complete!');
-  });
-
-}
-
-function scrobbleActive(requestedTrack, cb) {
-  console.log('scrobbling to active listeners...');
-
-  Track.findOne({ _id: requestedTrack._id }).populate('_artist').exec(function(err, track) {
-    if (!track || track._artist.name && track._artist.name.toLowerCase() == 'gobbly') { return false; }
-
-    Person.find({ _id: { $in: _.toArray(app.room.listeners).map(function(x) { return x._id; }) } }).exec(function(err, people) {
-      _.filter( people , function(x) {
-        console.log('evaluating listener:');
-        console.log(x);
-        return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
-      } ).forEach(function(user) {
-        console.log('listener available:');
-        console.log(user);
-
-        var lastfm = new LastFM({
-            api_key: config.lastfm.key
-          , secret:  config.lastfm.secret
-        });
-
-        var creds = {
-            username: user.profiles.lastfm.username
-          , key: user.profiles.lastfm.key
-        };
-
-        lastfm.setSessionCredentials( creds.username , creds.key );
-        lastfm.track.scrobble({
-            artist: track._artist.name
-          , track: track.title
-          , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
-        }, function(err, scrobbles) {
-          if (err) { return console.log('le fail...', err); }
-
-          console.log(scrobbles);
-          cb();
-        });
-      });
-    });
-  });
-
-}
-
-function sortPlaylist() {
-  app.room.playlist = _.union( [ app.room.playlist[0] ] , app.room.playlist.slice(1).sort(function(a, b) {
-    if (b.score == a.score) {
-      return a.timestamp - b.timestamp;
-    } else {
-      return b.score - a.score;
-    }
-  }) );
-}
 
 app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log('skip received:');
@@ -443,7 +200,7 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
     }
   );
   
-  nextSong();
+  app.nextSong();
   res.send({ status: 'success' });
 });
 
@@ -470,7 +227,7 @@ async.parallel([
     });
   }
 ], function(err, trackLists) {
-  //nextSong();
+  //app.nextSong();
 });
 
 sock.on('connection', function(conn) {
@@ -511,6 +268,7 @@ sock.on('connection', function(conn) {
             , username: matches[0].user.username
             , id: conn.id
             , role: (matches[0].user.roles && matches[0].user.roles.indexOf('editor') >= 0) ? 'editor' : 'listener'
+            , avatar: matches[0].user.avatar
           };
           
           app.broadcast({
@@ -641,7 +399,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   console.log('track score: ' + app.room.playlist[ index].score);
   console.log('track votes: ' + JSON.stringify(app.room.playlist[ index].votes));
 
-  sortPlaylist();
+  app.sortPlaylist();
 
   app.broadcast({
     type: 'playlist:update'
@@ -684,7 +442,7 @@ function queueTrack(track, curator, queueCallback) {
         }
     } ) );
 
-    sortPlaylist();
+    app.sortPlaylist();
 
     app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
@@ -814,8 +572,26 @@ function getTop100FromCodingSoundtrack(done) {
   });
 }
 
-server.listen(config.app.port, function(err) {
-  console.log('Listening on port ' + config.app.port + ' for HTTP');
-  console.log('Must have redis listening on port 6379');
-  console.log('Must have mongodb listening on port 27017');
+app.redis = redis.createClient();
+app.redis.get(config.database.name + ':playlist', function(err, playlist) {
+  playlist = JSON.parse(playlist);
+
+  if (!playlist || !playlist.length) {
+    playlist = [];
+  }
+
+  app.room = {
+      track: undefined
+    , playlist: playlist
+    , listeners: {}
+  };
+
+  server.listen(config.app.port, function(err) {
+    console.log('Listening on port ' + config.app.port + ' for HTTP');
+    console.log('Must have redis listening on port 6379');
+    console.log('Must have mongodb listening on port 27017');
+
+    app.startMusic();
+  });
+
 });

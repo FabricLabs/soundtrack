@@ -30,7 +30,7 @@ module.exports = {
       Track.find({ $or: [
           { _artist: artist._id }
         , { _credits: artist._id }
-      ] }).exec(function(err, tracks) {
+      ] }).populate('_artist').exec(function(err, tracks) {
 
         Play.aggregate([
           { $match: { _track: { $in: tracks.map(function(x) { return x._id; }) } } },

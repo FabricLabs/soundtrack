@@ -1,5 +1,5 @@
 !!! 5
-html(lang="en-US", ng-app)
+html(lang="en-US", ng-app="soundtrack-io")
   head
     title soundtrack.io | music for all.
 
@@ -31,17 +31,17 @@ html(lang="en-US", ng-app)
     script(src="/js/app.js")
 
     if (user)
-      script
+      script.
         window.pendo_options = {
           apiKey: 'c4a237f5-e4e2-40eb-4a79-5a96fdc45d82',
           visitorId: '#{user._id}' // NOTE: THIS IS OPTIONAL.  SEE IDENTIFY
         };
     else
-      script
+      script.
         window.pendo_options = {
           apiKey: 'c4a237f5-e4e2-40eb-4a79-5a96fdc45d82'
         };
-    script
+    script.
       (function() {
           var script = document.createElement('script');
           script.type = 'text/javascript';
@@ -137,7 +137,7 @@ html(lang="en-US", ng-app)
             input(type="checkbox", data-action="toggle-scrobble", checked=user.preferences.scrobble)
             |  Enable Scrobbling
         else
-          a.btn.btn-danger(href="/auth/lastfm") Enable <img src="http://last.fm/favicon.ico" /> Scrobbling &raquo;
+          a.btn.btn-danger(href="/auth/lastfm") Enable <img src="/img/last.fm.ico" /> Scrobbling &raquo;
 
         h4 Content
         label(title="Prefer SFW videos / audio sources for the currently playing track.")
@@ -191,6 +191,10 @@ html(lang="en-US", ng-app)
           //-.row-fluid
             input.span3(type="number", name="startTime")
             input.span3(type="number", name="endTime")
+
+          label(for="titles") Known Titles (for easy copypasta)
+          pre(data-for="titles")
+
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel
           button.btn.btn-primary.btn-large(type="submit") Save Changes &raquo;

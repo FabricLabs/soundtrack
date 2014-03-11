@@ -63,10 +63,24 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
     $editor.find('input[name=artist]').val( track._artist.name );
     $editor.find('input[name=title]').val( track.title );
 
-    $editor.find('input.typeahead').typeahead({
+    var titles = track.titles;
+    if (titles.indexOf( track.title ) == -1) {
+      titles.push( track.title );
+    }
+
+    track.sources.youtube.forEach(function(video) {
+      if (video.data && titles.indexOf( video.data.title ) == -1) {
+        titles.push( video.data.title );
+      }
+    });
+
+
+    $editor.find('pre[data-for=titles]').html( titles.join('<br />') );
+
+    /* $editor.find('input.typeahead').typeahead({
         name: 'artists'
       , remote: '/artists?q=%QUERY'
-    });
+    }); */
 
     $editor.modal();
   });
@@ -114,9 +128,9 @@ function updateUserlist() {
     data.forEach(function(user) {
       // TODO: use template (Blade?)
       if (user.role != 'listener') {
-        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+' <span class="badge pull-right" title="editors can fix track titles and artist names.  ping @martindale if you want to help.">'+user.role+'</span></a></li>').appendTo('#userlist');
+        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'"><img src="'+user.avatar.url+'" class="user-avatar-small pull-left" />'+user.username+' <span class="badge pull-right" title="editors can fix track titles and artist names.  ping @martindale if you want to help.">'+user.role+'</span></a></li>').appendTo('#userlist');
       } else {
-        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'">'+user.username+'</a></li>').appendTo('#userlist');
+        $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'"><img src="'+user.avatar.url+'" class="user-avatar-small pull-left" />'+user.username+'</a></li>').appendTo('#userlist');
       }
       
     });
@@ -145,6 +159,30 @@ function toggleVideoOff() {
   
   videoToggled = true;
 }
+
+angular.module('timeFilters', []).
+  filter('toHHMMSS', function() {
+    return function(input) {
+      var sec_num = parseInt( input , 10); // don't forget the second parm
+      var hours   = Math.floor(sec_num / 3600);
+      var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+      var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+      if (hours   < 10) {hours   = "0"+hours;}
+      if (minutes < 10) {minutes = "0"+minutes;}
+      if (seconds < 10) {seconds = "0"+seconds;}
+
+      if (hours != '00') {
+        var time    = hours+':'+minutes+':'+seconds;
+      } else {
+        var time    = minutes+':'+seconds;
+      }
+      return time;
+    }
+  });
+
+angular.module('soundtrack-io', ['timeFilters']);
+
 function AppController($scope, $http) {
   window.updatePlaylist = function(){
     $http.get('/playlist.json').success(function(data){
@@ -242,6 +280,9 @@ $(window).load(function(){
 
         switch (msg.type) {
           default: console.log('unhandled message: ' + msg); break;
+          case 'edit':
+            updatePlaylist();
+          break;
           case 'track':
             updatePlaylist();
 
@@ -680,8 +721,10 @@ $(window).load(function(){
 
   $(document).on('click', '*[data-action=skip-track]', function(e) {
     e.preventDefault();
-    soundtrack.player.pause();
-    $.post('/skip');
+    if (confirm("Are you sure you want to skip?")) {
+      soundtrack.player.pause();
+      $.post('/skip');
+    }
     return false;
   });
 
