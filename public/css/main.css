@@ -158,10 +158,16 @@ footer {
 }
 
 @media (max-width: 979px) {
-  body {
-    padding-top: 0px;
-    padding-bottom: 40px;
-  }
+  body {padding:0;}
+  
+  .container {
+	width: 100%;
+	margin-left:0;
+	margin-right:0;
+ }
+ 
+ footer {margin:0;}
+ 
   #chat-form .input-block-level {
     width: 275px;
   }
@@ -331,6 +337,9 @@ footer {
   /* background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 1)), to(rgba(0, 0, 0, 0))); */
 }
 
+/* ######################################### */
+/* #### Responsive Tweaks by jDizzy on 140311 #### */
+/* ######################################### */
 /* begin le Dizzcode */
 @media (max-width:1199px) and (min-width:980px){
   #chat-form .input-block-level {
