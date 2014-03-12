@@ -418,7 +418,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   console.log('track score: ' + app.room.playlist[ index].score);
   console.log('track votes: ' + JSON.stringify(app.room.playlist[ index].votes));
 
-  app.sortPlaylist();
+  soundtrack.sortPlaylist();
 
   soundtrack.broadcast({
     type: 'playlist:update'
