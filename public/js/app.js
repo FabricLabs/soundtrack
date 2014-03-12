@@ -387,7 +387,7 @@ $(window).load(function(){
             console.log("Ping Pong\'d");
           break;
           case 'announcement':
-            $( msg.data.formatted ).appendTo('#messages');
+            $( unescape(msg.data.formatted) ).appendTo('#messages');
             $("#messages").scrollTop($("#messages")[0].scrollHeight);
           break;
         }

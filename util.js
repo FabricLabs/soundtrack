@@ -104,6 +104,37 @@ String.prototype.capitalize = function(){
 };
 
 module.exports = {
+  timeSeries: function(field, interval) {
+    var queries = [];
+
+    if (!interval) { var interval = 24; }
+
+    for (var d = 0; d <= 29; d++) {
+
+      var start = new Date();
+      start.setHours('0');
+      start.setMinutes('0');
+      start.setSeconds('0');
+      start.setMilliseconds('0');
+
+      var end = new Date( start.getTime() );
+
+      start = new Date( start           - (d * 1000 * 60 * 60 * interval) );
+      end   = new Date( start.getTime() +      1000 * 60 * 60 * interval  );
+
+      var query = {};
+      query[ field ] = {
+          $gte: start
+        , $lt: end
+      };
+
+      queries.push( query );
+    }
+
+    console.log(queries);
+
+    return queries;
+  },
   getYoutubeVideo: function(videoID, internalCallback) {
     console.log('getYoutubeVideo() : ' + videoID );
     rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data, response) {

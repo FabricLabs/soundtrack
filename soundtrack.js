@@ -105,6 +105,8 @@ String.prototype.capitalize = function(){
 };
 
 if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
+  
+  app.LastFM = LastFM;
   var lastfm = new LastFM({
       api_key: config.lastfm.key
     , secret:  config.lastfm.secret
@@ -172,6 +174,7 @@ app.whisper       = soundtrackController.whisper;
 app.markAndSweep  = soundtrackController.markAndSweep;
 app.forEachClient = soundtrackController.forEachClient;
 
+app.queueTrack    = soundtrackController.queueTrack;
 app.ensureQueue   = soundtrackController.ensureQueue;
 app.nextSong      = soundtrackController.nextSong;
 app.startMusic    = soundtrackController.startMusic;
@@ -206,7 +209,7 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
 
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
 /* this will be in MongoDB soon...*/
-async.parallel([
+/*/ async.parallel([
   function(done) {
     var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
     async.series(fallbackVideos.map(function(videoID) {
@@ -228,7 +231,7 @@ async.parallel([
   }
 ], function(err, trackLists) {
   //app.nextSong();
-});
+}); /**/
 
 sock.on('connection', function(conn) {
   
@@ -411,54 +414,10 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
 });
 
-function queueTrack(track, curator, queueCallback) {
-  Track.findOne({ _id: track._id }).populate('_artist _credits').exec(function(err, realTrack) {
-
-    var playlistItem = realTrack.toObject();
-
-    playlistItem._artist = {
-        _id: playlistItem._artist._id
-      , name: playlistItem._artist.name
-      , slug: playlistItem._artist.slug
-    };
-
-    for (var source in playlistItem.sources) {
-      console.log(source);
-      console.log(playlistItem.sources[ source ]);
-      for (var i = 0; i<playlistItem.sources[ source ].length; i++) {
-        delete playlistItem.sources[ source ][ i ].data;
-      }
-    }
-
-    app.room.playlist.push( _.extend( playlistItem , {
-        score: 0
-      , votes: {} // TODO: auto-upvote?
-      , timestamp: new Date()
-      , curator: {
-            _id: curator._id
-          , id: (app.room.listeners[ curator._id.toString() ]) ? app.room.listeners[ curator._id.toString() ].connId : undefined
-          , username: curator.username
-          , slug: curator.slug
-        }
-    } ) );
-
-    app.sortPlaylist();
-
-    app.redis.set(config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
-
-    app.broadcast({
-        type: 'playlist:add'
-      , data: track
-    });
-
-    queueCallback();
-  });
-}
-
 app.post('/playlist', requireLogin, function(req, res) {
   util.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
     if (!err && track) {
-      queueTrack(track, req.user, function() {
+      app.queueTrack(track, req.user, function() {
         res.send({ status: 'success', message: 'Track added successfully!' });
       });
     } else {
