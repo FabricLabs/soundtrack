@@ -46,7 +46,7 @@ module.exports = {
             track = track.toObject();
             track._artist = artist;
 
-            req.app.broadcast({
+            req.soundtrack.broadcast({
                 type: 'edit'
               , track: track
             });

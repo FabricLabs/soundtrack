@@ -514,10 +514,16 @@ app.get('/tracks', tracks.list);
 app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
+
+var soundtracker = function(req, res, next) {
+  req.soundtrack = soundtrack;
+  next();
+};
+
 app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
-app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , tracks.edit);
+app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
 app.get('/tracks/:trackID', tracks.view );
-app.post('/tracks/:trackID',                 authorize('editor') , tracks.edit);
+app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
 app.get('/:artistSlug', artists.view);
 
