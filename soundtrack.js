@@ -2,7 +2,7 @@ var config = require('./config')
   , database = require('./db')
   , util = require('./util')
   , express = require('express')
-//  , app = express()
+  , app = express()
   , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
@@ -24,8 +24,6 @@ var config = require('./config')
   , crypto = require('crypto')
   , marked = require('marked')
   , validator = require('validator');
-
-app = express();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -104,20 +102,6 @@ String.prototype.capitalize = function(){
   return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
 
-if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
-  
-  app.LastFM = LastFM;
-  var lastfm = new LastFM({
-      api_key: config.lastfm.key
-    , secret:  config.lastfm.secret
-  });
-
-  app.lastfm = require('./lib/last.fm.js');
- 
-  app.get('/auth/lastfm', app.lastfm.authSetup );
-  app.get('/auth/lastfm/callback', app.lastfm.authCallback );
-}
-
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
   , people = require('./controllers/people')
@@ -140,6 +124,7 @@ function requireLogin(req, res, next) {
 function authorize(role) {
   switch (role) {
     case 'editor':
+    case 'admin':
       return function(req, res, next) {
         if (!req.user || !req.user.roles || req.user.roles.indexOf( role ) == -1) {
           res.status(401).send({
@@ -164,22 +149,36 @@ app.socketAuthTokens = [];
 
 app.config = config;
 
+var Soundtrack = require('./lib/soundtrack');
+var soundtrack = new Soundtrack(app);
+soundtrack.app = app;
 
-var soundtrackController = require('./lib/soundtrack');
+/*/
+app.sortPlaylist  = soundtrack.sortPlaylist;
 
-app.sortPlaylist  = soundtrackController.sortPlaylist;
+soundtrack.broadcast     = soundtrack.broadcast;
+app.whisper       = soundtrack.whisper;
+app.markAndSweep  = soundtrack.markAndSweep;
+app.forEachClient = soundtrack.forEachClient;
 
-app.broadcast     = soundtrackController.broadcast;
-app.whisper       = soundtrackController.whisper;
-app.markAndSweep  = soundtrackController.markAndSweep;
-app.forEachClient = soundtrackController.forEachClient;
+app.queueTrack    = soundtrack.queueTrack;
+app.ensureQueue   = soundtrack.ensureQueue;
+app.nextSong      = soundtrack.nextSong;
+app.startMusic    = soundtrack.startMusic;
+/**/
 
-app.queueTrack    = soundtrackController.queueTrack;
-app.ensureQueue   = soundtrackController.ensureQueue;
-app.nextSong      = soundtrackController.nextSong;
-app.startMusic    = soundtrackController.startMusic;
 
-setInterval(app.markAndSweep, config.connection.checkInterval);
+if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
+  
+  app.LastFM = LastFM;
+  var lastfm = new LastFM({
+      api_key: config.lastfm.key
+    , secret:  config.lastfm.secret
+  });
+
+  app.get('/auth/lastfm',          soundtrack.lastfmAuthSetup );
+  app.get('/auth/lastfm/callback', soundtrack.lastfmAuthCallback );
+}
 
 app.post('/skip', /*/requireLogin,/**/ function(req, res) {
   console.log('skip received:');
@@ -193,7 +192,7 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
         , created: new Date()
       }
     }, function(err, html) {
-      app.broadcast({
+      soundtrack.broadcast({
           type: 'announcement'
         , data: {
               formatted: html
@@ -203,7 +202,7 @@ app.post('/skip', /*/requireLogin,/**/ function(req, res) {
     }
   );
   
-  app.nextSong();
+  soundtrack.nextSong();
   res.send({ status: 'success' });
 });
 
@@ -265,7 +264,7 @@ sock.on('connection', function(conn) {
           
           // TODO: strip salt, hash, etc.
           // We do this on /listeners.json, but if nothing else, we save memory.
-          app.room.listeners[ matches[0].user._id ] = {
+          soundtrack.app.room.listeners[ matches[0].user._id ] = {
               _id: matches[0].user._id
             , slug: matches[0].user.slug
             , username: matches[0].user.username
@@ -274,7 +273,7 @@ sock.on('connection', function(conn) {
             , avatar: matches[0].user.avatar
           };
           
-          app.broadcast({
+          soundtrack.broadcast({
               type: 'join'
             , data: {
                   _id: matches[0].user._id
@@ -316,7 +315,7 @@ sock.on('connection', function(conn) {
       };
     }
     
-    /*app.broadcast({
+    /*soundtrack.broadcast({
         type: 'part'
       , data: {
             id: conn.id
@@ -364,7 +363,7 @@ app.post('/chat', requireLogin, function(req, res) {
         , _track: app.room.playlist[0]
       }
     }, function(err, html) {
-      app.broadcast({
+      soundtrack.broadcast({
           type: 'chat'
         , data: {
               _id: chat._id
@@ -382,6 +381,23 @@ app.post('/chat', requireLogin, function(req, res) {
       res.send({ status: 'success' });
     });
   });
+});
+
+app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, res, next) {
+  if (!req.param('index') || req.param('index') == 0) { return next(); }
+
+  app.room.playlist.splice( req.param('index') , 1 );
+  app.sortPlaylist();
+  app.redis.set( app.config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+
+  soundtrack.broadcast({
+    type: 'playlist:update'
+  });
+
+  res.send({
+    status: 'success'
+  });
+
 });
 
 app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
@@ -404,7 +420,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
   app.sortPlaylist();
 
-  app.broadcast({
+  soundtrack.broadcast({
     type: 'playlist:update'
   });
 
@@ -417,7 +433,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 app.post('/playlist', requireLogin, function(req, res) {
   util.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
     if (!err && track) {
-      app.queueTrack(track, req.user, function() {
+      soundtrack.queueTrack(track, req.user, function() {
         res.send({ status: 'success', message: 'Track added successfully!' });
       });
     } else {
@@ -550,7 +566,12 @@ app.redis.get(config.database.name + ':playlist', function(err, playlist) {
     console.log('Must have redis listening on port 6379');
     console.log('Must have mongodb listening on port 27017');
 
-    app.startMusic();
+    soundtrack.startMusic(function(err, track) {
+      /*/var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
+
+      clearTimeout( soundtrack.timeout );
+      soundtrack.timeout = setTimeout( soundtrack.nextSong , (app.room.playlist[0].duration - seekTo) * 1000 ); /**/
+    });
   });
 
 });

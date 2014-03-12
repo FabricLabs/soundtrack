@@ -104,12 +104,16 @@ String.prototype.capitalize = function(){
 };
 
 module.exports = {
-  timeSeries: function(field, interval) {
+  timeSeries: function(field, interval, skip, limit) {
     var queries = [];
 
     if (!interval) { var interval = 24; }
+    if (!skip)     { var skip = 1; }
+    if (!limit)    { var limit = 24; }
 
-    for (var d = 0; d <= 29; d++) {
+    var halfTime = interval / 2; // moving window
+
+    for (var i = 0; i <= limit; i++) {
 
       var start = new Date();
       start.setHours('0');
@@ -119,8 +123,8 @@ module.exports = {
 
       var end = new Date( start.getTime() );
 
-      start = new Date( start           - (d * 1000 * 60 * 60 * interval) );
-      end   = new Date( start.getTime() +      1000 * 60 * 60 * interval  );
+      start = new Date( start           - ((i+1)  * 1000 * 60 * 60 * 24) );
+      end   = new Date( start.getTime() + interval );
 
       var query = {};
       query[ field ] = {
@@ -130,8 +134,6 @@ module.exports = {
 
       queries.push( query );
     }
-
-    console.log(queries);
 
     return queries;
   },
