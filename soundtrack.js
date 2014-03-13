@@ -387,7 +387,7 @@ app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, re
   if (!req.param('index') || req.param('index') == 0) { return next(); }
 
   app.room.playlist.splice( req.param('index') , 1 );
-  app.sortPlaylist();
+  soundtrack.sortPlaylist();
   app.redis.set( app.config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
 
   soundtrack.broadcast({
@@ -431,9 +431,15 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 });
 
 app.post('/playlist', requireLogin, function(req, res) {
+  console.log('playlist endpoint hit with POST...')
+
   util.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
+
+    console.log('trackFromSource() callback executing...')
+
     if (!err && track) {
       soundtrack.queueTrack(track, req.user, function() {
+        console.log( 'queueTrack() callback executing... ');
         res.send({ status: 'success', message: 'Track added successfully!' });
       });
     } else {

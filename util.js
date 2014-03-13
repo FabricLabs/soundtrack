@@ -140,140 +140,87 @@ module.exports = {
   getYoutubeVideo: function(videoID, internalCallback) {
     console.log('getYoutubeVideo() : ' + videoID );
     rest.get('http://gdata.youtube.com/feeds/api/videos/'+videoID+'?v=2&alt=jsonc').on('complete', function(data, response) {
-      if (data && data.data) {
-        var video = data.data;
-        Track.findOne({
-          'sources.youtube.id': video.id
-        }).exec(function(err, track) {
-          if (!track) { var track = new Track({ title: video.title }); }
+      if (!data || !data.data) { return internalCallback('error retrieving video from youtube: ' + JSON.stringify(data) ); }
 
-          parseTitleString( video.title , function(parts) {
+      var video = data.data;
+      Track.findOne({
+        'sources.youtube.id': video.id
+      }).exec(function(err, track) {
+        if (!track) { var track = new Track({ title: video.title }); }
 
-            console.log( video.title + ' was parsed into:');
-            console.log(parts);
+        parseTitleString( video.title , function(parts) {
 
-            async.mapSeries( parts.credits , function( artistName , artistCollector ) {
-              Artist.findOne({ $or: [
-                    { slug: slug( artistName ) }
-                  , { name: artistName }
-              ] }).exec( function(err, artist) {
-                if (!artist) { var artist = new Artist({ name: artistName }); }
-                artist.save(function(err) {
-                  if (err) { console.log(err); }
-                  artistCollector(err, artist);
-                });
+          console.log( video.title + ' was parsed into:');
+          console.log(parts);
+
+          async.mapSeries( parts.credits , function( artistName , artistCollector ) {
+            Artist.findOne({ $or: [
+                  { slug: slug( artistName ) }
+                , { name: artistName }
+            ] }).exec( function(err, artist) {
+              if (!artist) { var artist = new Artist({ name: artistName }); }
+              artist.save(function(err) {
+                if (err) { console.log(err); }
+                artistCollector(err, artist);
               });
-            }, function(err, results) {
+            });
+          }, function(err, results) {
 
-              Artist.findOne({ $or: [
-                    { _id: track._artist }
-                  , { slug: slug( parts.artist ) }
-                  , { name: parts.artist }
-              ] }).exec(function(err, artist) {
-                if (!artist) { var artist = new Artist({ name: parts.artist }); }
-                artist.save(function(err) {
+            Artist.findOne({ $or: [
+                  { _id: track._artist }
+                , { slug: slug( parts.artist ) }
+                , { name: parts.artist }
+            ] }).exec(function(err, artist) {
+              if (!artist) { var artist = new Artist({ name: parts.artist }); }
+              artist.save(function(err) {
+                if (err) { console.log(err); }
+
+                // only use parsed version if original title is unchanged
+                track.title = (track.title == video.title) ? parts.title : track.title;
+                track._artist = artist._id;
+                track._credits = results.map(function(x) { return x._id; });
+
+                track.duration             = (track.duration) ? track.duration : video.duration;
+                track.images.thumbnail.url = (track.images.thumbnail.url) ? track.images.thumbnail.url : video.thumbnail.hqDefault;
+
+                var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
+                var index = youtubeVideoIDs.indexOf( video.id );
+                if (index == -1) {
+                  track.sources.youtube.push({
+                      id: video.id
+                    , data: video
+                  });
+                } else {
+                  track.sources.youtube[ index ].data = video;
+                }
+
+                track.save(function(err) {
                   if (err) { console.log(err); }
 
-                  // only use parsed version if original title is unchanged
-                  track.title = (track.title == video.title) ? parts.title : track.title;
-                  track._artist = artist._id;
-                  track._credits = results.map(function(x) { return x._id; });
+                  // begin cleanup
+                  //track = track.toObject();
+                  track._artist = {
+                      _id: artist._id
+                    , name: artist.name
+                    , slug: artist.slug
+                  };
 
-                  track.duration             = (track.duration) ? track.duration : video.duration;
-                  track.images.thumbnail.url = (track.images.thumbnail.url) ? track.images.thumbnail.url : video.thumbnail.hqDefault;
-
-                  var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
-                  var index = youtubeVideoIDs.indexOf( video.id );
-                  if (index == -1) {
-                    track.sources.youtube.push({
-                        id: video.id
-                      , data: video
-                    });
-                  } else {
-                    track.sources.youtube[ index ].data = video;
-                  }
-
-                  track.save(function(err) {
-                    if (err) { console.log(err); }
-
-                    // begin cleanup
-                    //track = track.toObject();
-                    track._artist = {
-                        _id: artist._id
-                      , name: artist.name
-                      , slug: artist.slug
-                    };
-
-                    for (var source in track.sources.toObject()) {
-                      console.log(source);
-                      console.log(track.sources[ source ]);
-                      for (var i = 0; i<track.sources[ source ].length; i++) {
-                        delete track.sources[ source ].data;
-                      }
+                  for (var source in track.sources.toObject()) {
+                    console.log(source);
+                    console.log(track.sources[ source ]);
+                    for (var i = 0; i<track.sources[ source ].length; i++) {
+                      delete track.sources[ source ].data;
                     }
-                    // end cleanup
+                  }
+                  // end cleanup
 
-                    internalCallback( track );
-                  });
+                  internalCallback( track );
                 });
               });
             });
           });
         });
-
-          /*
-
-            Artist.findOne().exec(function(err, artist) {
-
-              if (!artist) { var artist = new Artist({
-                name: data.author
-              }); }
-
-              track._artist = artist._id;
-
-              var youtubeVideoIDs = track.sources.youtube.map(function(x) { return x.id; });
-              var index = youtubeVideoIDs.indexOf( video.id );
-              if (index == -1) {
-                track.sources.youtube.push({
-                    id: video.id
-                  , data: video
-                });
-              } else {
-                track.sources.youtube[ index ].data = video;
-              }
-
-              // if the track doesn't already have a title, set it from 
-              if (!track.title) {
-                track.title = data.title || video.title;
-              }
-
-              track.duration             = (track.duration) ? track.duration : video.duration;
-              track.images.thumbnail.url = video.thumbnail.hqDefault;
-
-              // TODO: use CodingSoundtrack.org's lookup for artist creation
-              //Author.findOne()
-              artist.save(function(err) {
-                if (err) { console.log(err); }
-                track.save(function(err) {
-                  if (err) { console.log(err); }
-
-                  Artist.populate(track, {
-                    path: '_artist'
-                  }, function(err, track) {
-                    internalCallback( track );
-                  });
-
-                });
-              });
-            });
-          }); 
-        });*/
-      } else {
-        console.log('waaaaaaaaaaat  videoID: ' + videoID);
-        console.log(data);
-
-        internalCallback();
-      }
+      });
     });
   },
   trackFromSource: function trackFromSource(source, id, sourceCallback) {
@@ -295,17 +242,19 @@ module.exports = {
 
             //console.log('parts: ' + JSON.stringify(parts) );
 
+            // does the track already exist?
             Track.findOne({ $or: [
               { 'sources.soundcloud.id': data.id }
             ] }).exec(function(err, track) {
-              if (!track) { var track = new Track({}); }
+              if (!track) { var track = new Track({}); } // no? create a new one.
 
+              // does the artist already exist?
               Artist.findOne({ $or: [
                     { _id: track._artist }
                   , { slug: slug( parts.artist ) }
               ] }).exec(function(err, artist) {
                 if (err) { console.log(err); }
-                if (!artist) { var artist = new Artist({}); }
+                if (!artist) { var artist = new Artist({}); } // no? create a new one.
 
                 artist.name = artist.name || parts.artist;
 
@@ -346,9 +295,9 @@ module.exports = {
       case 'youtube':
         self.getYoutubeVideo( id , function(track) {
           if (track) {
-            sourceCallback(null, track);
+            return sourceCallback(null, track);
           } else {
-            sourceCallback('No track returned.');
+            return sourceCallback('No track returned.');
           }
         });
       break;
