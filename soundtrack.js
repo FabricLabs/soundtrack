@@ -151,7 +151,7 @@ app.config = config;
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
-soundtrack.app = app;
+//soundtrack.app = app;
 
 /*/
 app.sortPlaylist  = soundtrack.sortPlaylist;
@@ -180,11 +180,9 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   app.get('/auth/lastfm/callback', soundtrack.lastfmAuthCallback );
 }
 
-app.post('/skip', /*/requireLogin,/**/ function(req, res) {
-  console.log('skip received:');
-  console.log(req.user);
-  console.log(req.headers);
-  
+app.post('/skip', requireLogin, function(req, res) {
+  console.log('skip received from ' +req.user.username);
+
   //Announce who skipped this song
   res.render('partials/announcement', {
       message: {
@@ -433,18 +431,17 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 app.post('/playlist', requireLogin, function(req, res) {
   console.log('playlist endpoint hit with POST...')
 
-  util.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
-
+  soundtrack.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
     console.log('trackFromSource() callback executing...')
-
-    if (!err && track) {
-      soundtrack.queueTrack(track, req.user, function() {
-        console.log( 'queueTrack() callback executing... ');
-        res.send({ status: 'success', message: 'Track added successfully!' });
-      });
-    } else {
-      res.send({ status: 'error', message: 'Could not add that track.' });
+    if (err || !track) {
+      console.log(err);
+      return res.send({ status: 'error', message: 'Could not add that track.' });
     }
+
+    soundtrack.queueTrack(track, req.user, function() {
+      console.log( 'queueTrack() callback executing... ');
+      res.send({ status: 'success', message: 'Track added successfully!' });
+    });
   });
 });
 
