@@ -6,7 +6,7 @@ var config = require('./config')
   , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
-  , slug = require('slug-component')
+  , slug = require('speakingurl')
   , async = require('async')
   , redis = require('redis')
   , sockjs = require('sockjs')
@@ -149,36 +149,57 @@ app.socketAuthTokens = [];
 
 app.config = config;
 
-var Soundtrack = require('./lib/soundtrack');
-var soundtrack = new Soundtrack(app);
-//soundtrack.app = app;
-
-/*/
-app.sortPlaylist  = soundtrack.sortPlaylist;
-
-soundtrack.broadcast     = soundtrack.broadcast;
-app.whisper       = soundtrack.whisper;
-app.markAndSweep  = soundtrack.markAndSweep;
-app.forEachClient = soundtrack.forEachClient;
-
-app.queueTrack    = soundtrack.queueTrack;
-app.ensureQueue   = soundtrack.ensureQueue;
-app.nextSong      = soundtrack.nextSong;
-app.startMusic    = soundtrack.startMusic;
-/**/
-
-
 if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
-  
-  app.LastFM = LastFM;
   var lastfm = new LastFM({
       api_key: config.lastfm.key
     , secret:  config.lastfm.secret
   });
+  app.LastFM = LastFM;
+  app.lastfm = lastfm;
+  app.get('/auth/lastfm', function(req, res) {
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
+    res.redirect(authUrl);
+  });
+  app.get('/auth/lastfm/callback', function(req, res) {
+    lastfm.authenticate( req.param('token') , function(err, session) {
+      console.log(session);
 
-  app.get('/auth/lastfm',          soundtrack.lastfmAuthSetup );
-  app.get('/auth/lastfm/callback', soundtrack.lastfmAuthCallback );
+      if (err) {
+        console.log(err);
+        req.flash('error', 'Something went wrong with authentication.');
+        return res.redirect('/');
+      }
+
+      Person.findOne({ $or: [
+          { _id: (req.user) ? req.user._id : undefined }
+        , { 'profiles.lastfm.username': session.username }
+      ]}).exec(function(err, person) {
+
+        if (!person) {
+          var person = new Person({ username: 'reset this later ' });
+        }
+
+        person.profiles.lastfm = {
+            username: session.username
+          , key: session.key
+          , updated: new Date()
+        };
+
+        person.save(function(err) {
+          if (err) { console.log(err); }
+          req.session.passport.user = person._id;
+          res.redirect('/');
+        });
+
+      });
+
+    });
+  });
 }
+
+var Soundtrack = require('./lib/soundtrack');
+var soundtrack = new Soundtrack(app);
 
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
@@ -557,6 +578,10 @@ function getTop100FromCodingSoundtrack(done) {
 }
 
 app.redis = redis.createClient();
+app.redis.on('error', function(err) {
+  console.error("Error connecting to redis", err);
+});
+
 app.redis.get(config.database.name + ':playlist', function(err, playlist) {
   playlist = JSON.parse(playlist);
 
