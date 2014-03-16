@@ -1,11 +1,20 @@
 var rest = require('restler')
-  , _ = require('underscore');
+  , _ = require('underscore')
+  , async = require('async');
 
 module.exports = {
   list: function(req, res, next) {
+    var limit = (req.param('limit')) ? req.param('limit') : 100;
     var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : undefined;
-    console.log( query );
-    Artist.find( query ).sort('name').limit(100).exec(function(err, artists) {
+
+    async.parallel([
+      function(done) {
+        Artist.count().exec( done );
+      },
+      function(done) {
+        Artist.find( query ).sort('name').limit( limit ).exec( done );
+      }
+    ], function(err, results) {
       res.format({
         json: function() {
           res.send( artists.map(function(x) {
@@ -17,10 +26,12 @@ module.exports = {
         },
         html: function() {
           res.render('artists', {
-            artists: artists
+              count: results[0]
+            , limit: limit
+            , artists: results[1]
           });
         }
-      })
+      });
     });
   },
   view: function(req, res, next) {

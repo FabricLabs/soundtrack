@@ -2,7 +2,12 @@ extends layout
 
 block content
   .well.content-well
-    h1 #{artists.length} Artists Known
+    .pull-right
+      form
+        input(type="text", name="q")
+
+    h1 #{count} Artists Known
+    p Display limited to #{limit} artists.  Pass <code>limit</code> to change this.
     ul
       for artist in artists
         li

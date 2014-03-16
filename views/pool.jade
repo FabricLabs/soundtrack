@@ -3,8 +3,8 @@ extends layout
 block content
 
   .well.content-well
-    h1 #{count} Tracks Known
-    p Ordered by number of plays.  Display limited to #{limit} tracks.  Pass <code>limit</code> to change this.
+    h1 #{tracks.length} Tracks Currently in Queue Pool
+    p Chosen from tracks played during the previous 7 days at the present time of day (3 hour rolling window).
 
     ul
       for track in tracks

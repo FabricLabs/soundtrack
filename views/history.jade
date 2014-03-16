@@ -6,14 +6,4 @@ block content
     h1 Track History
     ul
       for play in plays
-        if (typeof(play._track._artist) != 'undefined' && play._track._artist)
-          li
-            a(href="/#{play._track._artist.slug}") #{play._track._artist.name}
-            |  &mdash; 
-            a(href="/#{play._track._artist.slug}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
-            small  queued by 
-              if (play._curator)
-                a(href="#{play._curator.slug}") #{play._curator.username}
-              else
-                span random entropy (chosen by the machine)
-              |  with #{play.messageCount} messages
+        include partials/play

@@ -1,21 +1,53 @@
 var async = require('async')
-  , _ = require('underscore');
+  , _ = require('underscore')
+  , util = require('../util');
 
 module.exports = {
   list: function(req, res, next) {
+    var limit = (req.param('limit')) ? req.param('limit') : 100;
+    var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : undefined;
+
     Play.aggregate([
+      { $match: query },
       { $group: { _id: '$_track', count: { $sum: 1 } } },
       { $sort: { 'count': -1 } },
-      { $limit: 100 }
+      { $limit: limit }
     ], function(err, tracks) {
 
       Track.find({ _id: { $in: tracks.map(function(x) { return x._id; }) }}).populate('_artist').exec(function(err, tracks) {
+
+        Track.count( query ).exec(function(err, count) {
+          res.format({
+            json: function() {
+              res.send( tracks );
+            },
+            html: function() {
+              res.render('tracks', {
+                  tracks: tracks
+                , count: count
+                , limit: limit
+              });
+            }
+          });
+        });
+      });
+    });
+  },
+  pool: function(req, res, next) {
+    var query = { _curator: { $exists: true } };
+
+    query = _.extend( query , {
+      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7)
+    });
+
+    Play.find( query ).limit(4096).exec(function(err, plays) {
+      Track.find({ _id: { $in: plays.map(function(x) { return x._track; }) } }).populate('_artist _credits').exec(function(err, tracks) {
         res.format({
           json: function() {
             res.send( tracks );
           },
           html: function() {
-            res.render('tracks', {
+            res.render('pool', {
               tracks: tracks
             });
           }

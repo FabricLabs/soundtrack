@@ -1,15 +1,28 @@
+var async = require('async');
+
 module.exports = {
   profile: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      Playlist.find({ _creator: person._id, public: true }).exec(function(err, playlists) {
+      async.parallel([
+        function(done) {
+          Playlist.find({ _creator: person._id, public: true }).exec( done );
+        },
+        function(done) {
+          Play.find({ _curator: person._id }).sort('-timestamp').limit(20).populate('_track _curator').exec(function(err, plays) {
+            Artist.populate( plays , {
+              path: '_track._artist _track._credits'
+            }, done );
+          });
+        }
+      ], function(err, results) {
         res.render('person', {
             person: person
-          , playlists: playlists
+          , playlists: results[0]
+          , plays: results[1]
         });
       });
-
     });
   },
   edit: function(req, res, next) {
@@ -35,6 +48,30 @@ module.exports = {
     Person.find({}).sort('_id').exec(function(err, people) {
       res.render('people', {
         people: people
+      });
+    });
+  },
+  listPlays: function(req, res, next) {
+    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+      if (!person) { return next(); }
+
+      async.parallel([
+        function(done) {
+          Playlist.find({ _creator: person._id, public: true }).exec( done );
+        },
+        function(done) {
+          Play.find({ _curator: person._id }).sort('-timestamp').populate('_track _curator').exec(function(err, plays) {
+            Artist.populate( plays , {
+              path: '_track._artist _track._credits'
+            }, done );
+          });
+        }
+      ], function(err, results) {
+        res.render('person-plays', {
+            person: person
+          , playlists: results[0]
+          , plays: results[1]
+        });
       });
     });
   },

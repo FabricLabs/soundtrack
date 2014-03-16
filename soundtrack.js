@@ -53,6 +53,7 @@ Track        = require('./models/Track').Track;
 Artist       = require('./models/Artist').Artist;
 Play         = require('./models/Play').Play;
 Playlist     = require('./models/Playlist').Playlist;
+Source       = require('./models/Source').Source;
 Chat         = require('./models/Chat').Chat;
 
 passport.use(Person.createStrategy());
@@ -535,6 +536,7 @@ app.get('/history', pages.history);
 app.get('/people', people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
+app.get('/pool', tracks.pool);
 app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
@@ -552,6 +554,7 @@ app.post('/tracks/:trackID',                 authorize('editor') , soundtracker 
 app.get('/:artistSlug', artists.view);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
+app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);
 

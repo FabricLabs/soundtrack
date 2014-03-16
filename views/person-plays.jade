@@ -1,0 +1,7 @@
+extends layout
+
+block content
+  h1 All #{plays.length} Plays By <a href="/#{person.slug}">#{person.username}</a>
+
+  for play in plays
+    include partials/play

@@ -16,6 +16,7 @@ var TrackSchema = new Schema({
   , images: {
       thumbnail: { url: { type: String } }
     }
+  , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
       youtube: [ new Schema({
           id: { type: String, required: true }
@@ -36,6 +37,17 @@ var TrackSchema = new Schema({
         _artist: { type: ObjectId, ref: 'Artist' }
       , _track: { type: ObjectId, ref: 'Track' }
     }) ]
+});
+
+TrackSchema.pre('save', function(next) {
+  var self = this;
+
+  /** for (var source in self.sources) {
+    self._sources.push({ });
+  } **/
+
+  next();
+
 });
 
 TrackSchema.post('init', function() {

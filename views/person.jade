@@ -34,3 +34,7 @@ block content
               a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
             p #{playlist.description}
 
+    h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)
+    for play in plays
+      include partials/play
+
