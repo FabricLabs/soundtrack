@@ -6,6 +6,9 @@ block content
     h1 #{tracks.length} Tracks Currently in Queue Pool
     p Chosen from tracks played during the previous 7 days at the present time of day (3 hour rolling window).
 
+    h2 Query used (for debug purposes)
+    pre #{JSON.stringify(query)}
+
     ul
       for track in tracks
         li

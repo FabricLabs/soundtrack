@@ -4,19 +4,24 @@ var async = require('async')
 
 module.exports = {
   list: function(req, res, next) {
-    var limit = (req.param('limit')) ? req.param('limit') : 100;
-    var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : undefined;
+    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+    var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : {};
 
-    Play.aggregate([
-      { $match: query },
+    /*/Play.aggregate([
       { $group: { _id: '$_track', count: { $sum: 1 } } },
       { $sort: { 'count': -1 } },
       { $limit: limit }
     ], function(err, tracks) {
+      if (err) { console.log(err); }/**/
 
-      Track.find({ _id: { $in: tracks.map(function(x) { return x._id; }) }}).populate('_artist').exec(function(err, tracks) {
+      //Track.find({ _id: { $in: tracks.map(function(x) { return x._id; }) }}).populate('_artist').exec(function(err, tracks) {
+      Track.find( query ).populate('_artist').limit( limit ).exec(function(err, tracks) {
+        if (err) { console.log(err); }
+
 
         Track.count( query ).exec(function(err, count) {
+          if (err) { console.log(err); }
+          
           res.format({
             json: function() {
               res.send( tracks );
@@ -26,12 +31,13 @@ module.exports = {
                   tracks: tracks
                 , count: count
                 , limit: limit
+                , query: query
               });
             }
           });
         });
       });
-    });
+    /*/});/**/
   },
   pool: function(req, res, next) {
     var query = { _curator: { $exists: true } };
@@ -48,7 +54,8 @@ module.exports = {
           },
           html: function() {
             res.render('pool', {
-              tracks: tracks
+                tracks: tracks
+              , query: query
             });
           }
         });

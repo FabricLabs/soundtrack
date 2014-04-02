@@ -17,7 +17,7 @@ module.exports = {
     ], function(err, results) {
       res.format({
         json: function() {
-          res.send( artists.map(function(x) {
+          res.send( results[1].map(function(x) {
             x = x.toObject();
             //x.value = x._id;
             x.value = x.name;
