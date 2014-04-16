@@ -116,11 +116,6 @@ module.exports = {
     for (var i = 0; i <= limit; i++) {
 
       var start = new Date();
-      start.setHours('0');
-      start.setMinutes('0');
-      start.setSeconds('0');
-      start.setMilliseconds('0');
-
       var end = new Date( start.getTime() );
 
       start = new Date( start           - ((i+1)  * 1000 * 60 * 60 * 24) );
