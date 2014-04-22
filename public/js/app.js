@@ -186,7 +186,13 @@ angular.module('soundtrack-io', ['timeFilters']);
 function AppController($scope, $http) {
   window.updatePlaylist = function(){
     $http.get('/playlist.json').success(function(data){
-      $scope.tracks = data;
+      $scope.tracks = data.map(function(t) {
+        if (t.images && t.images.thumbnail && t.images.thumbnail.url) {
+          // strip hardcoded http urls
+          t.images.thumbnail.url = t.images.thumbnail.url.replace('http:', '');
+        }
+        return t;
+      });
       soundtrack.room.track = data[0];
     });
   }
@@ -250,11 +256,14 @@ $(window).load(function(){
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-      techOrder: ['html5', 'flash', 'youtube']
+        techOrder: ['html5', 'youtube']
+      , forceHTML5: true
+      , forceSSL: true
+      , playsInline: true
     });
   } else {
     soundtrack.player = videojs('#secondary-player', {
-      techOrder: ['html5', 'flash', 'youtube']
+      techOrder: ['html5', 'youtube']
     });
     mutePlayer();
   }
@@ -315,7 +324,7 @@ $(window).load(function(){
             });
 
             msg.data.sources.soundcloud.forEach(function( item ) {
-              sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+              sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+msg.data.duration+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
             });
 
             soundtrack.player.src( sources );
@@ -324,6 +333,7 @@ $(window).load(function(){
             soundtrack.player.pause();
             soundtrack.player.currentTime( msg.seekTo );
             soundtrack.player.play();
+            soundtrack.player.currentTime( msg.seekTo );
 
             // ...and SoundCloud doesn't behave well without these. :/
             var bufferEvaluator = function() {
@@ -337,7 +347,7 @@ $(window).load(function(){
                 soundtrack.player.off('progress', bufferEvaluator);
                 soundtrack.player.off('loadeddata', bufferEvaluator);
                 console.log('jumping to ' + msg.seekTo + '...');
-                soundtrack.player.pause(); // this breaks soundcloud, wat?
+                //soundtrack.player.pause(); // this breaks soundcloud, wat?
                 soundtrack.player.currentTime( msg.seekTo );
                 soundtrack.player.play();
               } else {
@@ -348,7 +358,6 @@ $(window).load(function(){
             //soundtrack.player.off('progress', bufferEvaluator);
             soundtrack.player.on('progress', bufferEvaluator);
             soundtrack.player.on('loadeddata', bufferEvaluator);
-
             ensureVolumeCorrect();
 
             if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
