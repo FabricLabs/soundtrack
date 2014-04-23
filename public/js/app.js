@@ -272,16 +272,16 @@ $(window).load(function(){
     console.log('player loaded. :)');
 
     startSockJs = function(){
-      sockjs = new SockJS('/stream');
+      soundtrack.sockjs = new SockJS('/stream');
 
-      sockjs.onopen = function(){
+      soundtrack.sockjs.onopen = function(){
         //sockjs connection has been opened!
         $.post('/socket-auth', {}, function(data){
-          sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+          soundtrack.sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
         });
       }
 
-      sockjs.onmessage = function(e) {
+      soundtrack.sockjs.onmessage = function(e) {
         retryIdx = 0; //reset our retry timeouts
         var received = new Date();
 
@@ -413,7 +413,7 @@ $(window).load(function(){
         }
       };
 
-      sockjs.onclose = function() { 
+      soundtrack.sockjs.onclose = function() { 
         console.log('Lost our connection, lets retry!');
         if (retryIdx < retryTimes.length) {
           console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
@@ -425,7 +425,7 @@ $(window).load(function(){
     }
 
     restartSockJs = function(){
-      sockjs = null;
+      soundtrack.sockjs = null;
       startSockJs();
     }
 
@@ -523,6 +523,7 @@ $(window).load(function(){
       case 'on':
         $.cookie('streaming', true);
         soundtrack.settings.streaming = true;
+        soundtrack.sockjs.stop();
         startSockJs();
         $('<div class="message"><strong id="announcement">Streaming turned on.</strong></div>').appendTo('#messages');
       break;
