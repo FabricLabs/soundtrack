@@ -1,7 +1,8 @@
 // Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
-    notifications: $.cookie('notificationsEnabled')
+      notifications: $.cookie('notificationsEnabled')
+    , streaming:     ($.cookie('streaming') !== 'false') ? true : false
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
@@ -317,54 +318,58 @@ $(window).load(function(){
               $('#track-curator').html('the machine');
             }
 
-            var sources = [];
+            console.log('STREAMING : ' + soundtrack.settings.streaming );
 
-            msg.data.sources.youtube.forEach(function( item ) {
-              sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&t=' + msg.seekTo } );
-            });
+            if (soundtrack.settings.streaming) {
+              var sources = [];
 
-            msg.data.sources.soundcloud.forEach(function( item ) {
-              sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+msg.seekTo+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
-            });
+              msg.data.sources.youtube.forEach(function( item ) {
+                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&t=' + msg.seekTo } );
+              });
 
-            soundtrack.player.src( sources );
+              msg.data.sources.soundcloud.forEach(function( item ) {
+                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+msg.seekTo+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+              });
 
-            // YouTube doesn't behave well without these two lines...
-            soundtrack.player.pause();
-            soundtrack.player.currentTime( msg.seekTo );
-            soundtrack.player.play();
+              soundtrack.player.src( sources );
 
-            soundtrack.player.on('loadedmetadata', function() {
+              // YouTube doesn't behave well without these two lines...
+              soundtrack.player.pause();
               soundtrack.player.currentTime( msg.seekTo );
               soundtrack.player.play();
-            });
 
-            // ...and SoundCloud doesn't behave well without these. :/
-            var bufferEvaluator = function() {
-              console.log('evaluating buffer...');
-
-              var now = new Date();
-              var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
-              var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
-
-              if (soundtrack.player.bufferedPercent() > estimatedProgress) {
-                soundtrack.player.off('progress', bufferEvaluator);
-                soundtrack.player.off('loadeddata', bufferEvaluator);
-                console.log('jumping to ' + msg.seekTo + '...');
-                //soundtrack.player.pause(); // this breaks soundcloud, wat?
+              soundtrack.player.on('loadedmetadata', function() {
                 soundtrack.player.currentTime( msg.seekTo );
                 soundtrack.player.play();
-              } else {
-                console.log('estimated progress: ' + estimatedProgress );
-                console.log( soundtrack.player.bufferedPercent() )
+              });
+
+              // ...and SoundCloud doesn't behave well without these. :/
+              var bufferEvaluator = function() {
+                console.log('evaluating buffer...');
+
+                var now = new Date();
+                var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
+                var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
+
+                if (soundtrack.player.bufferedPercent() > estimatedProgress) {
+                  soundtrack.player.off('progress', bufferEvaluator);
+                  soundtrack.player.off('loadeddata', bufferEvaluator);
+                  console.log('jumping to ' + msg.seekTo + '...');
+                  //soundtrack.player.pause(); // this breaks soundcloud, wat?
+                  soundtrack.player.currentTime( msg.seekTo );
+                  soundtrack.player.play();
+                } else {
+                  console.log('estimated progress: ' + estimatedProgress );
+                  console.log( soundtrack.player.bufferedPercent() )
+                }
+              };
+              //soundtrack.player.off('progress', bufferEvaluator);
+              if (msg.seekTo >= 1) {
+                soundtrack.player.on('progress', bufferEvaluator);
+                soundtrack.player.on('loadeddata', bufferEvaluator);
               }
-            };
-            //soundtrack.player.off('progress', bufferEvaluator);
-            if (msg.seekTo >= 1) {
-              soundtrack.player.on('progress', bufferEvaluator);
-              soundtrack.player.on('loadeddata', bufferEvaluator);
+              ensureVolumeCorrect();
             }
-            ensureVolumeCorrect();
 
             if ($('#playlist-list li:first').data('track-id') == msg.data._id) {
               $('#playlist-list li:first').slideUp('slow', function() {
@@ -484,7 +489,7 @@ $(window).load(function(){
     function chatSubmit(msg) {
       var matches = msg.match(triggerWord);
       if (matches) {
-        if (notify(matches[1])) {
+        if (notify(matches[1] , msg )) {
           return;
         }
       }
@@ -507,9 +512,31 @@ $(window).load(function(){
   // /reset -> reset the video player
   OutgoingChatHandler.addListener('reset', function(msg){
     var cur = soundtrack.player.currentTime();
-    soundtrack.player.stop();
+    soundtrack.player.pause();
     soundtrack.player.currentTime(cur);
     soundtrack.player.play();
+  });
+
+  OutgoingChatHandler.addListener('stream', function(msg){
+    if (!msg) return true;
+    switch((msg.split(' ')[1] || '').toLowerCase()) {
+      case 'on':
+        $.cookie('streaming', true);
+        soundtrack.settings.streaming = true;
+        startSockJs();
+        $('<div class="message"><strong id="announcement">Streaming turned on.</strong></div>').appendTo('#messages');
+      break;
+      case 'off':
+        $.cookie('streaming', false);
+        soundtrack.settings.streaming = false;
+        soundtrack.player.pause();
+        $('<div class="message"><strong id="announcement">Streaming turned off.</strong></div>').appendTo('#messages');
+      break;
+      default:
+        var status = (soundtrack.settings.streaming) ? 'on' : 'off';
+        $('<div class="message"><strong id="announcement">Stream is '+status+'.</strong></div>').appendTo('#messages');
+      break;
+    }
   });
 
   // /video -> toggle video
