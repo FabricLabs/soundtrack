@@ -271,17 +271,17 @@ $(window).load(function(){
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
 
-    startSockJs = function(){
-      sockjs = new SockJS('/stream');
+    soundtrack.startSockJs = function(){
+      soundtrack.sockjs = new SockJS('/stream');
 
-      sockjs.onopen = function(){
+      soundtrack.sockjs.onopen = function(){
         //sockjs connection has been opened!
         $.post('/socket-auth', {}, function(data){
-          sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
+          soundtrack.sockjs.send(JSON.stringify({type: 'auth', authData: data.authData}));
         });
       }
 
-      sockjs.onmessage = function(e) {
+      soundtrack.sockjs.onmessage = function(e) {
         retryIdx = 0; //reset our retry timeouts
         var received = new Date();
 
@@ -413,7 +413,7 @@ $(window).load(function(){
         }
       };
 
-      sockjs.onclose = function() { 
+      soundtrack.sockjs.onclose = function() { 
         console.log('Lost our connection, lets retry!');
         if (retryIdx < retryTimes.length) {
           console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
@@ -425,8 +425,8 @@ $(window).load(function(){
     }
 
     restartSockJs = function(){
-      sockjs = null;
-      startSockJs();
+      soundtrack.sockjs = null;
+      soundtrack.startSockJs();
     }
 
     restartSockJs();
@@ -500,6 +500,7 @@ $(window).load(function(){
     //add our default chat handler that actually sends the messages
     addListener(CHAT_DEFAULT, function (msg) {
       $.post('/chat', { message: msg }, function(data){});
+      $("#messages").scrollTop($("#messages")[0].scrollHeight);
     });
 
     return {
@@ -521,20 +522,25 @@ $(window).load(function(){
     if (!msg) return true;
     switch((msg.split(' ')[1] || '').toLowerCase()) {
       case 'on':
+        $('<div class="message"><strong id="announcement">Streaming turned on.</strong></div>').appendTo('#messages');
+        $("#messages").scrollTop($("#messages")[0].scrollHeight);
+
         $.cookie('streaming', true);
         soundtrack.settings.streaming = true;
-        startSockJs();
-        $('<div class="message"><strong id="announcement">Streaming turned on.</strong></div>').appendTo('#messages');
+        soundtrack.sockjs.close();
+        soundtrack.startSockJs();
       break;
       case 'off':
         $.cookie('streaming', false);
         soundtrack.settings.streaming = false;
         soundtrack.player.pause();
         $('<div class="message"><strong id="announcement">Streaming turned off.</strong></div>').appendTo('#messages');
+        $("#messages").scrollTop($("#messages")[0].scrollHeight);
       break;
       default:
         var status = (soundtrack.settings.streaming) ? 'on' : 'off';
         $('<div class="message"><strong id="announcement">Stream is '+status+'.</strong></div>').appendTo('#messages');
+        $("#messages").scrollTop($("#messages")[0].scrollHeight);
       break;
     }
   });
