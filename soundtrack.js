@@ -1,12 +1,14 @@
 var config = require('./config')
   , database = require('./db')
   , util = require('./util')
+  , fs = require('fs')
   , express = require('express')
   , app = express()
   , sys = require('sys')
   , http = require('http')
   , rest = require('restler')
   , slug = require('speakingurl')
+  , jade = require('jade')
   , async = require('async')
   , redis = require('redis')
   , sockjs = require('sockjs')
@@ -102,6 +104,27 @@ app.locals.helpers  = require('./helpers').helpers;
 String.prototype.capitalize = function(){
   return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
+
+// compile client-side templates into public/js/jade-templates.js
+var templates = {
+    'playlist-row'   : 'views/partials/playlist-row.jade'
+  , 'track-row'      : 'views/partials/track-row.jade'
+};
+// compile into functions and convert to strings
+// inspired by clientjade (https://github.com/jgallen23/clientjade)
+var compiledFunctions = Object.keys(templates).map(function(filename) {
+  return jade.compile(fs.readFileSync(__dirname + '/' + templates[filename]), {
+    filename: filename,
+    client: true,
+    compileDebug: false
+  }).toString().replace(/function anonymous/, 'jade.templates["' + filename + '"] = function');
+});
+// init client-side templates object
+compiledFunctions.unshift('jade.templates = {};');
+// need jade runtime.js
+compiledFunctions.unshift(fs.readFileSync(__dirname + '/node_modules/jade/runtime.js'));
+// write to file
+fs.writeFileSync(__dirname + '/public/js/jade-templates.js', compiledFunctions.join("\n"));
 
 var auth = require('./controllers/auth')
   , pages = require('./controllers/pages')
@@ -553,6 +576,7 @@ app.post('/tracks/:trackID',                 authorize('editor') , soundtracker 
 
 app.get('/:artistSlug', artists.view);
 
+app.get('/:usernameSlug/playlists', playlists.list);
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug', people.profile);

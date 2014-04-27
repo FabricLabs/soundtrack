@@ -5,7 +5,8 @@ var Soundtrack = function() {
     , streaming:     ($.cookie('streaming') !== 'false') ? true : false
   };
   this.user = {
-    username: $('a[data-for=user-model]').data('username')
+      username: $('a[data-for=user-model]').data('username')
+    , slug: $('a[data-for=user-model]').data('slug')
   };
   this.room = {
       name: ''
@@ -25,6 +26,12 @@ var Soundtrack = function() {
       return src;
     }
   }
+  this.views = jade.templates;
+  /*/var self = this;
+  $('*[data-for=template]').each(function(i, el) {
+    self.views[ el.data('name') ] = blade.Compiler.parse( el.text() );
+  });/**/
+
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   if (window.webkitNotifications.checkPermission() != 0) {
@@ -871,9 +878,7 @@ $(window).load(function(){
       , trackID:     $('input[name=current-track-id]').val()
     }, function(data) {
       console.log('playlist created!');
-
-      $('<li data-playlist-id="'+ data.results._id +'" data-action="save-track"><a data-playlist-id="'+ data.results._id +'" data-action="save-track">'+ data.results.name +'</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
-
+      $( soundtrack.views['playlist-row']( { playlist: data.results } ) ).insertBefore('ul[data-for=user-playlists] li:last-child');
     });
     return false;
   });
@@ -964,11 +969,23 @@ $(window).load(function(){
 
   $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
     var self = this;
+    // TODO: fix this
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
       public: $(self).prop('checked')
     }, function(data) {
       console.log(data);
     });
+  });
+
+  $(document).on('click', '*[data-for=user-playlists] li', function(e) {
+    e.preventDefault();
+
+    var playlist = $(this);
+    $.getJSON('/'+soundtrack.user.slug+'/'+ playlist.data('slug'), function(data) {
+      console.log(data);
+    });
+
+    return false;
   });
 
   $('*[data-action=enable-profile-editor]').on('click', function(e) {
