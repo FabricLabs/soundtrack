@@ -553,6 +553,7 @@ app.post('/tracks/:trackID',                 authorize('editor') , soundtracker 
 
 app.get('/:artistSlug', artists.view);
 
+app.get('/:usernameSlug/playlists', playlists.list);
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug', people.profile);

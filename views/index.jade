@@ -35,7 +35,7 @@ block content
               a.btn(href="#playlist-modal", data-toggle="modal") your playlists
               a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
                 span.caret
-              ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
+              ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists", ic-src="/#{user.slug}/playlists", ic-poll="2s")
                 for playlist in playlists
                   li(data-playlist-id="#{playlist._id}")
                     a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
@@ -118,13 +118,10 @@ block scripts
             i.icon-globe(title="public")
             ul.nav.nav-list(data-for="user-playlists")
               for playlist in playlists
-                li(data-playlist-id="#{playlist._id}")
-                  a(href="/#{user.slug}/#{playlist.slug}")
-                    small.pull-right #{playlist._tracks.length}
-                    input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
-                    |  #{playlist.name}
+                include partials/playlist-row
           .span8
             h4 Tracks
+            ul.nav.nav-list(data-for="playlist-tracks")
 
       .modal-footer
         button.btn.btn(data-dismiss="modal") Cancel

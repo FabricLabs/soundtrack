@@ -1,6 +1,54 @@
-var _ = require('underscore')
+var _ = require('underscore');
 
 module.exports = {
+  list: function(req, res, next) {
+    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+      if (!person) { return next(); }
+      Playlist.find({ $or: [
+          { _creator: person._id, public: true }
+        , { _creator: (req.user) ? req.user._id : person._id }
+      ] }).populate('_tracks _creator', { hash: 0, salt: 0, preferences: 0 }).lean().exec(function(err, playlists) {
+        if(err){console.log(err);}
+        console.log(playlists);
+
+        // probably a way to clean this up via Mongoose
+        playlists = playlists.map(function(list) {
+          list._tracks = list._tracks.map(function(track) {
+            for (var source in track.sources) {
+              console.log(source);
+              for (var i = 0; i < track.sources[source].length; i++) {
+                delete track.sources[source][i].data;
+              }
+            }
+            return track;
+          });
+          return list;
+        });
+
+        Artist.populate( playlists , {
+            path: '_tracks._artist _tracks._credits'
+          , select: '_id name slug'
+        }, function(err, playlists) {
+
+          res.format({
+            json: function() {
+              res.send(playlists);
+            },
+            html: function() {
+              res.render('playlists', {
+                playlists: playlists
+              });
+            },
+            text: function() {
+              res.render('partials/playlist-list', {
+                playlists: playlists
+              });
+            }
+          });
+        });
+      });
+    });
+  },
   view: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
@@ -41,8 +89,12 @@ module.exports = {
     });
   },
   create: function(req, res, next) {
+
+    console.log(req.params);
+
     var playlist = new Playlist({
         name: req.param('name')
+      , description: req.param('description')
       , _creator: req.user._id
       , public: (req.param('public') == 'true') ? true : false
     });
@@ -58,6 +110,7 @@ module.exports = {
           , results: {
                 _id: playlist._id
               , name: playlist.name
+              , description: playlist.description
               , tracks: [ track ]
             }
         });

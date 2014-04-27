@@ -29,6 +29,8 @@ html(lang="en-US", ng-app="soundtrack-io")
     script(src="/video-js/video.dev.js")
     script(src="/js/vjs.youtube.js")
     script(src="/js/sockjs-0.3.min.js")
+    script(src="/js/intercooler-0.2.0.min.js")
+    //-script(src="/js/jade-templates.js")
     script(src="/js/app.js")
 
     if (user)
@@ -90,7 +92,7 @@ html(lang="en-US", ng-app="soundtrack-io")
                   a(href="#settings-modal", data-toggle="modal")
                     i.icon-white.icon-cog
                 li
-                  a(href="/#{user.slug}", data-username="#{user.username}", data-for="user-model")
+                  a(href="/#{user.slug}", data-username="#{user.username}", data-slug="#{user.slug}", data-for="user-model")
                     img.user-avatar-small(src="#{user.avatar.url}")
                     | #{user.username}
                 li

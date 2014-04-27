@@ -1,0 +1,5 @@
+li(data-playlist-id="#{playlist._id}", data-playlist-slug="#{playlist.slug}")
+  a(href="/#{user.slug}/#{playlist.slug}")
+    small.pull-right #{playlist._tracks.length}
+    input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
+    |  #{playlist.name}
