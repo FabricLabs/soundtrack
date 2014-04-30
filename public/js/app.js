@@ -96,10 +96,10 @@ function volumeChangeHandler(e) {
   $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
 };
 
-function mutePlayer() {
+function mutePlayer( saveState ) {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
   soundtrack.player.volume( 0.00001 );
-  $.cookie('lastVolume', '0');
+  if (saveState) { $.cookie('lastVolume', '0'); }
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
@@ -257,7 +257,7 @@ $(window).load(function(){
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-        techOrder: ['html5', 'youtube']
+        techOrder: ['html5', 'flash', 'youtube']
       , forceHTML5: true
       , forceSSL: true
       , playsInline: true
@@ -266,7 +266,7 @@ $(window).load(function(){
     soundtrack.player = videojs('#secondary-player', {
       techOrder: ['html5', 'youtube']
     });
-    mutePlayer();
+    mutePlayer(false);
   }
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
@@ -324,11 +324,11 @@ $(window).load(function(){
               var sources = [];
 
               msg.data.sources.youtube.forEach(function( item ) {
-                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&t=' + msg.seekTo } );
+                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
               });
 
               msg.data.sources.soundcloud.forEach(function( item ) {
-                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+msg.seekTo+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
               });
 
               soundtrack.player.src( sources );
