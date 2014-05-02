@@ -3,6 +3,7 @@ var Soundtrack = function() {
   this.settings = {
       notifications: $.cookie('notificationsEnabled')
     , streaming:     ($.cookie('streaming') !== 'false') ? true : false
+    , avoidVideo:    ($.cookie('avoidVideo') === 'true') ? true : false
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
@@ -64,6 +65,13 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
     $editor.find('input[name=artist]').val( track._artist.name );
     $editor.find('input[name=title]').val( track.title );
 
+    console.log( $editor.find('*[data-context=track]') )
+
+    $editor.find('*[data-context=track]').data('track-id', track._id);
+
+    $editor.find('*[data-context=track][data-action=track-flag-nsfw]').prop('checked', track.flags.nsfw );
+    $editor.find('*[data-context=track][data-action=track-flag-live]').prop('checked', track.flags.live );
+
     var titles = track.titles;
     if (titles.indexOf( track.title ) == -1) {
       titles.push( track.title );
@@ -74,7 +82,6 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
         titles.push( video.data.title );
       }
     });
-
 
     $editor.find('pre[data-for=titles]').html( titles.join('<br />') );
 
@@ -99,7 +106,7 @@ function volumeChangeHandler(e) {
 function mutePlayer( saveState ) {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
   soundtrack.player.volume( 0.00001 );
-  if (saveState) { $.cookie('lastVolume', '0'); }
+  $.cookie('lastVolume', '0');
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
@@ -186,6 +193,7 @@ angular.module('soundtrack-io', ['timeFilters']);
 
 function AppController($scope, $http) {
   window.updatePlaylist = function(){
+    console.log('angular updatePlaylist()')
     $http.get('/playlist.json').success(function(data){
       $scope.tracks = data.map(function(t) {
         if (t.images && t.images.thumbnail && t.images.thumbnail.url) {
@@ -250,23 +258,26 @@ COOKIE_EXPIRES = 604800;
 $(window).load(function(){
 
   var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000]; //in ms
+  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000, 86400000]; //in ms
   var retryIdx = 0;
 
   // must be after DOM loads so we have access to the user-model
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-        techOrder: ['html5', 'flash', 'youtube']
+        techOrder: ['html5', 'youtube']
       , forceHTML5: true
       , forceSSL: true
       , playsInline: true
+      , controls: true
+      , autoload: true
     });
+    soundtrack.player.controls(true);
   } else {
     soundtrack.player = videojs('#secondary-player', {
       techOrder: ['html5', 'youtube']
     });
-    mutePlayer(false);
+    mutePlayer( false );
   }
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
@@ -323,20 +334,37 @@ $(window).load(function(){
             if (soundtrack.settings.streaming) {
               var sources = [];
 
-              msg.data.sources.youtube.forEach(function( item ) {
-                sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
-              });
+              // use the new sources array if available
+              if (msg.sources) { msg.data.sources = msg.sources };
 
-              msg.data.sources.soundcloud.forEach(function( item ) {
-                sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
-              });
+              if (soundtrack.settings.avoidVideo) {
+                msg.data.sources.soundcloud.forEach(function( item ) {
+                  sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+                });
+                msg.data.sources.youtube.forEach(function( item ) {
+                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&start=' + Math.floor(msg.seekTo) } );
+                });
+              } else {
+                msg.data.sources.youtube.forEach(function( item ) {
+                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&start=' + Math.floor(msg.seekTo) } );
+                });
+                msg.data.sources.soundcloud.forEach(function( item ) {
+                  sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+                });
+              }
 
+              console.log(sources);
+              console.log( msg.sources );
+
+              //soundtrack.player.pause();
               soundtrack.player.src( sources );
-
-              // YouTube doesn't behave well without these two lines...
-              soundtrack.player.pause();
-              soundtrack.player.currentTime( msg.seekTo );
               soundtrack.player.play();
+              //soundtrack.player.currentTime( msg.seekTo );
+
+              /*/setTimeout(function() {
+                soundtrack.player.currentTime( msg.seekTo );
+                soundtrack.player.play();
+              }, 250);
 
               soundtrack.player.on('loadedmetadata', function() {
                 soundtrack.player.currentTime( msg.seekTo );
@@ -344,6 +372,7 @@ $(window).load(function(){
               });
 
               // ...and SoundCloud doesn't behave well without these. :/
+              /**/
               var bufferEvaluator = function() {
                 console.log('evaluating buffer...');
 
@@ -364,10 +393,9 @@ $(window).load(function(){
                 }
               };
               //soundtrack.player.off('progress', bufferEvaluator);
-              if (msg.seekTo >= 1) {
-                soundtrack.player.on('progress', bufferEvaluator);
-                soundtrack.player.on('loadeddata', bufferEvaluator);
-              }
+              soundtrack.player.on('progress', bufferEvaluator);
+              soundtrack.player.on('loadeddata', bufferEvaluator); /**/
+
               ensureVolumeCorrect();
             }
 
@@ -395,7 +423,11 @@ $(window).load(function(){
           break;
           case 'chat':
             $( msg.data.formatted ).appendTo('#messages');
-            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+
+            setTimeout(function() {
+              $("#messages").scrollTop($("#messages")[0].scrollHeight);
+            }, 100);
+
             $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
           
             if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
@@ -885,9 +917,37 @@ $(window).load(function(){
     return false;
   });
 
+  $(document).on('click', '*[data-action=track-flag-nsfw]', function(e) {
+
+    var self = this;
+    var trackID = $(self).data('track-id');
+
+    $.post('/tracks/'+trackID, {
+      nsfw: true
+    }, function(data) {
+      console.log(data);
+    });
+
+  });
+
+  $(document).on('click', '*[data-action=track-flag-live]', function(e) {
+
+    var self = this;
+    var trackID = $(self).data('track-id');
+
+    $.post('/tracks/'+trackID, {
+      live: true
+    }, function(data) {
+      console.log(data);
+    });
+
+  });
+
   $(document).on('submit', 'form[data-for=edit-track]', function(e) {
     e.preventDefault();
     var self = this;
+
+    console.log('track edit submission...');
 
     var trackID = $(self).data('track-id')
       , artistSlug = $(self).data('artist-slug')
@@ -902,6 +962,19 @@ $(window).load(function(){
       console.log(data);
       $(self).modal('hide');
     });
+
+    return false;
+  });
+
+  $(document).on('click', '*[data-for=swap-artist-title]', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    var currentArtist = $('form[data-for=edit-track]').find('input[name=artist]').val();
+    var currentTitle = $('form[data-for=edit-track]').find('input[name=title]').val();
+
+    $('form[data-for=edit-track]').find('input[name=artist]').val( currentTitle );
+    $('form[data-for=edit-track]').find('input[name=title]').val( currentArtist );
 
     return false;
   });
@@ -995,6 +1068,25 @@ $(window).load(function(){
     }
   });
 
+  $('*[data-action=toggle-video-avoid]').on('click', function(e) {
+    var self = this;
+    if ($(self).prop('checked')) {
+      $.cookie('avoidVideo', true, { expires: COOKIE_EXPIRES });
+      $.post('/settings', {
+        avoidVideo: true
+      }, function(data) {
+        console.log(data);
+      });
+    } else {
+      $.cookie('avoidVideo', false, { expires: COOKIE_EXPIRES });
+      $.post('/settings', {
+        avoidVideo: false
+      }, function(data) {
+        console.log(data);
+      });
+    }
+  });
+
   $('*[data-action=toggle-notifications]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
@@ -1052,8 +1144,12 @@ $(window).load(function(){
     }
   });
 
-  if ($.cookie('scrobblingEnabled') == 'true') {
+  if ($.cookie('scrobblingEnabled') === 'true') {
     $('*[data-action=toggle-scrobble]').prop('checked', true);
+  }
+
+  if ($.cookie('avoidVideo') === 'true') {
+    $('*[data-action=toggle-video-avoid]').prop('checked', true);
   }
 
   if ($.cookie('notificationsEnabled') == 'true') {

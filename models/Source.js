@@ -5,11 +5,13 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var SourceSchema = new Schema({
-    id: { type: String }
-  , type: { type: String, enum: ['video/youtube', 'audio/mp3'] }
-  , uri: { type: String }
+    id:    { type: String }
+  , type:  { type: String, enum: ['audio/mp3', 'video/youtube'] }
+  , uri:   { type: String }
   , start: { type: Number }
-  , end: { type: Number }
+  , end:   { type: Number }
+  , live:  { type: Boolean }
+  , nsfw:  { type: Boolean }
 });
 
 var Source = mongoose.model('Source', SourceSchema);

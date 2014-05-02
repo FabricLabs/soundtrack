@@ -27,7 +27,7 @@ html(lang="en-US", ng-app="soundtrack-io")
     script(src="/js/jquery.cookie.js")
     script(src="/js/intro.js")
     script(src="/video-js/video.dev.js")
-    script(src="/js/vjs.youtube.js")
+    script(src="/js/youtube.js")
     script(src="/js/sockjs-0.3.min.js")
     script(src="/js/app.js")
 
@@ -42,6 +42,7 @@ html(lang="en-US", ng-app="soundtrack-io")
         window.pendo_options = {
           apiKey: 'c4a237f5-e4e2-40eb-4a79-5a96fdc45d82'
         };
+    //- pendo.io...
     script.
       (function() {
           var script = document.createElement('script');
@@ -145,7 +146,10 @@ html(lang="en-US", ng-app="soundtrack-io")
           |  Avoid NSFW Content
         label(title="Prefer videos / audio sources that don't have ads.")
           input(type="checkbox", data-action="toggle-avoid-ads")
-          |  Avoid Ads Where Possible
+          |  Avoid Ads [where possible]
+        label(title="Prefer sources that don't have an attached video")
+          input(type="checkbox", data-action="toggle-video-avoid")
+          |  Avoid Videos [where possible]
 
         h4 Notifications
         label(title="Enable desktop notifications on mention.")
@@ -183,7 +187,11 @@ html(lang="en-US", ng-app="soundtrack-io")
           label(for="artist") Track Artist
           input.input-block-level.typeahead(type="text", name="artist", data-remote="/artists?q=%QUERY")
 
-          label(for="title") Track Title
+          label(for="title")
+            a.btn.btn-mini.pull-right(href="#", data-for="swap-artist-title")
+              i.icon-resize-vertical
+              |  swap
+            | Track Title
           input.input-block-level(type="text", name="title")
           //-.row-fluid
             label.span3 Start
@@ -194,6 +202,14 @@ html(lang="en-US", ng-app="soundtrack-io")
 
           label(for="titles") Known Titles (for easy copypasta)
           pre(data-for="titles")
+
+          label
+            input(type="checkbox", data-action="track-flag-nsfw", data-context="track", data-track-id)
+            |  NSFW (not safe for work)
+
+          label
+            input(type="checkbox", data-action="track-flag-live", data-context="track", data-track-id)
+            |  Live Performance (only check if the audio is live, not the video)
 
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel

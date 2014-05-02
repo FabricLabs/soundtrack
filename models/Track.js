@@ -12,6 +12,10 @@ var TrackSchema = new Schema({
   , _artist: { type: ObjectId, ref: 'Artist' }
   , _credits: [ { type: ObjectId, ref: 'Artist' } ]
   , duration: { type: Number } // time in seconds
+  , flags: {
+        nsfw: { type: Boolean, default: false }
+      , live: { type: Boolean, default: false }
+    }
   , description: { type: String }
   , images: {
       thumbnail: { url: { type: String } }
@@ -87,7 +91,9 @@ TrackSchema.statics.random = function(callback) {
   }.bind(this));
 };
 
-TrackSchema.plugin( slug('title') );
+TrackSchema.plugin( slug('title', {
+  track: true
+}) );
 TrackSchema.index({ slug: 1 });
 
 var Track = mongoose.model('Track', TrackSchema);
