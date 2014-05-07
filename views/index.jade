@@ -45,7 +45,7 @@ block content
           //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
           #playlist
             ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
-              li(ng-repeat="track in tracks", ng-class="{active: $first}", ng-style="{top: ((track.order * 40) + 'px')}", data-track-id="{{track._id}}")
+              li(ng-repeat="track in tracks", ng-class="{active: $first}", ng-style="{top: ((track.order * 40) + 'px')}", ng-model="track", data-track-id="{{track._id}}")
                 .playlist-controls
                   .score.badge {{track.score}}
                   i.icon-chevron-up.icon-white(data-action="upvote-track", data-track-id="{{track._id}}")
@@ -61,9 +61,12 @@ block content
                 .track-details(style="font-size: 1.1em;")
                   img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                   a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}") {{track.title}}
-                .track-details.text-right
-                  | by 
-                  a(href="/{{track._artist.slug}}") {{track._artist.name}}
+                .track-details
+                  .text-right
+                    .label.label-warning(ng-if="track.flags.nsfw") nsfw
+                    .label(ng-if="track.flags.live") live
+                    |  by 
+                    a(href="/{{track._artist.slug}}") {{track._artist.name}}
 
           h5 Add Track
           form#search-form.input-append(style="display:block;", data-for="track-search")

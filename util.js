@@ -32,7 +32,17 @@ function parseTitleString(string, partsCallback) {
     string = string.replace(token.capitalize(), '').trim();
   });
 
+  console.log('next string: ' +string );
+
   var parts = string.split( ' - ' );
+  console.log(parts);
+
+  for (var i = 0; i < parts.length; i++) {
+    if ( baddies.indexOf( parts[i].toLowerCase() ) >= 0 ) {
+      parts.splice( i , 1 );
+    }
+  }
+  console.log(parts);
 
   if (parts.length == 2) {
     artist = parts[0];
@@ -62,6 +72,7 @@ function parseTitleString(string, partsCallback) {
   credits.push(  title.replace(/(.*) featuring (.*)/i,      '$2').trim() );
   credits.push(  title.replace(/(.*) \(ft (.*)\)/i,         '$1').trim() );
   credits.push(  title.replace(/(.*) \(ft (.*)\)/i,         '$2').trim() );
+  credits.push(  title.replace(/(.*) \(feat\.? (.*)\)/i,    '$2').trim() );
   credits.push(  title.replace(/(.*) \(featuring (.*)\)/i,  '$2').trim() );
   credits.push( artist.replace(/(.*) ft\.? (.*)/i,          '$1').trim() );
   credits.push( artist.replace(/(.*) ft\.? (.*)/i,          '$2').trim() );
@@ -70,6 +81,7 @@ function parseTitleString(string, partsCallback) {
   credits.push( artist.replace(/(.*) featuring (.*)/i,      '$2').trim() );
   credits.push( artist.replace(/(.*) \(ft (.*)\)/i,         '$1').trim() );
   credits.push( artist.replace(/(.*) \(ft (.*)\)/i,         '$2').trim() );
+  credits.push( artist.replace(/(.*) \(feat\.? (.*)\)/i,    '$1').trim() );
   credits.push( artist.replace(/(.*) \(featuring (.*)\)/i,  '$2').trim() );
   credits.push( artist.replace(/(.*) & (.*)/ig,             '$1').trim() );
   credits.push( artist.replace(/(.*) & (.*)/ig,             '$2').trim() );
