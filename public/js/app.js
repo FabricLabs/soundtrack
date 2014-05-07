@@ -421,7 +421,8 @@ $(window).load(function(){
             updateUserlist();
           break;
           case 'part':
-            $('#userlist li[data-user-id='+msg.data._id+']').remove();
+            //$('#userlist li[data-user-id='+msg.data._id+']').remove();
+            updateUserlist();
           break;
           case 'chat':
             $( msg.data.formatted ).appendTo('#messages');

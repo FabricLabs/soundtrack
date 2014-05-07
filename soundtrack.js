@@ -264,7 +264,7 @@ sock.on('connection', function(conn) {
       //respond to pings
       case 'pong':
         conn.pongTime = (new Date()).getTime();
-        break;
+      break;
 
       //user is trying to authenticate their socket...
       //so we go ahead and look up the token they've sent us.
@@ -284,11 +284,12 @@ sock.on('connection', function(conn) {
           
           // TODO: strip salt, hash, etc.
           // We do this on /listeners.json, but if nothing else, we save memory.
+          var previous = soundtrack.app.room.listeners[ matches[0].user._id ] || { ids: [] };
           soundtrack.app.room.listeners[ matches[0].user._id ] = {
               _id: matches[0].user._id
             , slug: matches[0].user.slug
             , username: matches[0].user.username
-            , id: conn.id
+            , ids: _.union( previous.ids , [ conn.id ] ) // TODO: rename this to 'clients'
             , role: (matches[0].user.roles && matches[0].user.roles.indexOf('editor') >= 0) ? 'editor' : 'listener'
             , avatar: matches[0].user.avatar
           };
@@ -306,12 +307,12 @@ sock.on('connection', function(conn) {
           console.log("Connection auth failure!");
           conn.close();
         }
-        break;
+      break;
 
       //echo anything else
       default:
         conn.write(message);
-        break;
+      break;
     }
   });
 
@@ -328,21 +329,27 @@ sock.on('connection', function(conn) {
   conn.on('close', function() {
     if (conn.user) {
       console.log("connection closed for user " + conn.user.username);
-      
-      //Remove user from listeners array if this is their connection
-      if (app.room.listeners[conn.user._id] && app.room.listeners[conn.user._id].id == conn.id) {
-        //delete app.room.listeners[conn.user._id];
-      };
-    }
-    
-    /*soundtrack.broadcast({
-        type: 'part'
-      , data: {
-            id: conn.id
-          , _id: (conn.user) ? conn.user._id : undefined
+
+      app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
+        return x == conn.id;
+      }); 
+
+      for (var userID in app.room.listeners) {
+        if (app.room.listeners[ userID ].ids.length === 0) {
+          delete app.room.listeners[ userID ];
+          soundtrack.broadcast({
+              type: 'part'
+            , data: {
+                _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
+              }
+          });
+
         }
-    });
-    delete app.clients[conn.id];*/
+      }
+    }
+
+    delete app.clients[conn.id];
+
   });
 });
 sock.installHandlers(server, {prefix:'/stream'});
