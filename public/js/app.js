@@ -356,7 +356,7 @@ $(window).load(function(){
               console.log(sources);
               console.log( msg.sources );
 
-              //soundtrack.player.pause();
+              soundtrack.player.pause();
               soundtrack.player.src( sources );
               soundtrack.player.play();
               //soundtrack.player.currentTime( msg.seekTo );
@@ -393,8 +393,10 @@ $(window).load(function(){
                 }
               };
               //soundtrack.player.off('progress', bufferEvaluator);
-              soundtrack.player.on('progress', bufferEvaluator);
-              soundtrack.player.on('loadeddata', bufferEvaluator); /**/
+              if (msg.seekTo >= 5) {
+                soundtrack.player.on('progress', bufferEvaluator);
+                soundtrack.player.on('loadeddata', bufferEvaluator); /**/
+              }
 
               ensureVolumeCorrect();
             }
