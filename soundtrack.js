@@ -340,7 +340,7 @@ sock.on('connection', function(conn) {
           soundtrack.broadcast({
               type: 'part'
             , data: {
-                _id: (app.clients[id] && app.clients[id].user) ? app.clients[id].user._id : undefined
+                _id: userID
               }
           });
 
@@ -354,6 +354,11 @@ sock.on('connection', function(conn) {
 });
 sock.installHandlers(server, {prefix:'/stream'});
 
+var soundtracker = function(req, res, next) {
+  req.soundtrack = soundtrack;
+  next();
+};
+
 app.get('/', function(req, res, next) {
   console.log( 'HOSTNAME: ' + req.headers.host );
   //console.log(req);
@@ -366,7 +371,7 @@ app.get('/playlist.json', function(req, res) {
 });
 
 app.get('/listeners.json', function(req, res) {
-  res.send( _.toArray( app.room.listeners ) );
+  res.send( _.toArray( soundtrack.app.room.listeners ) );
 });
 
 //client requests that we give them a token to auth their socket
@@ -547,15 +552,9 @@ app.get('/pool', tracks.pool);
 app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
-
-var soundtracker = function(req, res, next) {
-  req.soundtrack = soundtrack;
-  next();
-};
-
-app.get('/:artistSlug/:trackSlug/:trackID', tracks.view);
+app.get('/:artistSlug/:trackSlug/:trackID', soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
-app.get('/tracks/:trackID', tracks.view );
+app.get('/tracks/:trackID',                 soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
 app.get('/:artistSlug', artists.view);

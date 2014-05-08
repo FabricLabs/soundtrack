@@ -52,6 +52,8 @@ module.exports = {
     });
   },
   listPlays: function(req, res, next) {
+    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
@@ -60,17 +62,24 @@ module.exports = {
           Playlist.find({ _creator: person._id, public: true }).exec( done );
         },
         function(done) {
-          Play.find({ _curator: person._id }).sort('-timestamp').populate('_track _curator').exec(function(err, plays) {
+          Play.find({ _curator: person._id }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'
             }, done );
           });
         }
       ], function(err, results) {
-        res.render('person-plays', {
-            person: person
-          , playlists: results[0]
-          , plays: results[1]
+        res.format({
+          json: function() {
+            res.send( results[1] );
+          },
+          html: function() {
+            res.render('person-plays', {
+                person: person
+              , playlists: results[0]
+              , plays: results[1]
+            });
+          }
         });
       });
     });

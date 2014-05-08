@@ -438,7 +438,7 @@ $(window).load(function(){
             }
           break;
           case 'ping':
-            sockjs.send(JSON.stringify({type: 'pong'}));
+            soundtrack.sockjs.send(JSON.stringify({type: 'pong'}));
             console.log("Ping Pong\'d");
           break;
           case 'announcement':

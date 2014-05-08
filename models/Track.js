@@ -2,7 +2,9 @@ var mongoose = require('mongoose')
   , Schema = mongoose.Schema
   , ObjectId = mongoose.SchemaTypes.ObjectId
   , slug = require('mongoose-slug')
-  , slugify = require('mongoose-slug');
+  , slugify = require('mongoose-slug')
+  , rest = require('restler')
+  , async = require('async');
 
 // this defines the fields associated with the model,
 // and moreover, their type.
@@ -20,6 +22,7 @@ var TrackSchema = new Schema({
   , images: {
       thumbnail: { url: { type: String } }
     }
+  , updated: { type: Date }
   , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
       youtube: [ new Schema({

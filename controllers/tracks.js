@@ -254,13 +254,18 @@ module.exports = {
       async.series( functions , function(err, results) {
         var chats = results[0];
 
-
         console.log(results[1]);
 
         Track.findOne({ $or: [
             { _id: req.param('trackID') }
           , { slug: req.param('trackSlug') }
         ] }).populate('_artist _credits').exec(function(err, track) {
+
+          /**/req.soundtrack.gatherSources(track , function(err, sources) {
+            //console.log(err , sources);
+            //console.log( sources.length );
+            console.log('SOURCE GATHERING COMPLETE');
+          });/**/
 
           res.format({
             json: function() {
