@@ -4658,7 +4658,7 @@ vjs.Html5.prototype.duration = function(){ return this.el_.duration || 0; };
 vjs.Html5.prototype.buffered = function(){ return this.el_.buffered; };
 
 vjs.Html5.prototype.volume = function(){ return this.el_.volume; };
-vjs.Html5.prototype.setVolume = function(percentAsDecimal){ this.el_.volume = percentAsDecimal; };
+vjs.Html5.prototype.setVolume = function(percentAsDecimal){ this.el_.volume = percentAsDecimal || 0; };
 vjs.Html5.prototype.muted = function(){ return this.el_.muted; };
 vjs.Html5.prototype.setMuted = function(muted){ this.el_.muted = muted; };
 
