@@ -1,0 +1,15 @@
+tr
+  td
+    a(href="/#{track._artist.slug}") #{track._artist.name}
+  td
+    a(href="/#{artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+  td #{track.duration}
+  td played <strong>#{track.plays}</strong> times
+  td
+    .btn-group
+      if (user && user.roles.indexOf('editor') >= 0)
+        |
+        a.btn.btn-mini(href="#", data-action="launch-track-editor", data-track-id="#{track._id}")
+          | edit
+      |
+      a.btn.btn-mini(href="#", data-action="queue-track", data-source="soundtrack", data-id="#{track._id}") &#9835; queue it &raquo;
