@@ -330,9 +330,11 @@ sock.on('connection', function(conn) {
     if (conn.user) {
       console.log("connection closed for user " + conn.user.username);
 
-      app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
-        return x == conn.id;
-      }); 
+      if (conn.user && app.room.listeners[ conn.user._id ]) {
+        app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
+          return x == conn.id;
+        });
+      }
 
       for (var userID in app.room.listeners) {
         if (app.room.listeners[ userID ].ids.length === 0) {
