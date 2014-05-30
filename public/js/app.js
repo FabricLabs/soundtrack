@@ -18,13 +18,16 @@ var Soundtrack = function() {
   this.controls = {
     volume: {}
   }
+  // stub out the player, since sometimes we don't load it.
   this.player = {
-    ready: function(callback) {
-      callback();
-    },
-    src: function(src) {
-      return src;
-    }
+    ready:       function( callback )     { return callback(); },
+    src:         function( src )          { return src; },
+    pause:       function()               { return this; },
+    play:        function()               { return this; },
+    on:          function( event , cb )   { return this; },
+    volume:      function( level )        { return this; },
+    currentTime: function( t )            { return 0; },
+    duration:    function( t )            { return 0; },
   }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
@@ -120,14 +123,14 @@ function unmutePlayer() {
   }
 }
 function ensureVolumeCorrect() {
-  if (registered) {
+  // if (registered) {
     console.log('last volume... ' + $.cookie('lastVolume') + ' => '  +  ($.cookie('lastVolume') / 100) );
     // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
     soundtrack.player.volume( ($.cookie('lastVolume') + 0.001) / 100 );
     $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
-  } else {
-    mutePlayer();
-  }
+  //} else {
+  //  mutePlayer();
+  //}
 }
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
@@ -140,7 +143,7 @@ function updateUserlist() {
       } else {
         $('<li data-user-id="' + user._id + '"><a href="/'+user.slug+'"><img src="'+user.avatar.url+'" class="user-avatar-small pull-left" />'+user.username+'</a></li>').appendTo('#userlist');
       }
-      
+
     });
   });
 }
@@ -164,7 +167,7 @@ function toggleVideoOn() {
 function toggleVideoOff() {
   $('#screen-one *').css('height', '0px'); $('#messages').css('height', '541px');
   $(this).children('i').replaceWith($('<i class="icon-chevron-down"></i>'));
-  
+
   videoToggled = true;
 }
 
@@ -202,7 +205,9 @@ function AppController($scope, $http) {
         }
         return t;
       });
-      soundtrack.room.track = data[0];
+      if (typeof(soundtrack) != 'undefined') {
+        soundtrack.room.track = data[0];
+      }
     });
   }
 
@@ -237,14 +242,16 @@ promise.done(function() {
   soundtrack.controls.volume.on('slide', volumeChangeHandler);
   soundtrack.controls.volume.on('click', volumeChangeHandler);
 
-  if (!registered) { introJs().start(); }
+  //if (!registered) { introJs().start(); }
 
   ensureVolumeCorrect();
 
   setInterval(function() {
     // TODO: use angularJS for this
+    var duration = soundtrack.player.duration() || 0;
+
     var time = soundtrack.player.currentTime().toString().toHHMMSS();
-    var total = soundtrack.player.duration().toString().toHHMMSS();
+    var total = duration.toString().toHHMMSS();
     $('#current-track #time').html( time + '/' + total);
 
     var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
@@ -265,7 +272,7 @@ $(window).load(function(){
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-        techOrder: ['html5', 'youtube']
+        techOrder: ['html5', 'flash', 'youtube']
       , forceHTML5: true
       , forceSSL: true
       , playsInline: true
@@ -273,12 +280,12 @@ $(window).load(function(){
       , autoload: true
     });
     soundtrack.player.controls(true);
-  } else {
-    soundtrack.player = videojs('#secondary-player', {
-      techOrder: ['html5', 'youtube']
-    });
-    mutePlayer( false );
-  }
+  } //else {
+  //  soundtrack.player = videojs('#secondary-player', {
+  //    techOrder: ['html5', 'youtube']
+  //  });
+  //  mutePlayer( false );
+  //}
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
 
@@ -315,14 +322,16 @@ $(window).load(function(){
             } else {
               $('#track-artist').html( 'unknown' );
             }
-            
+
             $('#track-title').html( msg.data.title );
 
 
             $('input[name=current-track-id]').val( msg.data._id );
+            $('*[data-for=current-track-id]').data('track-id', msg.data._id );
+
             if (msg.data.curator) {
               $('#track-curator').html('<a title="added by" href="/'+msg.data.curator.slug+'">'+msg.data.curator.username+'</a>');
-            
+
               $('#userlist li').removeClass('current-curator');
               $('#userlist li[data-user-id='+msg.data.curator._id+']').addClass('current-curator');
             } else {
@@ -342,7 +351,7 @@ $(window).load(function(){
                   sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
                 });
                 msg.data.sources.youtube.forEach(function( item ) {
-                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&start=' + Math.floor(msg.seekTo) } );
+                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&t=' + Math.floor(msg.seekTo) } );
                 });
               } else {
                 msg.data.sources.youtube.forEach(function( item ) {
@@ -432,7 +441,7 @@ $(window).load(function(){
             }, 100);
 
             $('.message .message-content').filter(':contains("'+ $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
-          
+
             if ( msg.data.message.toLowerCase().indexOf( '@'+ soundtrack.user.username.toLowerCase() ) >= 0 ) {
               soundtrack.notify( 'https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message );
             }
@@ -448,7 +457,7 @@ $(window).load(function(){
         }
       };
 
-      soundtrack.sockjs.onclose = function() { 
+      soundtrack.sockjs.onclose = function() {
         console.log('Lost our connection, lets retry!');
         if (retryIdx < retryTimes.length) {
           console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
@@ -856,6 +865,8 @@ $(window).load(function(){
     return false;
   }, 200, true);
 
+  $(document).on('click', '*[data-action=queue-track]', selectTrack );
+
   $(document).on('submit', 'form[data-for=track-search]', function(e) {
     e.preventDefault();
     var self = this;
@@ -869,25 +880,29 @@ $(window).load(function(){
 
 
     var query = $( self ).find('*[data-for=track-search-query]').val();
-    console.log( $( self ).find('*[data-for=track-search-query]') )
+    var maxLength = 1200;
+
+
     $('*[data-for=track-search-query]').val( query );
 
     var $input = $('#search-modal *[data-for=track-search-query]');
     $input[0].selectionStart = $input[0].selectionEnd = $input.val().length;
 
     // TODO: execute search queries in parallel
-    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=20&v=2&alt=jsonc&q=' + query, function(data) {
+    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=50&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
-        $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+        if (item.duration <= maxLength) {
+          $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+        }
       });
     });
 
-    $.getJSON('https://api.soundcloud.com/tracks.json?client_id=7fbc3f4099d3390415d4c95f16f639ae', { q: query }, function(tracks) {
-      console.log('soundcloud returned: ' + tracks);
+    $.getJSON('https://api.soundcloud.com/tracks.json?&limit=50&client_id=7fbc3f4099d3390415d4c95f16f639ae', { q: query }, function(tracks) {
       if (!tracks.length) { return false; }
-      console.log('soundcloud iterating...');
       tracks.forEach(function(track) {
-        $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+        if (track.duration / 1000 <= maxLength) {
+          $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+        }
       });
     });
 
