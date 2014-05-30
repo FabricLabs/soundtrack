@@ -265,7 +265,7 @@ videojs.Youtube.prototype.parseSrc = function(src){
       this.userQuality = match[1];
     }
 
-    var regStartTime = /[?&]start=(\d+)/;
+    var regStartTime = /[?&]t=(\d+)/;
     match = src.match(regStartTime);
 
     if (match != null && match.length > 1) {
