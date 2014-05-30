@@ -52,7 +52,7 @@ module.exports = {
     });
   },
   listPlays: function(req, res, next) {
-    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 1000000;
 
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
