@@ -430,7 +430,7 @@ $(window).load(function(){
             updateUserlist();
           break;
           case 'part':
-            //$('#userlist li[data-user-id='+msg.data._id+']').remove();
+            $('#userlist li[data-user-id='+msg.data._id+']').slideUp();
             updateUserlist();
           break;
           case 'chat':

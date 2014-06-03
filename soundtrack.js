@@ -559,7 +559,7 @@ app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker 
 app.get('/tracks/:trackID',                 soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
-app.get('/:artistSlug', artists.view);
+app.get('/:artistSlug', soundtracker , artists.view);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);

@@ -14,6 +14,11 @@ var ArtistSchema = new Schema({
       url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
     }
   , bio: String
+  , tracking: {
+      tracks: {
+        updated: { type: Date , default: 0 }
+      }
+    }
 });
 
 ArtistSchema.pre('save', function(next) {

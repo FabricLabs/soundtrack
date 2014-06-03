@@ -42,6 +42,26 @@ module.exports = {
           { _artist: artist._id }
         , { _credits: artist._id }
       ] }).populate('_artist').exec(function(err, tracks) {
+        
+        var now = new Date();
+        var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
+
+        console.log( artist.tracking.tracks.updated , oneWeekAgo );
+        if (artist.tracking.tracks.updated < oneWeekAgo) {
+          rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=10000&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+            if (results.toptracks && results.toptracks.track) {
+              var popularTracks = results.toptracks.track;
+              popularTracks.forEach(function(track) {
+                console.log('popular track for artist ' + artist.name , track);
+                
+                req.soundtrack.trackFromSource('lastfm', track , function(err, realTrack) {
+                  console.log( err || realTrack._id );
+                });
+                
+              });
+            }
+          });
+        }
 
         Play.aggregate([
           { $match: { _track: { $in: tracks.map(function(x) { return x._id; }) } } },
