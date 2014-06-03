@@ -48,7 +48,7 @@ module.exports = {
 
         console.log( artist.tracking.tracks.updated , oneWeekAgo );
         if (artist.tracking.tracks.updated < oneWeekAgo) {
-          rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=10000&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+          rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
             if (results.toptracks && results.toptracks.track) {
               var popularTracks = results.toptracks.track;
               popularTracks.forEach(function(track) {
