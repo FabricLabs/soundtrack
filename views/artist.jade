@@ -8,14 +8,14 @@ block content
     .artist-bio !{artist.bio}
 
     h5 #{tracks.length} known tracks
-    ul
-      for track in tracks
-        li
-          a(href="/#{track._artist.slug}") #{track._artist.name}
-          |  &mdash; 
-          a(href="/#{artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-          |  played <strong>#{track.plays}</strong> times
-          if (user && user.roles.indexOf('editor') >= 0)
-            |  
-            a.btn.btn-mini(href="#", data-action="launch-track-editor", data-track-id="#{track._id}")
-              | edit
+    table.table
+      thead
+        tr
+          th Artist
+          th Title
+          th Length
+          th Stats
+          th Controls
+      tbody
+        for track in tracks
+          include partials/track-row

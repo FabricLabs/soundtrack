@@ -25,6 +25,11 @@ var TrackSchema = new Schema({
   , updated: { type: Date }
   , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
+      lastfm: [ new Schema({
+          id: { type: String , required: true }
+        , duration: { type: Number }
+        , data: {}
+      }) ],
       youtube: [ new Schema({
           id: { type: String, required: true }
         , start: { type: Number, default: 0 }

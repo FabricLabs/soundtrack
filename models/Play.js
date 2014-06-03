@@ -5,11 +5,13 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var PlaySchema = new Schema({
-    _track: { type: ObjectId, ref: 'Track' }
-  , _curator: { type: ObjectId, ref: 'Person' }
-  , timestamp: { type: Date, default: Date.now }
-  , length: { type: Number }
-  , played: { type: Number }
+    _track:     { type: ObjectId, ref: 'Track' }
+  , _artist:    { type: ObjectId, ref: 'Artist' }
+  , _artists: [ { type: ObjectId, ref: 'Artist' } ]
+  , _curator:   { type: ObjectId, ref: 'Person' }
+  , timestamp:  { type: Date, default: Date.now }
+  , length:     { type: Number }
+  , played:     { type: Number }
 });
 
 PlaySchema.virtual('isoDate').get(function() {

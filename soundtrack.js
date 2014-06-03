@@ -330,9 +330,11 @@ sock.on('connection', function(conn) {
     if (conn.user) {
       console.log("connection closed for user " + conn.user.username);
 
-      app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
-        return x == conn.id;
-      }); 
+      if (conn.user && app.room.listeners[ conn.user._id ]) {
+        app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
+          return x == conn.id;
+        });
+      }
 
       for (var userID in app.room.listeners) {
         if (app.room.listeners[ userID ].ids.length === 0) {
@@ -557,7 +559,7 @@ app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker 
 app.get('/tracks/:trackID',                 soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
-app.get('/:artistSlug', artists.view);
+app.get('/:artistSlug', soundtracker , artists.view);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
