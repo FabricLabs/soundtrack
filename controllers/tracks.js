@@ -262,7 +262,7 @@ module.exports = {
         ] }).populate('_artist _credits').exec(function(err, track) {
 
           /**/req.soundtrack.gatherSources(track , function(err, sources) {
-            //console.log(err , sources);
+            console.log(err , sources);
             //console.log( sources.length );
             console.log('SOURCE GATHERING COMPLETE');
           });/**/

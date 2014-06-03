@@ -52,9 +52,10 @@ module.exports = {
             if (results.toptracks && results.toptracks.track) {
               var popularTracks = results.toptracks.track;
               popularTracks.forEach(function(track) {
-                console.log('popular track for artist ' + artist.name , track);
+                //console.log('popular track for artist ' + artist.name , track);
                 
                 req.soundtrack.trackFromSource('lastfm', track , function(err, realTrack) {
+                  console.log('done:');
                   console.log( err || realTrack._id );
                 });
                 

@@ -22,7 +22,7 @@ var TrackSchema = new Schema({
   , images: {
       thumbnail: { url: { type: String } }
     }
-  , updated: { type: Date }
+  , updated: { type: Date, default: 0 }
   , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
       lastfm: [ new Schema({
