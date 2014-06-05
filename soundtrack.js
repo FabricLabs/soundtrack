@@ -215,7 +215,7 @@ app.post('/skip', requireLogin, function(req, res) {
   //Announce who skipped this song
   res.render('partials/announcement', {
       message: {
-          message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + ".";
+          message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + "."
         , created: new Date()
       }
     }, function(err, html) {
