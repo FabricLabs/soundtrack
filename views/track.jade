@@ -3,10 +3,8 @@ extends layout
 block content
 
   .well.content-well
-    if (user && user.roles.indexOf('editor') >= 0)
-      .track-editing.pull-right
-        h4 Editor Controls
-        a.btn(data-action="launch-track-editor", data-track-id="#{track._id}") edit
+    .pull-right
+      include partials/track-controls
 
     h1
       a(href="/#{track._artist.slug}") #{track._artist.name}
@@ -117,4 +115,3 @@ block scripts
                .attr("font-family", "sans-serif")
                .attr("font-size", "11px")
                .attr("fill", "white");
-

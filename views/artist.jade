@@ -8,13 +8,13 @@ block content
     .artist-bio !{artist.bio}
 
     h5 #{tracks.length} known tracks
-    table.table
+    table.table.tablesorter
       thead
         tr
           th Artist
           th Title
           th Length
-          th Stats
+          th Plays
           th Controls
       tbody
         for track in tracks
