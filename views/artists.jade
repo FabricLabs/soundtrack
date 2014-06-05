@@ -6,7 +6,7 @@ block content
       form
         input(type="text", name="q")
 
-    h1 #{count} Artists Known
+    h1 #{count} #{(count == 1) ? "Artist" : "Artists"} Known
     p Display limited to #{limit} artists.  Pass <code>limit</code> to change this.
     ul
       for artist in artists
