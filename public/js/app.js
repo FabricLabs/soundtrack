@@ -486,7 +486,7 @@ $(window).load(function(){
 
   // breaks javascript if page doesn't have #messages
   //$("#messages").scrollTop($("#messages")[0].scrollHeight);
-
+  $('.tablesorter').tablesorter();
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
@@ -892,7 +892,7 @@ $(window).load(function(){
     $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=50&v=2&alt=jsonc&q=' + query, function(data) {
       data.data.items.forEach(function(item) {
         if (item.duration <= maxLength) {
-          $('<li data-source="youtube" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+          $('<li data-source="youtube" data-title="'+item.title+'" data-id="'+item.id+'"><span class="pull-right badge">youtube</span><span class="pull-right badge">'+item.duration.toHHMMSS()+'</span><img src="'+item.thumbnail.sqDefault+'" class="thumbnail-medium" />' +item.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
         }
       });
     });
@@ -901,10 +901,21 @@ $(window).load(function(){
       if (!tracks.length) { return false; }
       tracks.forEach(function(track) {
         if (track.duration / 1000 <= maxLength) {
-          $('<li data-source="soundcloud" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+          $('<li data-source="soundcloud" data-title="'+track.title+'" data-id="'+track.id+'"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">'+(track.duration / 1000).toHHMMSS()+'</span><img src="'+track.artwork_url+'" class="thumbnail-medium" />' +track.title+'<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
         }
       });
     });
+    
+    /*/$.ajax({
+        url: 'https://api.vimeo.com/videos?query=the%20mountain%20tso'
+      , dataType: 'json'
+      , headers: {
+          'Authorization': 'Basic MGViZjM3MDU1OTczMGE2NjM0ODVlNTkxZDkwNGFkNGFhZGI2ZjA1MjozZTE3N2Q0NzNiYzk1YWQ4OGU0ODViN2VhODAwOTQzNmJjZmEwYWI3'
+        }
+      , success: function(data) {
+          console.log(data);
+        }
+    });/**/
 
     return false;
   });

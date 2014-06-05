@@ -2,7 +2,9 @@ var async = require('async');
 
 module.exports = {
   view: function(req, res, next) {
-    Chat.find({}).sort('-_id').populate('_author _track _play').limit(20).exec(function(err, chats) {
+    var limit = (req.param('limit')) ? req.param('limit') : 100;
+    
+    Chat.find({}).sort('-_id').populate('_author _track _play').limit( limit ).exec(function(err, chats) {
       Artist.populate( chats , {
         path: '_track._artist'
       }, function(err, chats) {

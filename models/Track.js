@@ -4,7 +4,8 @@ var mongoose = require('mongoose')
   , slug = require('mongoose-slug')
   , slugify = require('mongoose-slug')
   , rest = require('restler')
-  , async = require('async');
+  , async = require('async')
+  , _ = require('underscore');
 
 // this defines the fields associated with the model,
 // and moreover, their type.
@@ -58,8 +59,22 @@ TrackSchema.pre('save', function(next) {
     self._sources.push({ });
   } **/
 
-  next();
+  // de-dupe sources
+  var tempTrack = self.toObject();
+  for (var source in tempTrack.sources) {
+    var sourceMap = {};
+    
+    var sourcesForProvider = tempTrack.sources[ source ] || [];
+    sourcesForProvider.forEach(function( s ) {
+      sourceMap[ s.id ] = s;
+    });
+    
+    self.sources[ source ] = Object.keys( sourceMap ).map(function( k ) {
+      return sourceMap[ k ];
+    });
+  }
 
+  next();
 });
 
 TrackSchema.post('init', function() {

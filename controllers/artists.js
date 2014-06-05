@@ -51,6 +51,9 @@ module.exports = {
           rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
             if (results.toptracks && results.toptracks.track) {
               var popularTracks = results.toptracks.track;
+              
+              if (!popularTracks.length) return;
+              
               popularTracks.forEach(function(track) {
                 //console.log('popular track for artist ' + artist.name , track);
                 
@@ -76,6 +79,8 @@ module.exports = {
                 var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
                 track.plays = (plays) ? plays.count : 0;
                 return track;
+              }).sort(function(a, b) {
+                return b.plays - a.plays;
               })
           });
 

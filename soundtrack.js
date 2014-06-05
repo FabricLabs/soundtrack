@@ -554,9 +554,9 @@ app.get('/pool', tracks.pool);
 app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
-app.get('/:artistSlug/:trackSlug/:trackID', soundtracker , tracks.view);
+app.get('/:artistSlug/:trackSlug/:trackID',                        soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
-app.get('/tracks/:trackID',                 soundtracker , tracks.view );
+app.get('/tracks/:trackID',                                        soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
 app.get('/:artistSlug', soundtracker , artists.view);
