@@ -205,17 +205,17 @@ var soundtrack = new Soundtrack(app);
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   /* When first starting server, track is undefined, prevent this from erroring */
-  var message;
+  var title;
   if (app.room.track) {
-    message = "&ldquo;" + app.room.track.title + "&rdquo; was skipped by " + req.user.username + ".";
+    title = app.room.track.title;
   } else {
-    message = "Unknown track was skipped by " + req.user.username + ".";
+    title = "Unknown";
   }
 
   //Announce who skipped this song
   res.render('partials/announcement', {
       message: {
-          message: message
+          message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + ".";
         , created: new Date()
       }
     }, function(err, html) {
