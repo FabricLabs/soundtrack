@@ -3,7 +3,7 @@ extends layout
 block content
 
   .well.content-well
-    h1 #{count} Tracks Known
+    h1 #{count} #{(count == 1) ? "Track" : "Tracks"} Known
     p Ordered by number of plays.  Display limited to #{limit} tracks.  Pass <code>limit</code> to change this.
 
     ul

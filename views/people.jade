@@ -3,7 +3,7 @@ extends layout
 block content
 
   .well.content-well
-    h1 #{people.length} People on soundtrack.io
+    h1 #{people.length} #{(people.length == 1) ? "Person" : "People"} on soundtrack.io
 
     ul
       each person in people

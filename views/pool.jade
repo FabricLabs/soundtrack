@@ -3,7 +3,7 @@ extends layout
 block content
 
   .well.content-well
-    h1 #{tracks.length} Tracks Currently in Queue Pool
+    h1 #{tracks.length} #{(tracks.length == 1) ? "Track" : "Tracks"} Currently in Queue Pool
     p Chosen from tracks played during the previous 7 days at the present time of day (3 hour rolling window).
 
     h2 Query used (for debug purposes)
