@@ -4,6 +4,7 @@ var Soundtrack = function() {
       notifications: $.cookie('notificationsEnabled')
     , streaming:     ($.cookie('streaming') !== 'false') ? true : false
     , avoidVideo:    ($.cookie('avoidVideo') === 'true') ? true : false
+    , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource') || 500
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
@@ -205,6 +206,13 @@ function AppController($scope, $http) {
         }
         return t;
       });
+      
+      $scope.playlistLength = data.map(function(x) {
+        return x.duration;
+      }).reduce(function(prev, now) {
+        return prev + now;
+      });
+      
       if (typeof(soundtrack) != 'undefined') {
         soundtrack.room.track = data[0];
       }
@@ -364,10 +372,43 @@ $(window).load(function(){
 
               console.log(sources);
               console.log( msg.sources );
+              
+              var rollIt = function() {
+                soundtrack.player.pause();
+                soundtrack.player.src( sources );
+                soundtrack.player.play();
+              }
+              
+              var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
+              
+              rollIt();
+              var ensureTrackPlaying = setInterval(function() {
+                if (!sources.length) {
+                  console.log('track didn\'t play after %dms, and there are no other available audio sources.', maxTimeToPlayTrack);
+                  
+                  $.ajax({
+                      url: '/tracks/' + msg.data._id
+                    , method: 'PUT'
+                    , data: {
+                        flags: { lackingSources: true }
+                      }
+                  }, function(data) {
+                    console.log('submitted the track as needing more sources: ' , data);
+                  });
+                  
+                  clearInterval( ensureTrackPlaying );
+                } else if (soundtrack.player.currentTime() > 0) {
+                  console.log('track is playing (yay!), clearing interval.');
+                  clearInterval( ensureTrackPlaying )
+                } else {
+                  console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
+                  sources.shift();
+                  console.log('shifted sources: ' , sources );
+                  rollIt();
+                }
+              }, maxTimeToPlayTrack );
 
-              soundtrack.player.pause();
-              soundtrack.player.src( sources );
-              soundtrack.player.play();
+
               //soundtrack.player.currentTime( msg.seekTo );
 
               /*/setTimeout(function() {
@@ -867,6 +908,24 @@ $(window).load(function(){
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack );
 
+  $(document).on('click', '*[data-action=add-track-to-playlist]', function(e) {
+    e.preventDefault();
+    var self = this;
+
+    $( self ).slideUp(function() {
+      $( this ).remove();
+    });
+
+    $.post('/' + $( self ).data('username') +'/playlists/' + $(self).data('playlist-id'), {
+      trackID: $( self ).data('track-id')
+    }, function(data) {
+      // TODO: update UI with correct count
+      console.log(data);
+    });
+    
+    return false;
+  });
+
   $(document).on('submit', 'form[data-for=track-search]', function(e) {
     e.preventDefault();
     var self = this;
@@ -1017,7 +1076,6 @@ $(window).load(function(){
       // TODO: update UI with correct count
       console.log(data);
     });
-
   });
 
   $(document).on('click', '*[data-action=upvote-track]', function(e) {
