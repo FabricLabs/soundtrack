@@ -226,12 +226,18 @@ footer {
 #userlist {
   height: 508px;
 }
-#user-playlists-dropdown {
+#user-playlists-dropdown, .user-playlists-dropdown {
   max-height: 300px;
   overflow-y: scroll;
 }
-#user-playlists-dropdown a {
+#user-playlists-dropdown a, .user-playlists-dropdown a {
   cursor: pointer;
+}
+.dropdown-menu>li>a {
+  color: lightgrey;
+}
+.dropdown-menu.user-playlists-dropdown>li>a:hover, .dropdown-menu.user-playlists-dropdown>li>a:focus, .dropdown-submenu.user-playlists-dropdown:hover>a, .dropdown-submenu.user-playlists-dropdown:focus>a,.dropdown-submenu.user-playlists-dropdown>a {
+  color: white;
 }
 
 #announcement{

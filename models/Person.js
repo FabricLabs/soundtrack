@@ -24,6 +24,7 @@ var PersonSchema = new Schema({
   , preferences: {
       scrobble: { type: Boolean, default: true }
     }
+  , _playlists: [ { type: ObjectId , ref: 'Playlist' } ]
 });
 
 PersonSchema.plugin(passportLocalMongoose);

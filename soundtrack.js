@@ -63,8 +63,17 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(userID, done) {
-  Person.findOne({ _id: userID }).exec(function(err, user) {
-    done(null, user);
+  Person.findOne({ _id: userID }).populate('_playlists').exec(function(err, user) {
+    Playlist.find({ _creator: user._id }).exec(function(err, playlists) {
+      if (user._playlists && !user._playlists.length && playlists.length) {
+        user._playlists = playlists.map(function(x) { return x._id; });
+        user.save(function(err) {
+          done(null, user);
+        });
+      } else {
+        done(null, user);
+      }
+    });
   });
 });
 app.use(function(req, res, next) {

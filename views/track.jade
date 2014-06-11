@@ -6,12 +6,12 @@ block content
     .pull-right
       include partials/track-controls
 
-    h1
+    h1.clearfix
       a(href="/#{track._artist.slug}") #{track._artist.name}
       |  &mdash; 
       a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
     h4 !{track._credits.map(function(x) { return '<a href="/'+x.slug+'">'+x.name+'</a>'; }).join(', ')}
-    p <strong>#{track.duration}</strong> seconds of brain-melting audio
+    p <strong>#{track.duration ? track.duration.toHHMMSS(): 'some unknown'}</strong> of brain-melting audio
     h2 played #{history.length} times
 
     #track-stats

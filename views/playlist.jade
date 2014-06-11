@@ -9,12 +9,14 @@ block content
       a(href="/#{playlist._creator.slug}") #{playlist._creator.username}
     p #{playlist.description}
 
-    ul
-      for track in playlist._tracks
-        li
-          if (track._artist)
-            a(href="/#{track._artist.slug}") #{track._artist.name}
-            |  &mdash; 
-            a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-          else
-            h5 ಠ_ಠ #{track}
+    table.table.tablesorter
+      thead
+        tr
+          th Artist
+          th Title
+          th Length
+          th Plays
+          th Controls
+      tbody
+        for track in playlist._tracks
+          include partials/track-row

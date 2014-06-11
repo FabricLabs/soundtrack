@@ -34,8 +34,8 @@ block content
                 a.btn.btn-mini(href="#", data-action="launch-track-editor", data-for="current-track-id") edit
 
             .btn-group.pull-right
-              a.btn(href="#playlist-modal", data-toggle="modal") your playlists
-              a.btn.dropdown-toggle(href="#", data-toggle="dropdown") add 
+              //-a.btn(href="#playlist-modal", data-toggle="modal") your playlists
+              a.btn.btn-mini.dropdown-toggle(href="#", data-toggle="dropdown") add to 
                 span.caret
               ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
                 for playlist in playlists
@@ -70,7 +70,10 @@ block content
                     |  by 
                     a(href="/{{track._artist.slug}}") {{track._artist.name}}
 
-          h5 Add Track
+          
+          h5
+            .pull-right.tooltipped(ng-bind="playlistLength | toHHMMSS", title="Length of all tracks in the playlist")
+            | Add Track
           form#search-form.input-append(style="display:block;", data-for="track-search")
             if (user)
               input.input-block-level(type="text", data-for="track-search-query", placeholder="type here and press [ENTER] to search", data-intro="<h5>Queue a song!</h5>Search here for a track to add it to the playlist.", data-step="2", data-position="right")#search-query
@@ -113,28 +116,6 @@ block content
 
 block scripts
 
-    #playlist-modal.modal.hide.fade
-      .modal-header
-        button.close(data-dismiss="modal") &times;
-        h3 Your Playlists
-      .modal-body
-        .row-fluid
-          .span4
-            i.icon-globe(title="public")
-            ul.nav.nav-list(data-for="user-playlists")
-              for playlist in playlists
-                li(data-playlist-id="#{playlist._id}")
-                  a(href="/#{user.slug}/#{playlist.slug}")
-                    small.pull-right #{playlist._tracks.length}
-                    input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
-                    |  #{playlist.name}
-          .span8
-            h4 Tracks
-
-      .modal-footer
-        button.btn.btn(data-dismiss="modal") Cancel
-        button.btn.btn-primary.btn-large(data-dismiss="modal") Done
-
     #search-modal.modal.hide.fade
       .modal-header
         button.close(data-dismiss="modal") &times;
@@ -151,7 +132,6 @@ block scripts
             .add-on.btn(data-for="track-search-reset")
               i.icon-remove
 
-
         ul.nav.nav-list.search-results(data-for="track-search-results")
 
       .modal-footer
@@ -159,6 +139,28 @@ block scripts
         button.btn.btn-primary.btn-large(data-dismiss="modal") Done
 
     if (user)
+      #playlist-modal.modal.hide.fade
+        .modal-header
+          button.close(data-dismiss="modal") &times;
+          h3 Your Playlists
+        .modal-body
+          .row-fluid
+            .span4
+              i.icon-globe(title="public")
+              ul.nav.nav-list(data-for="user-playlists")
+                for playlist in playlists
+                  li(data-playlist-id="#{playlist._id}")
+                    a(href="/#{user.slug}/#{playlist.slug}")
+                      small.pull-right #{playlist._tracks.length}
+                      input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
+                      |  #{playlist.name}
+            .span8
+              h4 Tracks
+
+        .modal-footer
+          button.btn.btn(data-dismiss="modal") Cancel
+          button.btn.btn-primary.btn-large(data-dismiss="modal") Done
+    
       form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
         #create-playlist-modal.modal.hide.fade
           .modal-header
