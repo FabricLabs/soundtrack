@@ -95,6 +95,7 @@ module.exports = {
         if (!track) { return next(); }
 
         playlist._tracks.push( track._id );
+        playlist.updated = new Date();
         playlist.save(function(err) {
           res.send({
               status: 'success'

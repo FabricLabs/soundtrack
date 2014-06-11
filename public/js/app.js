@@ -1,10 +1,12 @@
+var DEFAULT_MAX_SOURCE_TIME = 1000;
+
 // Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
       notifications: $.cookie('notificationsEnabled')
     , streaming:     ($.cookie('streaming') !== 'false') ? true : false
     , avoidVideo:    ($.cookie('avoidVideo') === 'true') ? true : false
-    , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource') || 500
+    , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource', Number ) || DEFAULT_MAX_SOURCE_TIME
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
@@ -294,6 +296,12 @@ $(window).load(function(){
   //  });
   //  mutePlayer( false );
   //}
+  
+  if (!$.cookie('maxTimeToPlaySource')) {
+    $.cookie('maxTimeToPlaySource', soundtrack.settings.maxTimeToPlaySource );
+  }
+  $('*[data-for=max-source-load-time]').val( $.cookie('maxTimeToPlaySource', Number ) );
+  
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
 
@@ -369,44 +377,41 @@ $(window).load(function(){
                   sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
                 });
               }
-
-              console.log(sources);
-              console.log( msg.sources );
               
               var rollIt = function() {
                 soundtrack.player.pause();
                 soundtrack.player.src( sources );
                 soundtrack.player.play();
               }
-              
-              var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
-              
-              rollIt();
-              var ensureTrackPlaying = setInterval(function() {
-                if (!sources.length) {
-                  console.log('track didn\'t play after %dms, and there are no other available audio sources.', maxTimeToPlayTrack);
-                  
-                  $.ajax({
-                      url: '/tracks/' + msg.data._id
-                    , method: 'PUT'
-                    , data: {
-                        flags: { lackingSources: true }
-                      }
-                  }, function(data) {
-                    console.log('submitted the track as needing more sources: ' , data);
-                  });
-                  
-                  clearInterval( ensureTrackPlaying );
-                } else if (soundtrack.player.currentTime() > 0) {
-                  console.log('track is playing (yay!), clearing interval.');
-                  clearInterval( ensureTrackPlaying )
-                } else {
-                  console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
-                  sources.shift();
-                  console.log('shifted sources: ' , sources );
-                  rollIt();
-                }
-              }, maxTimeToPlayTrack );
+
+              console.log('sources: ' , sources);
+              if (!sources.length) {
+                $.ajax({
+                    url: '/tracks/' + msg.data._id
+                  , method: 'PUT'
+                  , data: {
+                      flags: { lackingSources: true }
+                    }
+                }, function(data) {
+                  console.log('submitted the track as needing more sources: ' , data);
+                });
+              } else {
+                rollIt();
+                // track should now be playing.
+                
+                var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
+                var ensureTrackPlaying = setInterval(function() {
+                  if (soundtrack.player.currentTime() > 0 || !sources.length) {
+                    console.log('track is playing (yay!), or there are no remaining sources (boo). clearing interval.');
+                    clearInterval( ensureTrackPlaying )
+                  } else {
+                    console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
+                    sources.shift();
+                    console.log('shifted sources: ' , sources );
+                    rollIt();
+                  }
+                }, maxTimeToPlayTrack );
+              }
 
 
               //soundtrack.player.currentTime( msg.seekTo );
@@ -861,6 +866,23 @@ $(window).load(function(){
     return false;
   });
 
+  $(document).on('click', '*[data-action=remove-queued-track]', function(e) {
+    e.preventDefault();
+    var self = this;
+    
+    $('#playlist-list li[data-track-id='+ $(self).data('track-id') +']').slideUp();
+
+    $.ajax({
+        url: '/playlist/' + $(self).data('track-id')
+      , method: 'DELETE'
+      , data: { index: $(self).data('track-index') }
+    }, function(data) {
+      console.log( data );
+    });
+
+    return false;
+  });
+
   $(document).on('click', '*[data-for=track-search-reset]', function(e) {
     e.preventDefault();
     $('*[data-for=track-search-results]').html('');
@@ -1114,6 +1136,13 @@ $(window).load(function(){
 
   $(document).on('click', '*[data-action=toggle-video]', function(e) {
     toggleVideo();
+  });
+  
+  $(document).on('keyup mouseup', '*[data-for=max-source-load-time]', function(e) {
+    var self = this;
+    console.log('max wait time: ', $(self).val());
+    $.cookie('maxTimeToPlaySource', $(self).val() );
+    soundtrack.settings.maxTimeToPlaySource = Number($(self).val());
   });
 
   $('*[data-action=ding]').click(function(e) {

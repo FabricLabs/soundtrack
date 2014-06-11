@@ -60,10 +60,14 @@ block content
                   span.pull-right {{track.duration | toHHMMSS }}
                   a(href="{{track.curator.slug}}") {{track.curator.username}}
                   |  wants to play 
+                  if (user &&user.roles.indexOf('admin') >= 0)
+                    |  
+                    a(href="#", data-action="remove-queued-track", data-track-id="{{track._id}}", data-track-index="{{$index}}")
+                      i.icon-remove.icon-white
                 .track-details(style="font-size: 1.1em;")
                   img.thumbnail-medium.pull-left(ng-src="{{track.images.thumbnail.url}}")
                   a(href="/{{track._artist.slug}}/{{track.slug}}/{{track._id}}") {{track.title}}
-                .track-details
+                .track-details.clearfix
                   .text-right
                     .label.label-warning(ng-if="track.flags.nsfw") nsfw
                     .label(ng-if="track.flags.live") live

@@ -73,7 +73,10 @@ TrackSchema.pre('save', function(next) {
       return sourceMap[ k ];
     });
   }
-
+  
+  // de-dupe credits
+  self._credits = _.uniq( self._credits );
+  
   next();
 });
 

@@ -9,8 +9,11 @@ block content
     h1 #{count} #{(count == 1) ? "Artist" : "Artists"} Known
     p Display limited to #{limit} artists.  Pass <code>limit</code> to change this.
     ul
-      for artist in artists
+      for artist in artists.sort(function(a, b) { return b.tracks - a.tracks; })
         li
           a(href="/#{artist.slug}")
             img.pull-left.avatar-small(src="#{artist.image.url}")
             | #{artist.name}
+            |  with 
+            strong #{artist.tracks}
+            |  known tracks

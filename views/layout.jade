@@ -24,6 +24,7 @@ html(lang="en-US", ng-app="soundtrack-io")
     title soundtrack.io | music for all.
     
     meta(name="google-site-verification", content="YRNN2O5wVHlb-amk2huI5wAk_J3_kDNKUinkzWCRBN0")
+    meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
 
     link(rel="shortcut icon", href="/favicon.ico")
 
@@ -36,6 +37,7 @@ html(lang="en-US", ng-app="soundtrack-io")
     link(rel="stylesheet", href="/css/slider.css")
     link(rel="stylesheet", href="/css/introjs.css")
     link(rel="stylesheet", href="/video-js/video-js.min.css")
+    link(rel="stylesheet", href="/videojs-errors/videojs.errors.css")
     link(rel="stylesheet", href="/css/main.css")
     //-link(rel="stylesheet", href="//www.corsproxy.com/www.decisivedesign.com/dev/sio/css/main.css")
 
@@ -50,30 +52,9 @@ html(lang="en-US", ng-app="soundtrack-io")
     script(src="/js/jquery.tablesorter.min.js")
     script(src="/video-js/video.dev.js")
     script(src="/js/youtube.js")
+    script(src="/videojs-errors/videojs.errors.js")
     script(src="/js/sockjs-0.3.min.js")
     script(src="/js/app.js")
-
-    if (user)
-      script.
-        window.pendo_options = {
-          apiKey: 'c4a237f5-e4e2-40eb-4a79-5a96fdc45d82',
-          visitorId: '#{user._id}' // NOTE: THIS IS OPTIONAL.  SEE IDENTIFY
-        };
-    else
-      script.
-        window.pendo_options = {
-          apiKey: 'c4a237f5-e4e2-40eb-4a79-5a96fdc45d82'
-        };
-    //- pendo.io...
-    script.
-      (function() {
-          var script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.async = true;
-          script.src = ('https:' === document.location.protocol ? 'https://' : 'http://' ) + 'd3accju1t3mngt.cloudfront.net/js/pa.min.js';
-          var firstScript = document.getElementsByTagName('script')[0];
-          firstScript.parentNode.insertBefore(script, firstScript);
-      })();
 
     base
 
@@ -181,6 +162,10 @@ html(lang="en-US", ng-app="soundtrack-io")
         label(title="Prefer sources that don't have an attached video")
           input(type="checkbox", data-action="toggle-video-avoid")
           |  Avoid Videos [where possible]
+        label(title="Maximum amount of time to wait for a track's audio source to load.")
+          |  Advance to next source after 
+          input(type="number", data-for="max-source-load-time", value="1000", min="0", style="width: 4em;")
+          | ms
 
         h4 Notifications
         label(title="Enable desktop notifications on mention.")

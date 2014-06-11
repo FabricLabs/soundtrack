@@ -19,7 +19,7 @@
     "underscore": "~1.4.4",
     "mongoose-redis-cache": "0.0.3",
     "connect-redis": "~1.4.5",
-    "mongoose-slug": "~1.1.1",
+    "mongoose-slug": "~1.3.0",
     "sockjs": "~0.3.7",
     "restler": "git+http://github.com/danwrong/restler.git",
     "flashify": "~0.1.2",

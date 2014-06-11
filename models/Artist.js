@@ -38,8 +38,12 @@ ArtistSchema.pre('save', function(next) {
   }
 });
 
-ArtistSchema.plugin( slug('name') );
+ArtistSchema.plugin( slug('name', {
+    track: true
+  , lang: false
+}) );
 ArtistSchema.index({ slug: 1 });
+ArtistSchema.index({ slugs: 1 });
 
 var Artist = mongoose.model('Artist', ArtistSchema);
 

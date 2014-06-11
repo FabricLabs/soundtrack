@@ -79,6 +79,7 @@ passport.deserializeUser(function(userID, done) {
 app.use(function(req, res, next) {
   res.setHeader("X-Powered-By", 'beer.');
   res.locals.user = req.user;
+  res.charset = 'utf-8';
 
   if (req.user && !req.user.username) {
     return res.redirect('/set-username');
@@ -307,6 +308,7 @@ sock.on('connection', function(conn) {
             , username: matches[0].user.username
             , ids: _.union( previous.ids , [ conn.id ] ) // TODO: rename this to 'clients'
             , role: (matches[0].user.roles && matches[0].user.roles.indexOf('editor') >= 0) ? 'editor' : 'listener'
+            , roles: matches[0].user.roles
             , avatar: matches[0].user.avatar
           };
           
@@ -576,6 +578,9 @@ app.get('/tracks/:trackID',                                        soundtracker 
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
 app.get('/:artistSlug', soundtracker , artists.view);
+app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
+app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
+app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
