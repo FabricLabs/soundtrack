@@ -3,7 +3,7 @@ extends layout
 block content
   .well.content-well
     .pull-right
-      form
+      form(action="/artists", method="get")
         input(type="text", name="q")
 
     h1 #{count} #{(count == 1) ? "Artist" : "Artists"} Known
