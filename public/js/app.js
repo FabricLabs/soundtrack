@@ -504,9 +504,7 @@ $(window).load(function(){
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
-    var currentVolume = parseInt( $('.slider[data-for=volume]').slider('getValue').val() );
-
-    console.log('currentVolume is a ' + typeof(currentVolume) + ' and is ' + currentVolume);
+    var currentVolume = Number( $('.slider[data-for=volume]').slider('getValue') );
 
     if (currentVolume) {
       mutePlayer();
