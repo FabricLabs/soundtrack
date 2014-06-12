@@ -103,10 +103,10 @@ function volumeChangeHandler(e) {
   var self = this;
 
   console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
-  console.log( typeof($(self).val()) )
+  console.log( typeof(Number($(self).val())) )
 
-  soundtrack.player.volume( $(self).val() / 100 );
-  $.cookie('lastVolume', $(self).val() , { expires: COOKIE_EXPIRES });
+  soundtrack.player.volume( Number($(self).val()) / 100 );
+  $.cookie('lastVolume', Number($(self).val()) , { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer( saveState ) {
@@ -116,21 +116,23 @@ function mutePlayer( saveState ) {
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
-  if (parseInt($.cookie('lastVolume'))) {
-    soundtrack.player.volume( $.cookie('lastVolume') / 100 );
-    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val($.cookie('lastVolume'));
+  var lastVol = $.cookie('lastVolume', Number );
+  
+  if ( lastVol ) {
+    soundtrack.player.volume( lastVol / 100 );
+    $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   } else {
     soundtrack.player.volume( 0.8 );
     $('.slider[data-for=volume]').slider('setValue', 80).val(80);
-    $.cookie('lastVolume', '80', { expires: COOKIE_EXPIRES });
+    $.cookie('lastVolume', 80, { expires: COOKIE_EXPIRES });
   }
 }
 function ensureVolumeCorrect() {
+  var lastVol = $.cookie('lastVolume', Number );
   // if (registered) {
-    console.log('last volume... ' + $.cookie('lastVolume') + ' => '  +  ($.cookie('lastVolume') / 100) );
-    // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
-    soundtrack.player.volume( ($.cookie('lastVolume') + 0.001) / 100 );
-    $('.slider[data-for=volume]').slider('setValue', $.cookie('lastVolume')).val( $.cookie('lastVolume') );
+    console.log('last volume... ' + lastVol + ' => '  +  ( lastVol / 100) );
+    soundtrack.player.volume( lastVol / 100 );
+    $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   //} else {
   //  mutePlayer();
   //}
@@ -249,8 +251,7 @@ promise = deferred.promise();
 promise.done(function() {
 
   soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
-  soundtrack.controls.volume.on('slide', volumeChangeHandler);
-  soundtrack.controls.volume.on('click', volumeChangeHandler);
+  soundtrack.controls.volume.on('slide mousedown', volumeChangeHandler);
 
   //if (!registered) { introJs().start(); }
 
