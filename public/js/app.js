@@ -100,13 +100,10 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
   });
 }
 function volumeChangeHandler(e) {
-  var self = this;
+  var vol = Number( e.value );
 
-  console.log('Handling volume change... ' + $(self).val() + ' => ' + $(self).val() / 100 );
-  console.log( typeof(Number($(self).val())) )
-
-  soundtrack.player.volume( Number($(self).val()) / 100 );
-  $.cookie('lastVolume', Number($(self).val()) , { expires: COOKIE_EXPIRES });
+  soundtrack.player.volume( vol / 100 );
+  $.cookie('lastVolume', vol , { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer( saveState ) {
@@ -251,7 +248,7 @@ promise = deferred.promise();
 promise.done(function() {
 
   soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
-  soundtrack.controls.volume.on('slide mousedown', volumeChangeHandler);
+  soundtrack.controls.volume.on('slide slideStart', volumeChangeHandler);
 
   //if (!registered) { introJs().start(); }
 
