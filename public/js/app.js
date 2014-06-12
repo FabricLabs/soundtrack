@@ -413,45 +413,15 @@ $(window).load(function(){
                 }, maxTimeToPlayTrack );
               }
 
-
-              //soundtrack.player.currentTime( msg.seekTo );
-
-              /*/setTimeout(function() {
-                soundtrack.player.currentTime( msg.seekTo );
-                soundtrack.player.play();
-              }, 250);
-
-              soundtrack.player.on('loadedmetadata', function() {
-                soundtrack.player.currentTime( msg.seekTo );
-                soundtrack.player.play();
-              });
-
-              // ...and SoundCloud doesn't behave well without these. :/
-              /**/
               var bufferEvaluator = function() {
-                console.log('evaluating buffer...');
-
                 var now = new Date();
                 var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
                 var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
-
-                if (soundtrack.player.bufferedPercent() > estimatedProgress) {
-                  soundtrack.player.off('progress', bufferEvaluator);
-                  soundtrack.player.off('loadeddata', bufferEvaluator);
-                  console.log('jumping to ' + msg.seekTo + '...');
-                  //soundtrack.player.pause(); // this breaks soundcloud, wat?
-                  soundtrack.player.currentTime( msg.seekTo );
-                  soundtrack.player.play();
-                } else {
-                  console.log('estimated progress: ' + estimatedProgress );
-                  console.log( soundtrack.player.bufferedPercent() )
-                }
+                
+                soundtrack.player.currentTime( estimatedSeekTo / 1000 );
               };
-              //soundtrack.player.off('progress', bufferEvaluator);
-              if (msg.seekTo >= 5) {
-                soundtrack.player.on('progress', bufferEvaluator);
-                soundtrack.player.on('loadeddata', bufferEvaluator); /**/
-              }
+              
+              soundtrack.player.one('playing', bufferEvaluator );
 
               ensureVolumeCorrect();
             }
