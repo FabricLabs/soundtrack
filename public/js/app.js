@@ -109,7 +109,7 @@ function volumeChangeHandler(e) {
 function mutePlayer( saveState ) {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
   soundtrack.player.volume( 0.00001 );
-  $.cookie('lastVolume', '0');
+  $.cookie('lastVolume', 0);
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
 function unmutePlayer() {
@@ -125,7 +125,7 @@ function unmutePlayer() {
   }
 }
 function ensureVolumeCorrect() {
-  var lastVol = $.cookie('lastVolume', Number );
+  var lastVol = $.cookie('lastVolume', Number ) || 80;
   // if (registered) {
     console.log('last volume... ' + lastVol + ' => '  +  ( lastVol / 100) );
     soundtrack.player.volume( lastVol / 100 );
