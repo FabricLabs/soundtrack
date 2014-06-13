@@ -73,7 +73,30 @@ TrackSchema.pre('save', function(next) {
       return sourceMap[ k ];
     });
   }
-  
+
+  ['youtube', 'soundcloud'].forEach(function(source) {
+
+    switch (source) {
+      case 'youtube':    var type = 'video/youtube'; break;
+      case 'soundcloud': var type = 'audio/mp3';     break;
+    }
+
+    self.sources[ source ].forEach(function(s) {
+      Source.findOne({ uri: s.id }).exec(function(err, storedSource) {
+        if (err) { console.log(err); }
+        if (!storedSource && type) {
+          var storedSource = new Source({
+              id: [ source , s.id ].join(':')
+            , type: type
+          });
+          storedSource.save(function(err) {
+            if (err) { console.log(err); }
+          });
+        }
+      });
+    });
+  });
+
   // de-dupe credits
   self._credits = _.uniq( self._credits );
   

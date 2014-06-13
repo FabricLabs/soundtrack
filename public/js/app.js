@@ -1,4 +1,6 @@
-var DEFAULT_MAX_SOURCE_TIME = 1000;
+var DEFAULT_MAX_SOURCE_TIME = 5000;
+var DEFAULT_VOLUME          = 80;
+var COOKIE_EXPIRES          = 604800;
 
 // Begin actual class implementation...
 var Soundtrack = function() {
@@ -28,9 +30,11 @@ var Soundtrack = function() {
     pause:       function()               { return this; },
     play:        function()               { return this; },
     on:          function( event , cb )   { return this; },
+    one:         function( event , cb )   { return this; },
     volume:      function( level )        { return this; },
     currentTime: function( t )            { return 0; },
     duration:    function( t )            { return 0; },
+    error:       function( e )            { return this; },
   }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
@@ -120,19 +124,19 @@ function unmutePlayer() {
     $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   } else {
     soundtrack.player.volume( 0.8 );
-    $('.slider[data-for=volume]').slider('setValue', 80).val(80);
-    $.cookie('lastVolume', 80, { expires: COOKIE_EXPIRES });
+    $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val(DEFAULT_VOLUME);
+    $.cookie('lastVolume', DEFAULT_VOLUME, { expires: COOKIE_EXPIRES });
   }
 }
 function ensureVolumeCorrect() {
-  var lastVol = $.cookie('lastVolume', Number ) || 80;
-  // if (registered) {
-    console.log('last volume... ' + lastVol + ' => '  +  ( lastVol / 100) );
-    soundtrack.player.volume( lastVol / 100 );
+  var lastVol = $.cookie('lastVolume', Number );
+  console.log('setting volume to ' , lastVol / 100 );
+
+  soundtrack.player.volume( lastVol / 100 );
+
+  if ($('.slider[data-for=volume]')[0]) {
     $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
-  //} else {
-  //  mutePlayer();
-  //}
+  }
 }
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
@@ -247,10 +251,13 @@ promise = deferred.promise();
 
 promise.done(function() {
 
-  soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
-  soundtrack.controls.volume.on('slide slideStart', volumeChangeHandler);
-
-  //if (!registered) { introJs().start(); }
+  if ($('.slider[data-for=volume]')[0]) {
+    soundtrack.controls.volume = $('.slider[data-for=volume]').slider();
+    soundtrack.controls.volume.on('slide slideStart', volumeChangeHandler);
+    if (!$.cookie('lastVolume', Number)) {
+      $.cookie('lastVolume', DEFAULT_VOLUME);
+    }
+  }
 
   ensureVolumeCorrect();
 
@@ -268,8 +275,6 @@ promise.done(function() {
   }, 1000);
 });
 
-COOKIE_EXPIRES = 604800;
-
 $(window).load(function(){
 
   var sockjs = null;
@@ -280,10 +285,9 @@ $(window).load(function(){
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-        techOrder: ['html5', 'flash', 'youtube']
+        techOrder: ['html5', 'youtube', 'flash']
       , forceHTML5: true
       , forceSSL: true
-      , playsInline: true
       , controls: true
       , autoload: true
     });
@@ -362,23 +366,35 @@ $(window).load(function(){
 
               if (soundtrack.settings.avoidVideo) {
                 msg.data.sources.soundcloud.forEach(function( item ) {
-                  sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+                  sources.push( {
+                    type:'audio/mp3',
+                    src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae',
+                    poster: (item.data) ? item.data.artwork_url : undefined
+                  } );
                 });
                 msg.data.sources.youtube.forEach(function( item ) {
-                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&t=' + Math.floor(msg.seekTo) } );
+                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
                 });
               } else {
                 msg.data.sources.youtube.forEach(function( item ) {
-                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id + '&start=' + Math.floor(msg.seekTo) } );
+                  sources.push( { type:'video/youtube', src: 'https://www.youtube.com/watch?v=' + item.id } );
                 });
                 msg.data.sources.soundcloud.forEach(function( item ) {
-                  sources.push( { type:'audio/mp3', src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?start='+Math.floor(msg.seekTo)+'&client_id=7fbc3f4099d3390415d4c95f16f639ae' } );
+                  sources.push( {
+                    type:'audio/mp3',
+                    src: 'https://api.soundcloud.com/tracks/' + item.id +  '/stream?client_id=7fbc3f4099d3390415d4c95f16f639ae',
+                    poster: (item.data) ? item.data.artwork_url : undefined
+                  } );
                 });
               }
               
               var rollIt = function() {
+                console.log('rollIt()', sources[0]);
+                if (!sources[0]) return;
+                soundtrack.player.poster( sources[0].poster );
+
                 soundtrack.player.pause();
-                soundtrack.player.src( sources );
+                soundtrack.player.src( [ sources[0] ] );
                 soundtrack.player.play();
               }
 
@@ -404,6 +420,8 @@ $(window).load(function(){
                     clearInterval( ensureTrackPlaying )
                   } else {
                     console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
+                    console.log('failed to load: ' , sources[0] );
+
                     sources.shift();
                     console.log('shifted sources: ' , sources );
                     rollIt();

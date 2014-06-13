@@ -14,6 +14,12 @@ var SourceSchema = new Schema({
   , flags: {
         live:  { type: Boolean, default: false } // ~bad audio
       , nsfw:  { type: Boolean, default: false } // ~bad video
+      , down:  { type: Boolean, default: false } // offline
+      , restricted: { type: Boolean, default: false } // non-free (libre)
+    }
+  , stats: {
+        created: { type: Date, default: Date.now }
+      , updated: { type: Date }
     }
 });
 

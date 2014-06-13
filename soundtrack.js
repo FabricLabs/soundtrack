@@ -336,11 +336,31 @@ sock.on('connection', function(conn) {
 
   if (app.room.playlist[0]) {
     Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
-      conn.write(JSON.stringify({
-          type: 'track'
-        , data: _.extend( app.room.playlist[0] , track )
-        , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
-      }));
+      // temporary collect exact matches... 
+      // testing for future merging of track data for advances
+      var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
+      console.log(query);
+
+      Track.find( query ).lean().exec(function(err, tracks) {
+
+        console.log('HEYYYYYYYYYYYYYYYYYY YOUUUUUUUUUUUUUUUUUUUUUUUUU')
+        console.log(err || tracks);
+
+        var sources = track.sources;
+        tracks.forEach(function(t) {
+          for (var source in t.sources) {
+            sources[ source ] = _.union( sources[ source ] , t.sources[ source ] );
+          }
+        });
+
+        conn.write(JSON.stringify({
+            type: 'track'
+          , data: _.extend( app.room.playlist[0] , track )
+          , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+          , sources: sources
+        }));
+
+      });
     });
   }
 
@@ -584,8 +604,14 @@ app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
+app.get('/:usernameSlug/mentions', people.mentions);
 app.get('/:usernameSlug', people.profile);
 app.post('/:usernameSlug', people.edit);
+
+// catch-all route (404)
+app.get('*', function(req, res) {
+  res.status(404).render('404');
+});
 
 function getTop100FromCodingSoundtrack(done) {
   rest.get('http://codingsoundtrack.org/songs/100.json').on('complete', function(data) {

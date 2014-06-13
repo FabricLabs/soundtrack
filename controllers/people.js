@@ -25,6 +25,17 @@ module.exports = {
       });
     });
   },
+  mentions: function(req, res, next) {
+    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+      if (!person) { return next(); }
+
+      Chat.find({ message: new RegExp( person.username , 'i') }).sort('-created').limit(100).populate('_author _track _play').exec(function(err, chats) {
+        res.render('chats', {
+          chats: chats
+        });
+      });
+    });
+  },
   edit: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }

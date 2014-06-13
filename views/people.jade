@@ -11,9 +11,9 @@ block content
           a(href="/#{person.slug}")
             img.user-avatar-small(src="#{person.avatar.url}")
             | #{person.username}
-            - if (person.bio.length)
-              | 
-              i.icon-user
+          if (person.bio.length)
+            | 
+            i.icon-user
           if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
             | 
             a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
