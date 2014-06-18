@@ -29,7 +29,9 @@ module.exports = {
       res.format({
         json: function() {
           res.send( results[1].map(function(x) {
-            x = x.toObject();
+            if (typeof(x.toObject) == 'function') {
+              x = x.toObject();
+            }
             //x.value = x._id;
             x.value = x.name;
             return x;
