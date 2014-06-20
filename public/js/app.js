@@ -1,40 +1,40 @@
 var DEFAULT_MAX_SOURCE_TIME = 5000;
-var DEFAULT_VOLUME = 80;
-var COOKIE_EXPIRES = 604800;
+var DEFAULT_VOLUME          = 80;
+var COOKIE_EXPIRES          = 604800;
 
 // Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
-    notifications: $.cookie('notificationsEnabled'),
-    streaming: ($.cookie('streaming') !== 'false') ? true : false,
-    avoidVideo: ($.cookie('avoidVideo') === 'true') ? true : false,
-    maxTimeToPlaySource: $.cookie('maxTimeToPlaySource', Number) || DEFAULT_MAX_SOURCE_TIME
+      notifications: $.cookie('notificationsEnabled')
+    , streaming: ($.cookie('streaming') !== 'false') ? true : false
+    , avoidVideo: ($.cookie('avoidVideo') === 'true') ? true : false
+    , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource', Number) || DEFAULT_MAX_SOURCE_TIME
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
   };
   this.room = {
-    name: '',
-    track: {
-      title: '',
-      artist: ''
-    }
+      name: ''
+    , track: {
+        title: '',
+        artist: ''
+      }
   };
   this.controls = {
     volume: {}
   }
   // stub out the player, since sometimes we don't load it.
   this.player = {
-    ready:       function( callback )  { return callback(); },
-    src:         function( src )       { return src; },
-    pause:       function()            { return this; },
-    play:        function()            { return this; },
-    on:          function( event, cb ) { return this; },
-    one:         function( event, cb ) { return this; },
-    volume:      function( level )     { return this; },
-    currentTime: function( t )         { return 0; },
-    duration:    function( t )         { return 0; },
-    error:       function( e )         { return this; },
+    ready:       function( callback )     { return callback(); },
+    src:         function( src )          { return src; },
+    pause:       function()               { return this; },
+    play:        function()               { return this; },
+    on:          function( event, cb )    { return this; },
+    one:         function( event, cb )    { return this; },
+    volume:      function( level )        { return this; },
+    currentTime: function( t )            { return 0; },
+    duration:    function( t )            { return 0; },
+    error:       function( e )            { return this; },
   }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
@@ -46,9 +46,7 @@ Soundtrack.prototype.checkNotificationPermissions = function(callback) {
 }
 Soundtrack.prototype.notify = function(img, title, content, callback) {
 
-  if (!this.settings.notifications) {
-    return false;
-  }
+  if (!this.settings.notifications) { return false; }
 
   var notification = window.webkitNotifications.createNotification(img, title, content);
   notification.ondisplay = function(e) {
@@ -119,7 +117,7 @@ function volumeChangeHandler(e) {
 
 function mutePlayer(saveState) {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
-  soundtrack.player.volume(0.00001);
+  soundtrack.player.volume( 0.00001 );
   $.cookie('lastVolume', 0);
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
@@ -131,7 +129,7 @@ function unmutePlayer() {
     soundtrack.player.volume(lastVol / 100);
     $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
   } else {
-    soundtrack.player.volume(0.8);
+    soundtrack.player.volume( 0.8 );
     $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val(DEFAULT_VOLUME);
     $.cookie('lastVolume', DEFAULT_VOLUME, {
       expires: COOKIE_EXPIRES
