@@ -25,36 +25,16 @@ var Soundtrack = function() {
   }
   // stub out the player, since sometimes we don't load it.
   this.player = {
-    ready: function(callback) {
-      return callback();
-    },
-    src: function(src) {
-      return src;
-    },
-    pause: function() {
-      return this;
-    },
-    play: function() {
-      return this;
-    },
-    on: function(event, cb) {
-      return this;
-    },
-    one: function(event, cb) {
-      return this;
-    },
-    volume: function(level) {
-      return this;
-    },
-    currentTime: function(t) {
-      return 0;
-    },
-    duration: function(t) {
-      return 0;
-    },
-    error: function(e) {
-      return this;
-    },
+    ready:       function( callback )  { return callback(); },
+    src:         function( src )       { return src; },
+    pause:       function()            { return this; },
+    play:        function()            { return this; },
+    on:          function( event, cb ) { return this; },
+    one:         function( event, cb ) { return this; },
+    volume:      function( level )     { return this; },
+    currentTime: function( t )         { return 0; },
+    duration:    function( t )         { return 0; },
+    error:       function( e )         { return this; },
   }
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
