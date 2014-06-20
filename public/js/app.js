@@ -16,8 +16,8 @@ var Soundtrack = function() {
   this.room = {
       name: ''
     , track: {
-        title: '',
-        artist: ''
+          title: ''
+        , artist: ''
       }
   };
   this.controls = {
@@ -29,8 +29,8 @@ var Soundtrack = function() {
     src:         function( src )          { return src; },
     pause:       function()               { return this; },
     play:        function()               { return this; },
-    on:          function( event, cb )    { return this; },
-    one:         function( event, cb )    { return this; },
+    on:          function( event , cb )   { return this; },
+    one:         function( event , cb )   { return this; },
     volume:      function( level )        { return this; },
     currentTime: function( t )            { return 0; },
     duration:    function( t )            { return 0; },
@@ -48,7 +48,7 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
 
   if (!this.settings.notifications) { return false; }
 
-  var notification = window.webkitNotifications.createNotification(img, title, content);
+  var notification = window.webkitNotifications.createNotification( img , title , content );
   notification.ondisplay = function(e) {
     setTimeout(function() {
       e.currentTarget.cancel();
@@ -60,37 +60,35 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
   }
   notification.show();
 };
-Soundtrack.prototype.editTrackID = function(trackID) {
+Soundtrack.prototype.editTrackID = function( trackID ) {
   $editor = $('form[data-for=edit-track]');
 
   $.getJSON('/tracks/' + encodeURIComponent(trackID), function(track) {
-    if (!track || !track._id) {
-      return alert('No such track.');
-    }
+    if (!track || !track._id) { return alert('No such track.'); }
 
-    $editor.data('track-id', track._id);
-    $editor.data('artist-slug', track._artist.slug);
-    $editor.data('artist-id', track._artist._d);
-    $editor.data('track-slug', track.slug);
+    $editor.data('track-id',    track._id );
+    $editor.data('artist-slug', track._artist.slug );
+    $editor.data('artist-id',   track._artist._d );
+    $editor.data('track-slug',  track.slug );
 
-    $editor.find('input[name=trackArtistID]').val(track._artist._id);
-    $editor.find('input[name=artist]').val(track._artist.name);
-    $editor.find('input[name=title]').val(track.title);
+    $editor.find('input[name=trackArtistID]').val( track._artist._id );
+    $editor.find('input[name=artist]').val( track._artist.name );
+    $editor.find('input[name=title]').val( track.title );
 
     console.log($editor.find('*[data-context=track]'))
 
     $editor.find('*[data-context=track]').data('track-id', track._id);
 
-    $editor.find('*[data-context=track][data-action=track-flag-nsfw]').prop('checked', track.flags.nsfw);
-    $editor.find('*[data-context=track][data-action=track-flag-live]').prop('checked', track.flags.live);
+    $editor.find('*[data-context=track][data-action=track-flag-nsfw]').prop('checked', track.flags.nsfw );
+    $editor.find('*[data-context=track][data-action=track-flag-live]').prop('checked', track.flags.live );
 
     var titles = track.titles;
-    if (titles.indexOf(track.title) == -1) {
-      titles.push(track.title);
+    if (titles.indexOf( track.title ) == -1) {
+      titles.push( track.title );
     }
 
     track.sources.youtube.forEach(function(video) {
-      if (video.data && titles.indexOf(video.data.title) == -1) {
+      if (video.data && titles.indexOf( video.data.title ) == -1) {
         titles.push(video.data.title);
       }
     });
