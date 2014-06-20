@@ -1126,8 +1126,8 @@ $(window).load(function() {
     var currentArtist = $('form[data-for=edit-track]').find('input[name=artist]').val();
     var currentTitle = $('form[data-for=edit-track]').find('input[name=title]').val();
 
-    $('form[data-for=edit-track]').find('input[name=artist]').val(currentTitle);
-    $('form[data-for=edit-track]').find('input[name=title]').val(currentArtist);
+    $('form[data-for=edit-track]').find('input[name=artist]').val( currentTitle );
+    $('form[data-for=edit-track]').find('input[name=title]').val( currentArtist );
 
     return false;
   });
@@ -1172,7 +1172,7 @@ $(window).load(function() {
   $(document).on('click', '.message *[data-role=author]', function(e) {
     e.preventDefault();
     var self = this;
-    $('#chat-input').val($('#chat-input').val() + ' @' + $(self).data('user-username') + ' ');
+    $('#chat-input').val( $('#chat-input').val() + ' @' + $(self).data('user-username') + ' ');
     $('#chat-input').focus();
     return false;
   });
@@ -1211,18 +1211,14 @@ $(window).load(function() {
   $('*[data-action=toggle-scrobble]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
-      $.cookie('scrobblingEnabled', true, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('scrobblingEnabled', true, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         scrobble: true
       }, function(data) {
         console.log(data);
       });
     } else {
-      $.cookie('scrobblingEnabled', false, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('scrobblingEnabled', false, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         scrobble: false
       }, function(data) {
@@ -1234,18 +1230,14 @@ $(window).load(function() {
   $('*[data-action=toggle-video-avoid]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
-      $.cookie('avoidVideo', true, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('avoidVideo', true, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         avoidVideo: true
       }, function(data) {
         console.log(data);
       });
     } else {
-      $.cookie('avoidVideo', false, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('avoidVideo', false, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         avoidVideo: false
       }, function(data) {
@@ -1259,14 +1251,10 @@ $(window).load(function() {
     if ($(self).prop('checked')) {
       soundtrack.settings.notifications = true;
       soundtrack.checkNotificationPermissions();
-      $.cookie('notificationsEnabled', true, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('notificationsEnabled', true, { expires: COOKIE_EXPIRES });
     } else {
       soundtrack.settings.notifications = false;
-      $.cookie('notificationsEnabled', false, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('notificationsEnabled', false, { expires: COOKIE_EXPIRES });
     }
   });
 
@@ -1284,10 +1272,11 @@ $(window).load(function() {
 
   function warnBeforeInterrupting(e) {
     // Warning for navigating away from the page via chat links
-    if (e.which != 2 && !skipWarning)
+    if (e.which != 2 && !skipWarning) {
       if (!confirm("Continuing will stop playback. Are you sure?")) {
         e.preventDefault();
       }
+    }
     return true;
   };
 
@@ -1296,15 +1285,11 @@ $(window).load(function() {
     if ($(self).prop('checked')) {
       console.log('enabling link warning...');
       $(document).on('click', '.message-content a', warnBeforeInterrupting);
-      $.cookie('warnBeforeInterrupting', true, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('warnBeforeInterrupting', true, { expires: COOKIE_EXPIRES });
     } else {
       console.log('disabling link warning...');
       $(document).off('click', '.message-content a', warnBeforeInterrupting);
-      $.cookie('warnBeforeInterrupting', false, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('warnBeforeInterrupting', false, { expires: COOKIE_EXPIRES });
     }
   });
 
@@ -1312,14 +1297,10 @@ $(window).load(function() {
     var self = this;
     if ($(self).prop('checked')) {
       $('base').attr('target', '_blank');
-      $.cookie('openLinksInNewWindow', true, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('openLinksInNewWindow', true, { expires: COOKIE_EXPIRES });
     } else {
       $('base').attr('target', '_self');
-      $.cookie('openLinksInNewWindow', false, {
-        expires: COOKIE_EXPIRES
-      });
+      $.cookie('openLinksInNewWindow', false, { expires: COOKIE_EXPIRES });
     }
   });
 
