@@ -336,6 +336,9 @@ sock.on('connection', function(conn) {
 
   if (app.room.playlist[0]) {
     Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
+      if (err) { console.log(err); }
+      if (!track) { return; }
+
       // temporary collect exact matches... 
       // testing for future merging of track data for advances
       var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
