@@ -14,11 +14,11 @@ var Soundtrack = function() {
     username: $('a[data-for=user-model]').data('username')
   };
   this.room = {
-      name: ''
-    , track: {
-          title: ''
-        , artist: ''
-      }
+    name: '',
+    track: {
+      title: '',
+      artist: ''
+    }
   };
   this.controls = {
     volume: {}
@@ -75,8 +75,6 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
     $editor.find('input[name=artist]').val( track._artist.name );
     $editor.find('input[name=title]').val( track.title );
 
-    console.log($editor.find('*[data-context=track]'))
-
     $editor.find('*[data-context=track]').data('track-id', track._id);
 
     $editor.find('*[data-context=track][data-action=track-flag-nsfw]').prop('checked', track.flags.nsfw );
@@ -89,28 +87,32 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
 
     track.sources.youtube.forEach(function(video) {
       if (video.data && titles.indexOf( video.data.title ) == -1) {
-        titles.push(video.data.title);
+        titles.push( video.data.title );
       }
     });
 
-    $editor.find('pre[data-for=titles]').html(titles.join('<br />'));
+    track.sources.soundcloud.forEach(function(track) {
+      if (track.data && titles.indexOf( track.data.title ) == -1) {
+        titles.push( track.data.title );
+      }
+    });
+
+    $editor.find('pre[data-for=titles]').html( titles.join('<br />') );
 
     /* $editor.find('input.typeahead').typeahead({
-    name: 'artists'
-    , remote: '/artists?q=%QUERY'
-  }); */
+        name: 'artists'
+      , remote: '/artists?q=%QUERY'
+    }); */
 
     $editor.modal();
   });
 }
 
 function volumeChangeHandler(e) {
-  var vol = Number(e.value);
+  var vol = Number( e.value );
 
-  soundtrack.player.volume(vol / 100);
-  $.cookie('lastVolume', vol, {
-    expires: COOKIE_EXPIRES
-  });
+  soundtrack.player.volume( vol / 100 );
+  $.cookie('lastVolume', vol, { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer(saveState) {
@@ -128,10 +130,8 @@ function unmutePlayer() {
     $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
   } else {
     soundtrack.player.volume( 0.8 );
-    $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val(DEFAULT_VOLUME);
-    $.cookie('lastVolume', DEFAULT_VOLUME, {
-      expires: COOKIE_EXPIRES
-    });
+    $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val( DEFAULT_VOLUME );
+    $.cookie('lastVolume', DEFAULT_VOLUME, { expires: COOKIE_EXPIRES });
   }
 }
 
@@ -142,7 +142,7 @@ function ensureVolumeCorrect() {
   soundtrack.player.volume(lastVol / 100);
 
   if ($('.slider[data-for=volume]')[0]) {
-    $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
+    $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   }
 }
 
@@ -188,31 +188,31 @@ function toggleVideoOff() {
 }
 
 angular.module('timeFilters', []).
-filter('toHHMMSS', function() {
-  return function(input) {
-    var sec_num = parseInt(input, 10); // don't forget the second parm
-    var hours = Math.floor(sec_num / 3600);
-    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+  filter('toHHMMSS', function() {
+    return function(input) {
+      var sec_num = parseInt(input, 10); // don't forget the second parm
+      var hours = Math.floor(sec_num / 3600);
+      var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+      var seconds = sec_num - (hours * 3600) - (minutes * 60);
 
-    if (hours < 10) {
-      hours = "0" + hours;
-    }
-    if (minutes < 10) {
-      minutes = "0" + minutes;
-    }
-    if (seconds < 10) {
-      seconds = "0" + seconds;
-    }
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
 
-    if (hours != '00') {
-      var time = hours + ':' + minutes + ':' + seconds;
-    } else {
-      var time = minutes + ':' + seconds;
+      if (hours != '00') {
+        var time = hours + ':' + minutes + ':' + seconds;
+      } else {
+        var time = minutes + ':' + seconds;
+      }
+      return time;
     }
-    return time;
-  }
-});
+  });
 
 angular.module('soundtrack-io', ['timeFilters']);
 
@@ -294,6 +294,13 @@ promise.done(function() {
     var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
     $('#track-progress .bar').css('width', progress + '%');
     $('#track-progress').attr('title', progress + '%');
+
+    $('.timestamp').each(function(i , el) {
+      var $el = $(el);
+      $el.html( moment( $el.attr('title') ).fromNow() );
+    });
+
+
   }, 1000);
 });
 
@@ -1031,15 +1038,15 @@ $(window).load(function() {
     });
 
     /*/$.ajax({
-    url: 'https://api.vimeo.com/videos?query=the%20mountain%20tso'
-    , dataType: 'json'
-    , headers: {
-      'Authorization': 'Basic MGViZjM3MDU1OTczMGE2NjM0ODVlNTkxZDkwNGFkNGFhZGI2ZjA1MjozZTE3N2Q0NzNiYzk1YWQ4OGU0ODViN2VhODAwOTQzNmJjZmEwYWI3'
-    }
-    , success: function(data) {
-      console.log(data);
-    }
-  });/**/
+        url: 'https://api.vimeo.com/videos?query=the%20mountain%20tso'
+      , dataType: 'json'
+      , headers: {
+        'Authorization': 'Basic MGViZjM3MDU1OTczMGE2NjM0ODVlNTkxZDkwNGFkNGFhZGI2ZjA1MjozZTE3N2Q0NzNiYzk1YWQ4OGU0ODViN2VhODAwOTQzNmJjZmEwYWI3'
+      }
+      , success: function(data) {
+        console.log(data);
+      }
+    });/**/
 
     return false;
   });
