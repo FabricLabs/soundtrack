@@ -53,7 +53,8 @@ module.exports = {
     var query = { _curator: { $exists: true } };
 
     query = _.extend( query , {
-      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7)
+      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7),
+      timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
     });
 
     Play.find( query ).limit(4096).exec(function(err, plays) {
