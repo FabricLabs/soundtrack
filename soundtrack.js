@@ -213,8 +213,8 @@ var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
 soundtrack.start();
 
-var Queue = require('./lib/Queue');
-queue = new Queue( config );
+var Monq = require('monq');
+var monq = Monq('mongodb://localhost:27017/' + config.database.name );
 
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);

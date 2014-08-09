@@ -53,8 +53,7 @@ module.exports = {
     var query = { _curator: { $exists: true } };
 
     query = _.extend( query , {
-      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7),
-      timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
+      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7)
     });
 
     Play.find( query ).limit(4096).exec(function(err, plays) {
@@ -255,18 +254,14 @@ module.exports = {
       async.series( functions , function(err, results) {
         var chats = results[0];
 
-        console.log(results[1]);
-
         Track.findOne({ $or: [
             { _id: req.param('trackID') }
           , { slug: req.param('trackSlug') }
         ] }).populate('_artist _credits').exec(function(err, track) {
 
-          /**/req.soundtrack.gatherSources(track , function(err, sources) {
-            console.log(err , sources);
-            //console.log( sources.length );
-            console.log('SOURCE GATHERING COMPLETE');
-          });/**/
+          req.soundtrack._jobs.enqueue('track:crawl', { id: track._id }, function(err) {
+            console.log('track crawling queued');
+          });
 
           res.format({
             json: function() {

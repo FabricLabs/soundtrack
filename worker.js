@@ -13,61 +13,71 @@ Track  = require('./models/Track').Track;
 Source = require('./models/Source').Source;
 
 var Queue = require('./lib/Queue');
-var jobs  = new Queue( config );
+//var jobs  = new Queue( config );
+var jobss = { process: new Function() }
+
+var Monq = require('monq');
+var monq = Monq('mongodb://localhost:27017/' + config.database.name );
+var jobs = monq.queue( config.database.name );
 
 var rest  = require('restler');
 var async = require('async');
 
-jobs.process('maki', function(job, done) {
-  if (!job) return done('no such job in Queue');
+var processors = {
+  'test': function( data , jobIsDone ) {
+    console.log('#winning' , data );
+    jobIsDone();
+  },
+  'track:crawl': function( data , jobIsDone ) {
+    Track.findOne({ _id: data.id }).exec(function(err, track) {
+      console.log('gathering sources...');
+      soundtrack.gatherSources( track , function() {
+        console.log('sources gathered!');
+        jobIsDone();
+      });
+    });
+  },
+  'artist:update': function( data , jobIsDone ) {
+    console.log('updating artist:', data.id)
 
-  console.log('evaluator running', job.id );
+    var artistID = data.id;
+    Artist.findOne({ _id: artistID }).exec(function(err, artist) {
+      if (err) return jobIsDone(err);
+      if (!artist) return jobIsDone('No such artist found!');
 
-  switch (job.type) {
-    default:
-      return done('unhandled job type', job.type);
-    break;
-    case 'artist:update':
-      console.log('updating artist:', job.data.id)
+      var now = new Date();
+      var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
 
-      var artistID = job.data.id;
-      Artist.findOne({ _id: artistID }).exec(function(err, artist) {
-        if (err) return done(err);
-        if (!artist) return done('No such artist found!');
+      if (artist.tracking.tracks.updated > oneWeekAgo) {
+        return jobIsDone('Artist already updated less than one week ago');
+      }
 
-        console.log('artist: ' , artist);
-
-        var now = new Date();
-        var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
-
-        if (artist.tracking.tracks.updated > oneWeekAgo) {
-          return done('Artist already updated less than one week ago');
+      rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+        if (!results.toptracks || !results.toptracks.track) {
+          return jobIsDone('Could not acquire top tracks for this artist');
         }
 
-        rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
-          if (!results.toptracks || !results.toptracks.track) {
-            return done('Could not acquire top tracks for this artist');
-          }
+        var popularTracks = results.toptracks.track;
+        if (!popularTracks.length) return jobIsDone('Popular tracks not array...');
 
-          var popularTracks = results.toptracks.track;
-          if (!popularTracks.length) return done('Popular tracks not array...');
-          
-          async.map( popularTracks , function( remoteTrack , trackDone ) {
-            soundtrack.trackFromSource('lastfm', remoteTrack , trackDone );
-          }, function(err, results) {
+        async.map( popularTracks , function( remoteTrack , trackDone ) {
+          soundtrack.trackFromSource('lastfm', remoteTrack , trackDone );
+        }, function(err, results) {
 
-            artist.tracking.tracks.updated = new Date();
-            artist.save(function(err) {
-              if (err) console.log(err);
-              done( err, artist );
-            });
+          artist.tracking.tracks.updated = new Date();
+          artist.save(function(err) {
+            if (err) console.log(err);
 
+            console.log('artist update complete!');
+            jobIsDone( err, artist );
           });
+
         });
-  
       });
-
-    break;
+    });
   }
+}
 
-});
+var worker = monq.worker( [ config.database.name ] );
+worker.register( processors );
+worker.start();
