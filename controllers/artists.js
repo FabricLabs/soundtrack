@@ -166,6 +166,7 @@ module.exports = {
 
         queue.push('soundtrack', {
           type: 'artist:update',
+          title: 'update artist, "' + artist.name + '"', 
           data: {
             id: artist._id
           }

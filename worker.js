@@ -25,7 +25,7 @@ jobs.process('maki', function(job, done) {
 
   switch (job.type) {
     default:
-      done('unhandled job type', job.type);
+      return done('unhandled job type', job.type);
     break;
     case 'artist:update':
       console.log('updating artist:', job.data.id)
