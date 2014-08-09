@@ -5,20 +5,20 @@ var COOKIE_EXPIRES          = 604800;
 // Begin actual class implementation...
 var Soundtrack = function() {
   this.settings = {
-      notifications: $.cookie('notificationsEnabled')
-    , streaming: ($.cookie('streaming') !== 'false') ? true : false
-    , avoidVideo: ($.cookie('avoidVideo') === 'true') ? true : false
+      notifications:        $.cookie('notificationsEnabled')
+    , streaming:           ($.cookie('streaming') !== 'false') ? true : false
+    , avoidVideo:          ($.cookie('avoidVideo') === 'true') ? true : false
     , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource', Number) || DEFAULT_MAX_SOURCE_TIME
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
   };
   this.room = {
-      name: ''
-    , track: {
-          title: ''
-        , artist: ''
-      }
+    name: '',
+    track: {
+      title: '',
+      artist: ''
+    }
   };
   this.controls = {
     volume: {}
@@ -75,8 +75,6 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
     $editor.find('input[name=artist]').val( track._artist.name );
     $editor.find('input[name=title]').val( track.title );
 
-    console.log($editor.find('*[data-context=track]'))
-
     $editor.find('*[data-context=track]').data('track-id', track._id);
 
     $editor.find('*[data-context=track][data-action=track-flag-nsfw]').prop('checked', track.flags.nsfw );
@@ -89,28 +87,32 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
 
     track.sources.youtube.forEach(function(video) {
       if (video.data && titles.indexOf( video.data.title ) == -1) {
-        titles.push(video.data.title);
+        titles.push( video.data.title );
       }
     });
 
-    $editor.find('pre[data-for=titles]').html(titles.join('<br />'));
+    track.sources.soundcloud.forEach(function(track) {
+      if (track.data && titles.indexOf( track.data.title ) == -1) {
+        titles.push( track.data.title );
+      }
+    });
+
+    $editor.find('pre[data-for=titles]').html( titles.join('<br />') );
 
     /* $editor.find('input.typeahead').typeahead({
-    name: 'artists'
-    , remote: '/artists?q=%QUERY'
-  }); */
+        name: 'artists'
+      , remote: '/artists?q=%QUERY'
+    }); */
 
     $editor.modal();
   });
 }
 
 function volumeChangeHandler(e) {
-  var vol = Number(e.value);
+  var vol = Number( e.value );
 
-  soundtrack.player.volume(vol / 100);
-  $.cookie('lastVolume', vol, {
-    expires: COOKIE_EXPIRES
-  });
+  soundtrack.player.volume( vol / 100 );
+  $.cookie('lastVolume' , vol, { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer(saveState) {
@@ -128,10 +130,8 @@ function unmutePlayer() {
     $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
   } else {
     soundtrack.player.volume( 0.8 );
-    $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val(DEFAULT_VOLUME);
-    $.cookie('lastVolume', DEFAULT_VOLUME, {
-      expires: COOKIE_EXPIRES
-    });
+    $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val( DEFAULT_VOLUME );
+    $.cookie('lastVolume', DEFAULT_VOLUME, { expires: COOKIE_EXPIRES });
   }
 }
 
@@ -139,10 +139,10 @@ function ensureVolumeCorrect() {
   var lastVol = $.cookie('lastVolume', Number);
   console.log('setting volume to ', lastVol / 100);
 
-  soundtrack.player.volume(lastVol / 100);
+  soundtrack.player.volume( lastVol / 100 );
 
   if ($('.slider[data-for=volume]')[0]) {
-    $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
+    $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   }
 }
 
@@ -188,31 +188,31 @@ function toggleVideoOff() {
 }
 
 angular.module('timeFilters', []).
-filter('toHHMMSS', function() {
-  return function(input) {
-    var sec_num = parseInt(input, 10); // don't forget the second parm
-    var hours = Math.floor(sec_num / 3600);
-    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+  filter('toHHMMSS', function() {
+    return function(input) {
+      var sec_num = parseInt(input, 10); // don't forget the second parm
+      var hours = Math.floor(sec_num / 3600);
+      var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+      var seconds = sec_num - (hours * 3600) - (minutes * 60);
 
-    if (hours < 10) {
-      hours = "0" + hours;
-    }
-    if (minutes < 10) {
-      minutes = "0" + minutes;
-    }
-    if (seconds < 10) {
-      seconds = "0" + seconds;
-    }
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
 
-    if (hours != '00') {
-      var time = hours + ':' + minutes + ':' + seconds;
-    } else {
-      var time = minutes + ':' + seconds;
+      if (hours != '00') {
+        var time = hours + ':' + minutes + ':' + seconds;
+      } else {
+        var time = minutes + ':' + seconds;
+      }
+      return time;
     }
-    return time;
-  }
-});
+  });
 
 angular.module('soundtrack-io', ['timeFilters']);
 
@@ -289,11 +289,18 @@ promise.done(function() {
 
     var time = soundtrack.player.currentTime().toString().toHHMMSS();
     var total = duration.toString().toHHMMSS();
-    $('#current-track #time').html(time + '/' + total);
+    $('#current-track #time').html( time + '/' + total );
 
     var progress = ((soundtrack.player.currentTime() / soundtrack.player.duration()) * 100);
     $('#track-progress .bar').css('width', progress + '%');
     $('#track-progress').attr('title', progress + '%');
+
+    $('.timestamp').each(function(i , el) {
+      var $el = $(el);
+      $el.html( moment( $el.attr('title') ).fromNow() );
+    });
+
+
   }, 1000);
 });
 
@@ -322,9 +329,9 @@ $(window).load(function() {
   //}
 
   if (!$.cookie('maxTimeToPlaySource')) {
-    $.cookie('maxTimeToPlaySource', soundtrack.settings.maxTimeToPlaySource);
+    $.cookie('maxTimeToPlaySource', soundtrack.settings.maxTimeToPlaySource );
   }
-  $('*[data-for=max-source-load-time]').val($.cookie('maxTimeToPlaySource', Number));
+  $('*[data-for=max-source-load-time]').val( $.cookie('maxTimeToPlaySource', Number) );
 
   soundtrack.player.ready(function() {
     console.log('player loaded. :)');
@@ -354,7 +361,7 @@ $(window).load(function() {
           break;
           case 'edit':
             updatePlaylist();
-            break;
+          break;
           case 'track':
             updatePlaylist();
 
@@ -367,7 +374,7 @@ $(window).load(function() {
               $('#track-artist').html('unknown');
             }
 
-            $('#track-title').html(msg.data.title);
+            $('#track-title').html( msg.data.title );
 
 
             $('input[name=current-track-id]').val(msg.data._id);
@@ -425,10 +432,10 @@ $(window).load(function() {
               var rollIt = function() {
                 console.log('rollIt()', sources[0]);
                 if (!sources[0]) return;
-                soundtrack.player.poster(sources[0].poster);
+                soundtrack.player.poster( sources[0].poster );
 
                 soundtrack.player.pause();
-                soundtrack.player.src([sources[0]]);
+                soundtrack.player.src( [ sources[0] ] );
                 soundtrack.player.play();
               }
 
@@ -453,16 +460,16 @@ $(window).load(function() {
                 var ensureTrackPlaying = setInterval(function() {
                   if (soundtrack.player.currentTime() > 0 || !sources.length) {
                     console.log('track is playing (yay!), or there are no remaining sources (boo). clearing interval.');
-                    clearInterval(ensureTrackPlaying)
+                    clearInterval( ensureTrackPlaying )
                   } else {
                     console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
-                    console.log('failed to load: ', sources[0]);
+                    console.log('failed to load: ', sources[0] );
 
                     sources.shift();
-                    console.log('shifted sources: ', sources);
+                    console.log('shifted sources: ', sources );
                     rollIt();
                   }
-                }, maxTimeToPlayTrack);
+                }, maxTimeToPlayTrack );
               }
 
               var bufferEvaluator = function() {
@@ -470,12 +477,12 @@ $(window).load(function() {
                 var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
                 var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
 
-                soundtrack.player.currentTime(estimatedSeekTo / 1000);
+                soundtrack.player.currentTime( estimatedSeekTo / 1000 );
 
                 ensureVolumeCorrect();
               };
 
-              soundtrack.player.one('playing', bufferEvaluator);
+              soundtrack.player.one('playing', bufferEvaluator );
 
               var track = msg.data;
 
@@ -494,22 +501,22 @@ $(window).load(function() {
               updatePlaylist();
             }
 
-            break;
+          break;
           case 'playlist:add':
             updatePlaylist();
-            break;
+          break;
           case 'playlist:update':
             updatePlaylist();
-            break;
+          break;
           case 'join':
             updateUserlist();
-            break;
+          break;
           case 'part':
             $('#userlist li[data-user-id=' + msg.data._id + ']').slideUp();
             updateUserlist();
-            break;
+          break;
           case 'chat':
-            $(msg.data.formatted).appendTo('#messages');
+            $( msg.data.formatted ).appendTo('#messages');
 
             setTimeout(function() {
               $("#messages").scrollTop($("#messages")[0].scrollHeight);
@@ -520,17 +527,17 @@ $(window).load(function() {
             if (msg.data.message.toLowerCase().indexOf('@' + soundtrack.user.username.toLowerCase()) >= 0) {
               soundtrack.notify('https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message);
             }
-            break;
+          break;
           case 'ping':
             soundtrack.sockjs.send(JSON.stringify({
               type: 'pong'
             }));
             console.log("Ping Pong\'d");
-            break;
+          break;
           case 'announcement':
-            $(unescape(msg.data.formatted)).appendTo('#messages');
+            $( unescape( msg.data.formatted ) ).appendTo('#messages');
             $("#messages").scrollTop($("#messages")[0].scrollHeight);
-            break;
+          break;
         }
       };
 
@@ -567,7 +574,7 @@ $(window).load(function() {
   $('*[data-action=toggle-volume]').click(function(e) {
     e.preventDefault();
     var self = this;
-    var currentVolume = Number($('.slider[data-for=volume]').slider('getValue'));
+    var currentVolume = Number( $('.slider[data-for=volume]').slider('getValue') );
 
     if (currentVolume) {
       mutePlayer();
@@ -608,7 +615,7 @@ $(window).load(function() {
     function chatSubmit(msg) {
       var matches = msg.match(triggerWord);
       if (matches) {
-        if (notify(matches[1], msg)) {
+        if (notify(matches[1], msg )) {
           return;
         }
       }
@@ -650,19 +657,19 @@ $(window).load(function() {
         soundtrack.settings.streaming = true;
         soundtrack.sockjs.close();
         soundtrack.startSockJs();
-        break;
+      break;
       case 'off':
         $.cookie('streaming', false);
         soundtrack.settings.streaming = false;
         soundtrack.player.pause();
         $('<div class="message"><strong id="announcement">Streaming turned off.</strong></div>').appendTo('#messages');
         $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
+      break;
       default:
         var status = (soundtrack.settings.streaming) ? 'on' : 'off';
         $('<div class="message"><strong id="announcement">Stream is ' + status + '.</strong></div>').appendTo('#messages');
         $("#messages").scrollTop($("#messages")[0].scrollHeight);
-        break;
+      break;
     }
   });
 
@@ -671,13 +678,13 @@ $(window).load(function() {
     switch ((msg.split(' ')[1] || '').toLowerCase()) {
       case 'on':
         toggleVideoOn();
-        break;
+      break;
       case 'off':
         toggleVideoOff();
-        break;
+      break;
       default:
         toggleVideo();
-        break;
+      break;
     }
   });
 
@@ -998,12 +1005,10 @@ $(window).load(function() {
       $('*[data-for=track-search-select-source]').removeClass('btn-primary');
     });
 
-
     var query = $(self).find('*[data-for=track-search-query]').val();
     var maxLength = 1200;
 
-
-    $('*[data-for=track-search-query]').val(query);
+    $('*[data-for=track-search-query]').val( query );
 
     var $input = $('#search-modal *[data-for=track-search-query]');
     $input[0].selectionStart = $input[0].selectionEnd = $input.val().length;
@@ -1031,15 +1036,15 @@ $(window).load(function() {
     });
 
     /*/$.ajax({
-    url: 'https://api.vimeo.com/videos?query=the%20mountain%20tso'
-    , dataType: 'json'
-    , headers: {
-      'Authorization': 'Basic MGViZjM3MDU1OTczMGE2NjM0ODVlNTkxZDkwNGFkNGFhZGI2ZjA1MjozZTE3N2Q0NzNiYzk1YWQ4OGU0ODViN2VhODAwOTQzNmJjZmEwYWI3'
-    }
-    , success: function(data) {
-      console.log(data);
-    }
-  });/**/
+        url: 'https://api.vimeo.com/videos?query=the%20mountain%20tso'
+      , dataType: 'json'
+      , headers: {
+        'Authorization': 'Basic MGViZjM3MDU1OTczMGE2NjM0ODVlNTkxZDkwNGFkNGFhZGI2ZjA1MjozZTE3N2Q0NzNiYzk1YWQ4OGU0ODViN2VhODAwOTQzNmJjZmEwYWI3'
+      }
+      , success: function(data) {
+        console.log(data);
+      }
+    });/**/
 
     return false;
   });
@@ -1102,10 +1107,10 @@ $(window).load(function() {
 
     console.log('track edit submission...');
 
-    var trackID = $(self).data('track-id'),
-      artistSlug = $(self).data('artist-slug'),
-      artistID = $(self).data('artist-id'),
-      trackSlug = $(self).data('track-slug');
+    var trackID    = $(self).data('track-id')
+      , artistSlug = $(self).data('artist-slug')
+      , artistID   = $(self).data('artist-id')
+      , trackSlug  = $(self).data('track-slug');
 
     $.post('/' + artistSlug + '/' + trackSlug + '/' + trackID, {
       title: $(self).find('input[name=title]').val(),
