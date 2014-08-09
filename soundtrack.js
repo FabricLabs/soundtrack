@@ -211,6 +211,10 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
+soundtrack.start();
+
+var Queue = require('./lib/Queue');
+queue = new Queue( config );
 
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
