@@ -1,5 +1,3 @@
-//require('debug-trace')({ always: true });
-
 var config = require('./config');
 var database = require('./db');
 
@@ -11,10 +9,6 @@ var soundtrack = new Soundtrack({
 Artist = require('./models/Artist').Artist;
 Track  = require('./models/Track').Track;
 Source = require('./models/Source').Source;
-
-var Queue = require('./lib/Queue');
-//var jobs  = new Queue( config );
-var jobss = { process: new Function() }
 
 var Monq = require('monq');
 var monq = Monq('mongodb://localhost:27017/' + config.database.name );
@@ -80,4 +74,18 @@ var processors = {
 
 var worker = monq.worker( [ config.database.name ] );
 worker.register( processors );
+
+worker.on('dequeued', function (data) {
+  console.log('worker dequeued job %s', data._id );
+});
+worker.on('failed', function (data) {
+  console.log('job %s failed', data._id , data.data );
+});
+worker.on('complete', function (data) {
+  console.log('job %s complete', data._id );
+});
+worker.on('error', function (err) {
+  console.log('worker error', err );
+});
+
 worker.start();
