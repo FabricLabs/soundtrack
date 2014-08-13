@@ -4,8 +4,14 @@ block content
   .well.content-well
     img.avatar-large.pull-left(src="#{artist.image.url}")
 
-    if (user && user.roles.indexOf('editor') >= 0)
-      a.btn.pull-right(href="#", onclick="$('form#edit-artist-form').slideDown(); return false;")
+
+
+    .pull-right
+      strong Last Updated: 
+        abbr(title="#{artist.tracking.tracks.updated}") #{artist.tracking.tracks.updated}
+
+      if (user && user.roles.indexOf('editor') >= 0)
+        a.btn(href="#", onclick="$('form#edit-artist-form').slideDown(); return false;") edit
 
     h1 #{artist.name}
     .artist-bio !{artist.bio}

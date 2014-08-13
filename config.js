@@ -1,12 +1,17 @@
 module.exports = {
   app: {
-      safe: process.env.SOUNDTRACK_APP_SAFE || false
+      name: 'soundtrack'
+    , safe: process.env.SOUNDTRACK_APP_SAFE || false
     , host: process.env.SOUNDTRACK_APP_HOST || 'soundtrack.io'
     , port: process.env.SOUNDTRACK_APP_PORT || 13000
   },
   database: {
       name: process.env.SOUNDTRACK_DB_NAME || 'soundtrack'
     , host: 'localhost'
+  },
+  redis: {
+      host: process.env.SOUNDTRACK_REDIS_HOST || 'localhost'
+    , port: process.env.SOUNDTRACK_REDIS_PORT || 6379
   },
   sessions: {
       key: 'put yourself a fancy little key here'

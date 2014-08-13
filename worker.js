@@ -5,6 +5,7 @@ var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack({
   config: config
 });
+soundtrack.DEBUG = true;
 
 Artist = require('./models/Artist').Artist;
 Track  = require('./models/Track').Track;
@@ -35,6 +36,8 @@ var processors = {
     console.log('updating artist:', data.id)
 
     var artistID = data.id;
+
+
     Artist.findOne({ _id: artistID }).exec(function(err, artist) {
       if (err) return jobIsDone(err);
       if (!artist) return jobIsDone('No such artist found!');
@@ -43,12 +46,14 @@ var processors = {
       var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
 
       if (artist.tracking.tracks.updated > oneWeekAgo) {
-        return jobIsDone('Artist already updated less than one week ago');
+        console.log('artist already up to date');
+        return jobIsDone();
       }
 
       rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
         if (!results.toptracks || !results.toptracks.track) {
-          return jobIsDone('Could not acquire top tracks for this artist');
+          console.log('Could not acquire top tracks for this artist')
+          return jobIsDone();
         }
 
         var popularTracks = results.toptracks.track;

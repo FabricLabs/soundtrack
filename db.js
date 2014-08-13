@@ -1,6 +1,6 @@
 var config = require('./config')
   , mongoose = require('mongoose')
-  , redis = require("redis")
+  , redis = require('redis')
   , client = redis.createClient();
 
 mongoose.connect(config.database.host, config.database.name);
