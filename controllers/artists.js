@@ -165,7 +165,8 @@ module.exports = {
         });
 
         req.soundtrack._jobs.enqueue('artist:update', {
-          id: artist._id
+            id: artist._id
+          , timeout: 3 * 60 * 1000
         }, function(err, job) {
           console.log('update artist queued');
         });
