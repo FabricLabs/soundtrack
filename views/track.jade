@@ -16,48 +16,56 @@ block content
     p <strong>#{track.duration ? track.duration.toHHMMSS(): 'some unknown'}</strong> of brain-melting audio
     h2 played #{history.length} times
 
-    #track-stats
+    ul.nav.nav-tabs
+      li.active
+        a(href="#plays") Plays
+      li
+        a(href="#sources") Audio Sources
+      li
+        a(href="#conversation") Conversation
 
-    ul
-      for play in history
-        li
-          a(href="#") #{play.timestamp}
-          |  by 
-          if (play._curator)
-            a(href="/#{play._curator.slug}") #{play._curator.username}
-          else
-            strong THE MACHINE
-          | .
+    .tab-content
+      .tab-pane.active#plays
 
-    h3 Available Sources
-    each list, key in track.sources.toObject()
-      h2 #{key}
-      if (list)
-        each link in list
-          case key
-            when 'youtube'
-              iframe(width="540", height="295", src="https://www.youtube.com/embed/#{link.id}?enablejsapi=1", frameborder="0")
-            when 'soundcloud'
-              iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{link.id}", frameborder="0")
-            default
-              li #{link}
+        h3 Plays Over Time
+        #track-stats
 
-    h3 Conversation
-    each message in chats
-      include partials/message
+        ul
+          for play in history
+            li
+              a(href="#") #{play.timestamp}
+              |  by 
+              if (play._curator)
+                a(href="/#{play._curator.slug}") #{play._curator.username}
+              else
+                strong THE MACHINE
+              | .
 
-    h3 Possible Sources
-    ul
-      each source in dupes
-        li
-          code #{source}
+      .tab-pane#sources
+        h3 Available Sources
+        each list, key in track.sources.toObject()
+          h2 #{key}
+          if (list)
+            each link in list
+              case key
+                when 'youtube'
+                  iframe(width="540", height="295", src="https://www.youtube.com/embed/#{link.id}?enablejsapi=1", frameborder="0")
+                when 'soundcloud'
+                  iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{link.id}", frameborder="0")
+                default
+                  li #{link}
 
-    each source in dupes
-      if (source.sources.youtube && source.sources.youtube.length)
-        iframe(width="540", height="295", src="https://www.youtube.com/embed/#{source.sources.youtube[0].id}?enablejsapi=1", frameborder="0")
-      if (source.sources.soundcloud && source.sources.soundcloud.length)
-        iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{source.sources.soundcloud[0].id}", frameborder="0")
-            
+        each source in dupes
+          if (source.sources.youtube && source.sources.youtube.length)
+            iframe(width="540", height="295", src="https://www.youtube.com/embed/#{source.sources.youtube[0].id}?enablejsapi=1", frameborder="0")
+          if (source.sources.soundcloud && source.sources.soundcloud.length)
+            iframe(width="100%", height="166", src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/#{source.sources.soundcloud[0].id}", frameborder="0")
+
+      .tab-pane#conversation
+        h3 Conversation
+        each message in chats
+          include partials/message
+
 block scripts
   style.
     .chart rect {
@@ -65,7 +73,7 @@ block scripts
       stroke: white;
     }
 
-  script.
+  //-script.
     // TODO: embed this in microdata.
     var playsPerDay = [#{playsPerDay}];
 

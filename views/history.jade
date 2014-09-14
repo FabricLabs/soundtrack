@@ -4,6 +4,15 @@ block content
 
   .well.content-well
     h1 Track History
-    ul
-      for play in plays
-        include partials/play
+
+    table.table.tablesorter
+      thead
+        tr
+          th Who
+          th When
+          th Artist
+          th Title
+          th Controls
+      tbody
+        for play in plays
+          include partials/play-row

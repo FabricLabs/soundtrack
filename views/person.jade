@@ -23,18 +23,39 @@ block content
         a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
           img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
 
-    .bio
-      | !{marked(person.bio)}
+    ul.nav.nav-tabs
+      li.active
+        a(href="#profile", data-toggle="tab") Profile
+      li
+        a(href="#playlists", data-toggle="tab") Playlists
+      li
+        a(href="#plays", data-toggle="tab") Plays
 
-    h3 Public Playlists 
-      ul.nav.nav-list
-        for playlist in playlists
-          li
-            h4
-              a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
-            p #{playlist.description}
+    .tab-content
+      .tab-pane.active#profile
+        .bio
+          | !{marked(person.bio)}
 
-    h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)
-    for play in plays
-      include partials/play
+      .tab-pane#playlists
+        h3 Public Playlists 
+          ul.nav.nav-list
+            for playlist in playlists
+              li
+                h4
+                  a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+                p #{playlist.description}
+
+      .tab-pane#plays
+        h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)
+        table.table.tablesorter
+          thead
+            tr
+              th Who
+              th When
+              th Artist
+              th Title
+              th Controls
+          tbody
+            for play in plays
+              include partials/play-row
 
