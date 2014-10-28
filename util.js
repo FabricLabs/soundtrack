@@ -18,8 +18,10 @@ function parseTitleString(string, partsCallback) {
     '[ official video ]', '[official music video]', '[free download]',
     '[free dl]', '( 1080p )', '(with lyrics)', '(high res / official video)',
     '(music video)', '[music video]', '[hd]', '(hd)', '[hq]', '(hq)',
-    '(original mix)', '[original mix]',
-    '[monstercat release]', '[monstercat freebie]'];
+    '(original mix)', '[original mix]', '[lyrics]', '[free]', '[trap]',
+    '[monstercat release]', '[monstercat freebie]', '[monstercat]',
+    '[edm.com premeire]', '[edm.com exclusive]', '[enm release]',
+    '[free download!]', '[monstercat free release]'];
   baddies.forEach(function(token) {
     string = string.replace(token + ' - ', '').trim();
     string = string.replace(token.toUpperCase() + ' - ', '').trim();
