@@ -477,7 +477,9 @@ $(window).load(function() {
                 var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
                 var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
 
-                soundtrack.player.currentTime( estimatedSeekTo / 1000 );
+                if (estimatedSeekTo / 1000 > 5) {
+                  soundtrack.player.currentTime( estimatedSeekTo / 1000 );
+                }
 
                 ensureVolumeCorrect();
               };

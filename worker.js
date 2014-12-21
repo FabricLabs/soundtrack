@@ -1,73 +1,113 @@
-//require('debug-trace')({ always: true });
+var Queue = require('maki-queue');
+var queue = new Queue('soundtrack');
 
 var config = require('./config');
 var database = require('./db');
+
+console.log('config, database loaded');
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack({
   config: config
 });
+soundtrack.DEBUG = true;
+
+console.log('soundtrack instantiated...');
 
 Artist = require('./models/Artist').Artist;
 Track  = require('./models/Track').Track;
 Source = require('./models/Source').Source;
 
-var Queue = require('./lib/Queue');
-var jobs  = new Queue( config );
-
 var rest  = require('restler');
 var async = require('async');
 
-jobs.process('maki', function(job, done) {
-  if (!job) return done('no such job in Queue');
+var TOP_TRACK_COUNT = 100;
 
-  console.log('evaluator running', job.id );
+var processors = {
+  'test': function( data , jobIsDone ) {
+    console.log('#winning' , data );
+    jobIsDone();
+  },
+  'track:crawl': function( data , jobIsDone ) {
+    console.log('trackID', data.id );
 
-  switch (job.type) {
-    default:
-      return done('unhandled job type', job.type);
-    break;
-    case 'artist:update':
-      console.log('updating artist:', job.data.id)
+    Track.findOne({ _id: data.id }).exec(function(err, track) {
+      if (err) console.log(err);
+      if (!track) console.log('no such track found!');
 
-      var artistID = job.data.id;
-      Artist.findOne({ _id: artistID }).exec(function(err, artist) {
-        if (err) return done(err);
-        if (!artist) return done('No such artist found!');
+      soundtrack.gatherSources( track , function() {
+        console.log('sources gathered!');
+        jobIsDone();
+      });
+    });
+  },
+  'artist:update': function( data , jobIsDone ) {
+    console.log('updating artist:', data.id)
 
-        console.log('artist: ' , artist);
+    var artistID = data.id;
 
-        var now = new Date();
-        var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
+    Artist.findOne({ _id: artistID }).exec(function(err, artist) {
+      console.log( err , artist );
 
-        if (artist.tracking.tracks.updated > oneWeekAgo) {
-          return done('Artist already updated less than one week ago');
+      if (err) return jobIsDone(err);
+      if (!artist) return jobIsDone('No such artist found!');
+
+      var now = new Date();
+      var oneWeekAgo = new Date(now.getTime() - (60*60*24*7*1000));
+
+      if (artist.tracking.tracks.updated > oneWeekAgo) {
+        console.log('artist already up to date');
+        return jobIsDone();
+      }
+
+      rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit='+TOP_TRACK_COUNT+'&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+        console.log('yesssss', results);
+
+        if (!results.toptracks || !results.toptracks.track) {
+          console.log('Could not acquire top tracks for this artist')
+          return jobIsDone();
         }
 
-        rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
-          if (!results.toptracks || !results.toptracks.track) {
-            return done('Could not acquire top tracks for this artist');
-          }
+        var popularTracks = results.toptracks.track;
+        if (!popularTracks.length) return jobIsDone('Popular tracks not array...');
 
-          var popularTracks = results.toptracks.track;
-          if (!popularTracks.length) return done('Popular tracks not array...');
-          
-          async.map( popularTracks , function( remoteTrack , trackDone ) {
-            soundtrack.trackFromSource('lastfm', remoteTrack , trackDone );
-          }, function(err, results) {
+        console.log('popularTracks', popularTracks);
 
-            artist.tracking.tracks.updated = new Date();
-            artist.save(function(err) {
-              if (err) console.log(err);
-              done( err, artist );
-            });
+        async.map( popularTracks , function( remoteTrack , trackDone ) {
+          console.log('inside something', remoteTrack )
+          soundtrack.trackFromSource('lastfm', remoteTrack , trackDone );
+        }, function(err, results) {
 
+          artist.tracking.tracks.updated = new Date();
+          artist.save(function(err) {
+            if (err) console.log(err);
+
+            console.log('artist update complete!');
+            jobIsDone( err, artist );
           });
+
         });
-  
       });
-
-    break;
+    });
   }
+}
 
+var worker = new queue.Worker();
+worker.register( processors );
+
+worker.on('dequeued', function (data) {
+  console.log('worker dequeued job %s', data._id );
+});
+worker.on('failed', function (data) {
+  console.log('job %s failed', data._id , data.data );
+});
+worker.on('complete', function (data) {
+  console.log('job %s complete', data._id );
+});
+worker.on('error', function (err) {
+  console.log('worker error', err );
+});
+
+worker.start(function(err) { 
+  console.log('started!');
 });

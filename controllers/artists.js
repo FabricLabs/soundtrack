@@ -164,17 +164,11 @@ module.exports = {
           });
         });
 
-        queue.push('soundtrack', {
-          type: 'artist:update',
-          title: 'update artist, "' + artist.name + '"', 
-          data: {
+        req.soundtrack._jobs.enqueue('artist:update', {
             id: artist._id
-          }
-        }, function( err , job ) {
-          if (err) console.log(err);
-          job.on('complete', function(t) {
-            console.log('scheduled job completed', t);
-          });
+          , timeout: 3 * 60 * 1000
+        }, function(err, job) {
+          console.log('update artist queued');
         });
 
       });

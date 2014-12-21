@@ -3,5 +3,14 @@ extends layout
 block content
   h1 All #{plays.length} Plays By <a href="/#{person.slug}">#{person.username}</a>
 
-  for play in plays
-    include partials/play
+  table.table.tablesorter
+    thead
+      tr
+        th Who
+        th When
+        th Artist
+        th Title
+        th Controls
+    tbody
+      for play in plays
+        include partials/play-row

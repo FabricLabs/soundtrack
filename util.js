@@ -3,6 +3,8 @@ var async = require('async')
   , slug = require('slug-component')
   , config = require('./config');
 
+var DEBUG = false;
+
 var TRACK_SEPARATOR = ' - ';
 function parseTitleString(string, partsCallback) {
   var artist, title, credits = [];
@@ -15,6 +17,7 @@ function parseTitleString(string, partsCallback) {
   // TODO: load from datafile
   var baddies = ['[dubstep]', '[electro]', '[edm]', '[house music]',
     '[glitch hop]', '[video]', '[official video]', '(official video)',
+    '(official music video)', '(lyrics)',
     '[ official video ]', '[official music video]', '[free download]',
     '[free dl]', '( 1080p )', '(with lyrics)', '(high res / official video)',
     '(music video)', '[music video]', '[hd]', '(hd)', '[hq]', '(hq)',
@@ -34,17 +37,17 @@ function parseTitleString(string, partsCallback) {
     string = string.replace(token.capitalize(), '').trim();
   });
 
-  console.log('next string: ' +string );
+  if (DEBUG) console.log('next string: ' +string );
 
   var parts = string.split( ' - ' );
-  console.log(parts);
+  if (DEBUG) console.log(parts);
 
   for (var i = 0; i < parts.length; i++) {
     if ( baddies.indexOf( parts[i].toLowerCase() ) >= 0 ) {
       parts.splice( i , 1 );
     }
   }
-  console.log(parts);
+  if (DEBUG) console.log(parts);
 
   if (parts.length == 2) {
     artist = parts[0];
@@ -105,7 +108,7 @@ function parseTitleString(string, partsCallback) {
     , credits: Object.keys(creditMap)
   };
 
-  console.log('output parts: ' + JSON.stringify(output) );
+  if (DEBUG) console.log('output parts: ' + JSON.stringify(output) );
   /* console.log('artist: ' + artist);
   console.log('title: ' + title);
   console.log('credits: ' + credits);*/
