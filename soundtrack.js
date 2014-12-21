@@ -77,9 +77,12 @@ passport.deserializeUser(function(userID, done) {
   });
 });
 app.use(function(req, res, next) {
-  res.setHeader("X-Powered-By", 'beer.');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Powered-By', 'beer.');
   res.locals.user = req.user;
   res.charset = 'utf-8';
+  
+  if (req.param('iframe')) return res.render('iframe');
 
   if (req.user && !req.user.username) {
     return res.redirect('/set-username');
