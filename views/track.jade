@@ -18,15 +18,14 @@ block content
 
     ul.nav.nav-tabs
       li.active
-        a(href="#plays") Plays
+        a(href="#plays", data-toggle="tab") Plays
       li
-        a(href="#sources") Audio Sources
+        a(href="#sources", data-toggle="tab") Audio Sources
       li
-        a(href="#conversation") Conversation
+        a(href="#conversation", data-toggle="tab") Conversation
 
     .tab-content
       .tab-pane.active#plays
-
         h3 Plays Over Time
         #track-stats
 
@@ -43,6 +42,11 @@ block content
 
       .tab-pane#sources
         h3 Available Sources
+
+        p If, for some reason, the original source for a recording goes away, soundtrack.io will automatically failover to other sources for the music you're trying to listen to.
+
+        p For example, if someone deletes a YouTube video, soundtrack.io will automatically find another copy of the video for you.
+
         each list, key in track.sources.toObject()
           h2 #{key}
           if (list)
@@ -55,6 +59,7 @@ block content
                 default
                   li #{link}
 
+        h3 Exact Matches
         each source in dupes
           if (source.sources.youtube && source.sources.youtube.length)
             iframe(width="540", height="295", src="https://www.youtube.com/embed/#{source.sources.youtube[0].id}?enablejsapi=1", frameborder="0")
@@ -73,7 +78,7 @@ block scripts
       stroke: white;
     }
 
-  //-script.
+  script.
     // TODO: embed this in microdata.
     var playsPerDay = [#{playsPerDay}];
 
