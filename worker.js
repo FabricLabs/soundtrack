@@ -1,5 +1,10 @@
+var Queue = require('maki-queue');
+var queue = new Queue('soundtrack');
+
 var config = require('./config');
 var database = require('./db');
+
+console.log('config, database loaded');
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack({
@@ -7,16 +12,16 @@ var soundtrack = new Soundtrack({
 });
 soundtrack.DEBUG = true;
 
+console.log('soundtrack instantiated...');
+
 Artist = require('./models/Artist').Artist;
 Track  = require('./models/Track').Track;
 Source = require('./models/Source').Source;
 
-var Monq = require('monq');
-var monq = Monq('mongodb://localhost:27017/' + config.database.name );
-var jobs = monq.queue( config.database.name );
-
 var rest  = require('restler');
 var async = require('async');
+
+var TOP_TRACK_COUNT = 100;
 
 var processors = {
   'test': function( data , jobIsDone ) {
@@ -24,8 +29,12 @@ var processors = {
     jobIsDone();
   },
   'track:crawl': function( data , jobIsDone ) {
+    console.log('trackID', data.id );
+
     Track.findOne({ _id: data.id }).exec(function(err, track) {
-      console.log('gathering sources...');
+      if (err) console.log(err);
+      if (!track) console.log('no such track found!');
+
       soundtrack.gatherSources( track , function() {
         console.log('sources gathered!');
         jobIsDone();
@@ -37,8 +46,9 @@ var processors = {
 
     var artistID = data.id;
 
-
     Artist.findOne({ _id: artistID }).exec(function(err, artist) {
+      console.log( err , artist );
+
       if (err) return jobIsDone(err);
       if (!artist) return jobIsDone('No such artist found!');
 
@@ -50,7 +60,9 @@ var processors = {
         return jobIsDone();
       }
 
-      rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit=100&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+      rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.gettoptracks&artist='+encodeURIComponent(artist.name)+'&limit='+TOP_TRACK_COUNT+'&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(results) {
+        console.log('yesssss', results);
+
         if (!results.toptracks || !results.toptracks.track) {
           console.log('Could not acquire top tracks for this artist')
           return jobIsDone();
@@ -59,7 +71,10 @@ var processors = {
         var popularTracks = results.toptracks.track;
         if (!popularTracks.length) return jobIsDone('Popular tracks not array...');
 
+        console.log('popularTracks', popularTracks);
+
         async.map( popularTracks , function( remoteTrack , trackDone ) {
+          console.log('inside something', remoteTrack )
           soundtrack.trackFromSource('lastfm', remoteTrack , trackDone );
         }, function(err, results) {
 
@@ -77,7 +92,7 @@ var processors = {
   }
 }
 
-var worker = monq.worker( [ config.database.name ] );
+var worker = new queue.Worker();
 worker.register( processors );
 
 worker.on('dequeued', function (data) {
@@ -93,4 +108,6 @@ worker.on('error', function (err) {
   console.log('worker error', err );
 });
 
-worker.start();
+worker.start(function(err) { 
+  console.log('started!');
+});
