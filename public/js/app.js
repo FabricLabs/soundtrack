@@ -488,7 +488,7 @@ $(window).load(function() {
 
               var track = msg.data;
 
-              $.getJSON('http://ws.audioscrobbler.com/2.0/?method=track.getsimilar&artist=' + encodeURIComponent(track._artist.name) + '&track=' + encodeURIComponent(track.title) + '&api_key=1a024cc184674f566ac53abf8cc6f137&format=json', function(data) {
+              $.getJSON('https://ws.audioscrobbler.com/2.0/?method=track.getsimilar&artist=' + encodeURIComponent(track._artist.name) + '&track=' + encodeURIComponent(track.title) + '&api_key=1a024cc184674f566ac53abf8cc6f137&format=json', function(data) {
                 console.log('similar tracks (e.g., potential follows: ', data);
               });
 
@@ -1060,7 +1060,8 @@ $(window).load(function() {
     $.post('/username/playlists', {
       name: $('#create-playlist-form input[name=name]').val(),
       description: $('#create-playlist-form textarea[name=description]').val(),
-      trackID: $('input[name=current-track-id]').val()
+      trackID: $('input[name=current-track-id]').val(),
+      status: ($('#create-playlist-form input[name=status]').prop('checked')) ? 'public' : 'private'
     }, function(data) {
       console.log('playlist created!');
 
@@ -1204,7 +1205,7 @@ $(window).load(function() {
   $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
     var self = this;
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
-      public: $(self).prop('checked')
+      status: ($(self).prop('checked')) ? 'public' : 'private'
     }, function(data) {
       console.log(data);
     });

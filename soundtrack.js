@@ -533,6 +533,10 @@ app.post('/:usernameSlug/playlists', requireLogin, playlists.create );
 app.post('/:usernameSlug/playlists/:playlistID', requireLogin, playlists.addTrack );
 app.post('/:usernameSlug/playlists/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
+app.post('/:usernameSlug/sets', requireLogin, playlists.create );
+app.post('/:usernameSlug/sets/:playlistID', requireLogin, playlists.addTrack );
+app.post('/:usernameSlug/sets/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
+
 app.get('/register', function(req, res) {
   res.render('register');
 });

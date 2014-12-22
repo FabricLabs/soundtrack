@@ -1,4 +1,6 @@
-var _ = require('underscore')
+var _ = require('underscore');
+var async = require('async');
+var rest = require('restler');
 
 module.exports = {
   view: function(req, res, next) {
@@ -16,7 +18,6 @@ module.exports = {
         Artist.populate(playlist, {
           path: '_tracks._artist'
         }, function(err, playlist) {
-
 
           res.format({
             json: function() {
@@ -44,13 +45,11 @@ module.exports = {
     var playlist = new Playlist({
         name: req.param('name')
       , _creator: req.user._id
-      , public: (req.param('public') == 'true') ? true : false
+      , public: (req.param('status') === 'public') ? true : false
     });
 
     Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
-      if (!track) { return next(); }
-
-      playlist._tracks.push( track._id );
+      if (track) playlist._tracks.push( track._id );
 
       playlist.save(function(err) {
         res.send({
@@ -65,19 +64,29 @@ module.exports = {
     });
 
   },
+  import: function(req, res, next) {
+    var playlist = new Playlist();
+
+    switch (req.param('source')) {
+      default:
+        return res.status(400).end();
+      break;
+      case 'soundcloud':
+        self.trackFromSource( 'soundcloud' , item.id , cb );
+      break;
+    }
+    
+  },
   edit: function(req, res, next) {
     Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
       if (!playlist) { return next(); }
 
       playlist.description = (req.param('description')) ? req.param('description') : playlist.description;
-      switch (req.param('public')) {
-        case 'true':
-          playlist.public = true;
-        break;
-        case 'false':
-          playlist.public = false;
-        break;
-      }
+      
+      if (req.param('status')) {
+        playlist.public = (req.param('status') === 'public') ? true : false;
+      } 
+
       playlist.save(function(err) {
         res.send({
             status: 'success'
