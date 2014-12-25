@@ -38,7 +38,6 @@ block content
               a.btn.btn-mini.dropdown-toggle(href="#", data-toggle="dropdown") add to 
                 span.caret
               ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
-                - var playlists = locals.playlists
                 if (playlists.length >= 10)
                   li(data-action="new-playlist")
                     a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;

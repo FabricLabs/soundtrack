@@ -83,12 +83,23 @@ app.use(function(req, res, next) {
   res.charset = 'utf-8';
   
   if (req.param('iframe')) return res.render('iframe');
+  if (!req.user) return next();
 
-  if (req.user && !req.user.username) {
-    return res.redirect('/set-username');
-  }
+  Playlist.find({
+    _creator: (req.user) ? req.user._id : undefined
+  }).sort('name').exec(function(err, playlists) {
+    if (err) console.log(err);
+    if (req.user && !req.user.username) {
+      return res.redirect('/set-username');
+    }
+    
+    console.log('playlists: ' , playlists);
+    
+    res.locals.playlists = playlists;
+    
+    next();
+  });
 
-  next();
 });
 app.use( flashify );
 

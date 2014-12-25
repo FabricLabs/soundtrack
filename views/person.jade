@@ -39,7 +39,6 @@ block content
       .tab-pane#playlists
         h3 Public Playlists 
           ul.nav.nav-list
-            - var playlists = (playlists) ? playlists : []
             for playlist in playlists
               li
                 h4
@@ -59,4 +58,3 @@ block content
           tbody
             for play in plays
               include partials/play-row
-

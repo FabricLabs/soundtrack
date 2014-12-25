@@ -7,7 +7,15 @@ module.exports = {
 
       async.parallel([
         function(done) {
-          Playlist.find({ _creator: person._id, public: true }).exec( done );
+          var q = { _creator: person._id };
+          
+          if (req.user && req.user._id.toString() == person._id.toString()) {
+            q.public = true;
+          }
+
+          Playlist.find( q ).exec(function(err, playlists) {
+            done( err , playlists );  
+          });
         },
         function(done) {
           Play.find({ _curator: person._id }).sort('-timestamp').limit(20).populate('_track _curator').exec(function(err, plays) {
@@ -19,7 +27,7 @@ module.exports = {
       ], function(err, results) {
         res.render('person', {
             person: person
-          , playlists: results[0]
+          , publicPlaylists: results[0]
           , plays: results[1]
         });
       });
