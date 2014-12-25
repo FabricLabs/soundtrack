@@ -978,6 +978,12 @@ $(window).load(function() {
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack);
 
+  $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
+    e.preventDefault();
+    $('#playlist-modal').modal('show');
+    return false;
+  });
+
   $(document).on('click', '*[data-action=add-track-to-playlist]', function(e) {
     e.preventDefault();
     var self = this;

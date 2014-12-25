@@ -38,6 +38,10 @@ block content
               a.btn.btn-mini.dropdown-toggle(href="#", data-toggle="dropdown") add to 
                 span.caret
               ul.dropdown-menu#user-playlists-dropdown(data-for="user-playlists")
+                - var playlists = playlists || []
+                if (playlists.length >= 10)
+                  li(data-action="new-playlist")
+                    a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
                 for playlist in playlists
                   li(data-playlist-id="#{playlist._id}")
                     a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
@@ -118,77 +122,4 @@ block content
               | Users
             ul.nav.nav-list#userlist(data-intro="<h5>One last thing...</h5>We're a work in progress, so you'll have to mind your step.  Until we implement AngularJS, you'll have to middle-click or ctrl+click these links to prevent them from interrupting the music.  Other than that, <strong>please enjoy!</strong>", data-step="5", data-position="left")
 
-block scripts
 
-    #search-modal.modal.hide.fade
-      .modal-header
-        button.close(data-dismiss="modal") &times;
-        h3 Track Search
-      .modal-body
-        form(data-for="track-search")
-          .btn-group.pull-right
-            a.btn(data-for="track-search-select-source", data-data="youtube") YouTube
-            a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
-            a.btn(data-for="track-search-select-source", data-data="playlists") Playlists
-          
-          .input-append
-            input(type="text", data-for="track-search-query")
-            .add-on.btn(data-for="track-search-reset")
-              i.icon-remove
-
-        ul.nav.nav-list.search-results(data-for="track-search-results")
-
-      .modal-footer
-        button.btn.btn(data-dismiss="modal") Cancel
-        button.btn.btn-primary.btn-large(data-dismiss="modal") Done
-
-    if (user)
-      #playlist-modal.modal.hide.fade
-        .modal-header
-          button.close(data-dismiss="modal") &times;
-          h3 Your Playlists
-        .modal-body
-          .row-fluid
-            .span4
-              i.icon-globe(title="public")
-              ul.nav.nav-list(data-for="user-playlists")
-                for playlist in playlists
-                  li(data-playlist-id="#{playlist._id}")
-                    a(href="/#{user.slug}/#{playlist.slug}")
-                      small.pull-right #{playlist._tracks.length}
-                      input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
-                      |  #{playlist.name}
-            .span8
-              h4 Tracks
-
-        .modal-footer
-          button.btn.btn(data-dismiss="modal") Cancel
-          button.btn.btn-primary.btn-large(data-dismiss="modal") Done
-    
-      form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
-        #create-playlist-modal.modal.hide.fade
-          .modal-header
-            button.close(data-dismiss="modal") &times;
-            h3 Create Playlist
-          .modal-body
-            label(required="required") Name
-            input(type="text", name="name")
-
-            label(required="required") Description
-            textarea(type="text", name="description")
-
-            label
-              input(type="checkbox", name="status", value="public", checked)
-              |  
-              i.icon-globe
-              |  Public
-
-            h4 You'll be adding the following track:
-            h5
-              span.track-artist foo
-              |  &mdash; 
-              span.track-title bar
-
-          .modal-footer
-            button.btn.btn(data-dismiss="modal") Cancel
-            button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
