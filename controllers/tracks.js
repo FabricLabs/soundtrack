@@ -4,34 +4,90 @@ var async = require('async')
 
 module.exports = {
   list: function(req, res, next) {
-    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
-    var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : {};
+    var LIMIT = 10;
+    
+    var functions = [];
+    if (!req.param('q')) {
+      functions.push( function( done ) {
+        Play.aggregate([
+          { $match: { _curator: { $exists: true } } },
+          { $group: { _id: '$_track', count: { $sum: 1 } } },
+          { $sort: { 'count': -1 } },
+          { $limit: LIMIT }
+        ], function(err, collected) {
+          Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+            var output = [];
+            for (var i = 0; i < collected.length; i++) {
+              output.push( _.extend( collected[i] , input[i] ) );
+            }
+            done( err , output );
+          });
+        } );
+      } );
 
-    if (req.param('nsfw') === '✓') {
-      query.flags = {
-        nsfw: true
-      }
+      functions.push( function( done ) {
+        Play.aggregate([
+          { $match: {
+            _curator: { $exists: true },
+            timestamp: { $gte: new Date((new Date()) - 30 * 24 * 3600 * 1000) }
+          } },
+          { $group: { _id: '$_track', count: { $sum: 1 } } },
+          { $sort: { 'count': -1 } },
+          { $limit: LIMIT }
+        ], function(err, collected) {
+          Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+            var output = [];
+            for (var i = 0; i < collected.length; i++) {
+              output.push( _.extend( collected[i] , input[i] ) );
+            }
+            done( err , output );
+          });
+        } );
+      } );
+      
+      functions.push( function( done ) {
+        Play.aggregate([
+          { $match: {
+            _curator: { $exists: true },
+            timestamp: { $gte: new Date((new Date()) - 7 * 24 * 3600 * 1000) }
+          } },
+          { $group: { _id: '$_track', count: { $sum: 1 } } },
+          { $sort: { 'count': -1 } },
+          { $limit: LIMIT }
+        ], function(err, collected) {
+          Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+            var output = [];
+            for (var i = 0; i < collected.length; i++) {
+              output.push( _.extend( collected[i] , input[i] ) );
+            }
+            done( err , output );
+          });
+        } );
+      } );
     }
-    if (req.param('live') === '✓') {
-      query.flags = {
-        live: true
+    
+    async.parallel( functions , function(err, statResults) {
+
+      var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+      var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : {};
+      
+      if (req.param('nsfw') === '✓') {
+        query.flags = {
+          nsfw: true
+        }
       }
-    }
-
-    /*/Play.aggregate([
-      { $group: { _id: '$_track', count: { $sum: 1 } } },
-      { $sort: { 'count': -1 } },
-      { $limit: limit }
-    ], function(err, tracks) {
-      if (err) { console.log(err); }/**/
-
-      //Track.find({ _id: { $in: tracks.map(function(x) { return x._id; }) }}).populate('_artist').exec(function(err, tracks) {
+      if (req.param('live') === '✓') {
+        query.flags = {
+          live: true
+        }
+      }
+      
       Track.find( query ).populate('_artist').limit( limit ).exec(function(err, tracks) {
-        if (err) { console.log(err); }
-
+        if (err) console.log(err);
+        
         Track.count( query ).exec(function(err, count) {
-          if (err) { console.log(err); }
-          
+          if (err) console.log(err);
+            
           res.format({
             json: function() {
               res.send( tracks );
@@ -41,13 +97,16 @@ module.exports = {
                   tracks: tracks
                 , count: count
                 , limit: limit
-                , query: query
+                , query: req.param('q')
+                , topTracksAll: statResults[0]
+                , topTracks30: statResults[1]
+                , topTracks7: statResults[2]
               });
             }
           });
         });
       });
-    /*/});/**/
+    });
   },
   pool: function(req, res, next) {
     var query = { _curator: { $exists: true } };

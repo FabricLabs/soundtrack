@@ -61,16 +61,16 @@ module.exports = {
           { $group: { _id: '$_curator', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
-          ], function(err, collected) {
-            Person.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).exec(function(err, input) {
-              var output = [];
-              for (var i = 0; i < collected.length; i++) {
-                output.push( _.extend( collected[i] , input[i] ) );
-              }
-              done( err , output );
-            });
-          } );
-        },
+        ], function(err, collected) {
+          Person.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).exec(function(err, input) {
+            var output = [];
+            for (var i = 0; i < collected.length; i++) {
+              output.push( _.extend( collected[i] , input[i] ) );
+            }
+            done( err , output );
+          });
+        } );
+      }
     ];
     
     async.parallel( functions , function(err, results) {
