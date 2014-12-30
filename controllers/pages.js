@@ -41,6 +41,7 @@ module.exports = {
     var functions = [
       function collectTopTracks( done ) {
         Play.aggregate([
+          { $match: { _curator: { $exists: true } } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
@@ -61,8 +62,6 @@ module.exports = {
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
           ], function(err, collected) {
-            console.log(collected);
-            
             Person.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).exec(function(err, input) {
               var output = [];
               for (var i = 0; i < collected.length; i++) {
