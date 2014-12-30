@@ -1,4 +1,6 @@
 var async = require('async');
+var _ = require('underscore');
+
 module.exports = {
   index: function(req, res, next) {
     Chat.find({}).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
@@ -42,17 +44,32 @@ module.exports = {
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
-        ], function(err, topTracks) {
-          Track.find({ _id: { $in: topTracks.map(function(x) { return x._id; }) } }).populate('_artist').exec( done );
+        ], function(err, collected) {
+          Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+            var output = [];
+            for (var i = 0; i < collected.length; i++) {
+              output.push( _.extend( collected[i] , input[i] ) );
+            }
+            done( err , output );
+          });
         } );
       },
       function collectTopDJs( done ) {
         Play.aggregate([
+          { $match: { _curator: { $exists: true } } },
           { $group: { _id: '$_curator', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
-          ], function(err, topDJs) {
-            Person.find({ _id: { $in: topDJs.map(function(x) { return x._id; }) } }).exec( done );
+          ], function(err, collected) {
+            console.log(collected);
+            
+            Person.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).exec(function(err, input) {
+              var output = [];
+              for (var i = 0; i < collected.length; i++) {
+                output.push( _.extend( collected[i] , input[i] ) );
+              }
+              done( err , output );
+            });
           } );
         },
     ];

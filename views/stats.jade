@@ -9,8 +9,9 @@ block content
         h3 Top Tracks
         ol
           for track in topTracks
-            li 
+            li
               a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track._artist.name} &mdash; #{track.title}
+                span.badge.pull-right #{track.count} plays
               
       .span4
         h3 Top DJs
@@ -18,5 +19,6 @@ block content
           for person in topDJs
             li
               a(href="/#{person.slug}") #{person.username}
+                span.badge #{person.count} plays
 
   
