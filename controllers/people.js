@@ -13,7 +13,7 @@ module.exports = {
             q.public = true;
           }
 
-          Playlist.find( q ).exec(function(err, playlists) {
+          Playlist.find( q ).sort('-_id').exec(function(err, playlists) {
             done( err , playlists );  
           });
         },
