@@ -2,7 +2,11 @@ extends layout
 
 block content
   .well.content-well
-    h1 Public Sets
+    
+    h1
+      if (user)
+        a.btn.pull-right(href="/#{user.slug}/playlists/new") Create a Set &raquo;
+      | Public Sets
 
     table.table.tablesorter
       thead
@@ -14,7 +18,7 @@ block content
       tbody
         for playlist in sets
           - var person = playlist._creator
-          tr
+          tr(data-updated="#{playlist.updated}")
             td
               a(href="/#{person.slug}") #{person.username}
             td

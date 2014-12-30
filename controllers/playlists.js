@@ -4,7 +4,7 @@ var rest = require('restler');
 
 module.exports = {
   list: function(req, res, next) {
-    Playlist.find({ public: true }).sort('-_id').populate('_tracks _creator _owner').exec(function(err, playlists) {
+    Playlist.find({ public: true }).sort('-updated').populate('_tracks _creator _owner').exec(function(err, playlists) {
       // TODO: use reduce();
       playlists = playlists.map(function(playlist) {
         playlist.length = 0;
@@ -157,7 +157,9 @@ module.exports = {
       
       if (req.param('status')) {
         playlist.public = (req.param('status') === 'public') ? true : false;
-      } 
+      }
+      
+      playlist.updated = new Date();
 
       playlist.save(function(err) {
         res.send({
