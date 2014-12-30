@@ -26,6 +26,33 @@ module.exports = {
       });
     });
   },
+  listPerson: function(req, res, next) {
+    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+      if (!person) return next();
+
+      var q = { _creator: person._id };
+      
+      if (!req.user || req.user._id.toString() !== person._id.toString()) {
+        q.public = true;
+      }
+      
+      Playlist.find( q ).sort('-_id').populate('_tracks').exec(function(err, playlists) {
+        // TODO: use reduce();
+        playlists = playlists.map(function(playlist) {
+          playlist.length = 0;
+          playlist._tracks.forEach(function(track) {
+            playlist.length += track.duration;
+          });
+          return playlist;
+        });
+        
+        res.render('playlists', {
+          person: person
+          , playlists: playlists
+        });
+      });
+    });
+  },
   view: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }

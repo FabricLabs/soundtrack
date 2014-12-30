@@ -627,6 +627,8 @@ app.get('/stats', pages.stats );
 
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
+app.get('/:usernameSlug/sets/new', playlists.createForm);
+app.get('/:usernameSlug/sets', playlists.listPerson);
 app.get('/:usernameSlug/playlists/new', playlists.createForm);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);

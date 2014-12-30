@@ -138,6 +138,9 @@ html(lang="en-US", ng-app="soundtrack-io")
                 a(class="btn btn-default", href="bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw", alt="B") Donate 
                   i.fa.fa-bitcoin
                   | itcoin &raquo;
+                if (user)
+                  |  
+                  a(class="btn btn-default", href="/#{user.slug}/sets") Manage Sets &raquo;
                 
             .span6
               a(href="/pool") Machine Pool
