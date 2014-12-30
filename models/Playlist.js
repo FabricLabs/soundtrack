@@ -24,6 +24,7 @@ PlaylistSchema.virtual('isoDate').get(function() {
 
 PlaylistSchema.post('init', function() {
   if (!this._owner) this._owner = this._creator;
+  if (!this.updated) this.updated = this.created;
 });
 
 PlaylistSchema.plugin( slug('name') );

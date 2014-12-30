@@ -15,6 +15,7 @@ block content
           th Name
           th Tracks
           th Length
+          th Updated
       tbody
         for playlist in sets
           - var person = playlist._creator
@@ -29,3 +30,4 @@ block content
                 | #{playlist.length.toHHMMSS()}
               else
                 | 00:00
+            td #{moment(playlist.updated).fromNow()}
