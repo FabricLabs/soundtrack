@@ -27,7 +27,7 @@ block content
       li.active
         a(href="#profile", data-toggle="tab") Profile
       li
-        a(href="#playlists", data-toggle="tab") Playlists
+        a(href="#sets", data-toggle="tab") Sets
       li
         a(href="#plays", data-toggle="tab") Plays
 
@@ -36,11 +36,11 @@ block content
         .bio
           | !{marked(person.bio)}
 
-      .tab-pane#playlists
+      .tab-pane#sets
         h3
           if (user && user._id.toString() === person._id.toString())
             a.pull-right.btn.btn-default(href="/#{user.slug}/playlists/new") Add New &raquo;
-          | Playlists
+          | Sets
         table.table.tablesorter
           thead
             tr

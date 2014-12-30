@@ -105,7 +105,7 @@ module.exports = {
               });
             },
             html: function() {
-              req.flash('info', 'Playlist created successfully!');
+              req.flash('info', 'Set created successfully!');
               res.redirect('/' + req.user.slug + '/' + playlist.slug );
             }
           });
