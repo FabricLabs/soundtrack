@@ -3,6 +3,29 @@ var async = require('async');
 var rest = require('restler');
 
 module.exports = {
+  list: function(req, res, next) {
+    Playlist.find({ public: true }).sort('-_id').populate('_tracks _creator _owner').exec(function(err, playlists) {
+      // TODO: use reduce();
+      playlists = playlists.map(function(playlist) {
+        playlist.length = 0;
+        playlist._tracks.forEach(function(track) {
+          playlist.length += track.duration;
+        });
+        return playlist;
+      });
+      
+      res.format({
+        json: function() {
+          res.send( playlists );
+        },
+        html: function() {
+          res.render('sets', {
+            sets: playlists
+          });
+        }
+      });
+    });
+  },
   view: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }

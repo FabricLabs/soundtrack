@@ -622,6 +622,8 @@ app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
+app.get('/sets', playlists.list );
+
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
 app.get('/:usernameSlug/playlists/new', playlists.createForm);

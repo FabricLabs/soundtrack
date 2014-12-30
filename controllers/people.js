@@ -29,15 +29,10 @@ module.exports = {
         var playlists = results[0];
         // TODO: use reduce();
         playlists = playlists.map(function(playlist) {
-          
           playlist.length = 0;
-          
           playlist._tracks.forEach(function(track) {
-            console.log('track eval', track);
-            
             playlist.length += track.duration;
           });
-          
           return playlist;
         });
 
