@@ -12,11 +12,12 @@ block content
     table.table.tablesorter
       thead
         tr
+          th
           th Artist
           th Title
           th Length
           th Plays
           th Controls
       tbody
-        for track in playlist._tracks
+        for track, pindex in playlist._tracks
           include partials/track-row

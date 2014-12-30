@@ -203,12 +203,7 @@ module.exports = {
         }
       ];
 
-      console.log(track._artist);
-      console.log(track._artist.slug.length);
-
       if (!track._artist || (track._artist && track._artist.slug === '')) {
-
-        console.log('yoooo gabba gabba fell into the thing')
 
         functions.push(function(done) {
 
@@ -304,13 +299,19 @@ module.exports = {
                         _artist: track._artist._id
                       , slug: track.slug
                     }).exec(function(err, dupes) {
-
-                      res.render('track', {
+                      
+                      
+                      Playlist.find({
+                        _creator: (req.user) ? req.user._id : undefined
+                      }).exec(function(err, playlists) {
+                        res.render('track', {
                           track: track
-                        , history: history
-                        , playsPerDay: playsPerDay
-                        , chats: chats
-                        , dupes: dupes
+                          , history: history
+                          , playsPerDay: playsPerDay
+                          , chats: chats
+                          , dupes: dupes
+                          , playlists: playlists
+                        });
                       });
                     });
                   }

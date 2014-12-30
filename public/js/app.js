@@ -1225,9 +1225,21 @@ $(window).load(function() {
         url: '/playlists/' + $(self).data('playlist-id'),
         type: 'DELETE',
         complete: function() {
-          $(self).parent().parent().slideUp(function() {
-            $( this ).remove();
-          });
+          $(self).parent().parent().slideUp().remove();
+        }
+      });
+    }
+  });
+  
+  $(document).on('click', '*[data-action=remove-track-from-playlist]', function(e) {
+    var self = this;
+    
+    if (confirm('Are you sure you would like to remove this track?')) {
+      $.ajax({
+        url: '/playlists/' + $(self).data('playlist-id') + '/' + $(self).data('index'),
+        type: 'DELETE',
+        complete: function() {
+          $(self).parent().parent().parent().slideUp().remove();
         }
       });
     }

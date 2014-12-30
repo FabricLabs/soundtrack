@@ -86,7 +86,7 @@ app.use(function(req, res, next) {
   if (!req.user) return next();
 
   Playlist.find({
-    _creator: (req.user) ? req.user._id : undefined
+    _creator: req.user._id
   }).sort('name').exec(function(err, playlists) {
     if (err) console.log(err);
     if (req.user && !req.user.username) {
@@ -622,6 +622,7 @@ app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
+app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
 app.get('/:usernameSlug/playlists/new', playlists.createForm);
 

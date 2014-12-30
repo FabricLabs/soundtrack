@@ -44,9 +44,25 @@ module.exports = {
     Playlist.remove({
       _id: req.param('playlistID'),
       _creator: req.user._id
+    }).exec(function(err, numberRemoved) {
+      if (err || !numberRemoved) return next();
+      return res.send('ok');
+    });
+  },
+  removeTrackFromPlaylist: function(req, res, next) {
+    if (!~(req.param('index'))) return next();
+    
+    Playlist.findOne({
+      _id: req.param('playlistID'),
+      _creator: req.user._id
     }).exec(function(err, playlist) {
       if (err || !playlist) return next();
-      return res.send('ok');
+      
+      playlist._tracks.splice( req.param('index') , 1 );
+      playlist.save(function(err) {
+        return res.send('ok');
+      });
+      
     });
   },
   createForm: function(req, res, next) {

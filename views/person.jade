@@ -68,7 +68,7 @@ block content
                         i.icon-globe(title="public")
                         |  public
                       else
-                        i.icon-private(title="private")
+                        i.icon-eye-close(title="private")
                         |  private
                 td #{playlist._tracks.length}
                 if (user && user._id.toString() === person._id.toString())
