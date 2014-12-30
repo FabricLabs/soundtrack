@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Stats
+    
+    .row
+      .span4
+        h3 Top Tracks
+        ol
+          for track in topTracks
+            li 
+              a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track._artist.name} &mdash; #{track.title}
+              
+      .span4
+        h3 Top DJs
+        ol
+          for person in topDJs
+            li
+              a(href="/#{person.slug}") #{person.username}
+
+  

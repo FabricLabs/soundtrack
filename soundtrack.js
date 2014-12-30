@@ -623,6 +623,7 @@ app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
 app.get('/sets', playlists.list );
+app.get('/stats', pages.stats );
 
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
