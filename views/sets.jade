@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Public Sets
+
+    table.table.tablesorter
+      thead
+        tr
+          th DJ
+          th Name
+          th Tracks
+          th Length
+      tbody
+        for playlist in sets
+          - var person = playlist._creator
+          tr
+            td
+              a(href="/#{person.slug}") #{person.username}
+            td
+              a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+            td #{playlist._tracks.length}
+            td
+              if (playlist.length)
+                | #{playlist.length.toHHMMSS()}
+              else
+                | 00:00
