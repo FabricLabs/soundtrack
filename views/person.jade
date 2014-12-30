@@ -43,6 +43,11 @@ block content
               li
                 h4
                   a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+                  if (playlist.public)
+                    |  
+                    span.badge.badge-default
+                      i.icon-globe(title="public")
+                      |  public
                 p #{playlist.description}
 
       .tab-pane#plays

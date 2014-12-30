@@ -275,7 +275,7 @@ html(lang="en-US", ng-app="soundtrack-io")
           h3 Your Playlists
         .modal-body
           .row-fluid
-            .span4
+            .span12
               i.icon-globe(title="public")
               ul.nav.nav-list(data-for="user-playlists")
                 for playlist in user.playlists
@@ -284,9 +284,6 @@ html(lang="en-US", ng-app="soundtrack-io")
                       small.pull-right #{playlist._tracks.length}
                       input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
                       |  #{playlist.name}
-            .span8
-              h4 Tracks
-
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel
           button.btn.btn-primary.btn-large(data-dismiss="modal") Done
