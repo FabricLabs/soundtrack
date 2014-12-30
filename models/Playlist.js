@@ -12,6 +12,7 @@ var PlaylistSchema = new Schema({
   , created: { type: Date, default: Date.now }
   , updated: { type: Date }
   , _creator: { type: ObjectId, ref: 'Person' }
+  , _owner: { type: ObjectId, ref: 'Person' }
   , _tracks: [ { type: ObjectId, ref: 'Track' } ]
   , _subscribers: [ { type: ObjectId, ref: 'Person' } ]
 });

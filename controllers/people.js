@@ -9,7 +9,7 @@ module.exports = {
         function(done) {
           var q = { _creator: person._id };
           
-          if (req.user && req.user._id.toString() !== person._id.toString()) {
+          if (!req.user || req.user._id.toString() !== person._id.toString()) {
             q.public = true;
           }
 

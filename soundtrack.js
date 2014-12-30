@@ -225,9 +225,6 @@ var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
 soundtrack.start();
 
-var Monq = require('monq');
-var monq = Monq('mongodb://localhost:27017/' + config.database.name );
-
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   /* When first starting server, track is undefined, prevent this from erroring */
@@ -624,6 +621,9 @@ app.get('/:artistSlug', soundtracker , artists.view);
 app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
+
+app.del('/playlists/:playlistID', playlists.delete);
+app.get('/:usernameSlug/playlists/new', playlists.createForm);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);

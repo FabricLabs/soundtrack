@@ -1,0 +1,14 @@
+form(action="/#{user.slug}/playlists", method="post")
+  label(required="required") Name
+  input(type="text", name="name")
+
+  label(required="required") Description
+  textarea(type="text", name="description")
+
+  label
+    input(type="checkbox", name="status", value="public", checked)
+    |  
+    i.icon-globe
+    |  Public
+
+  button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;

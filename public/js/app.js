@@ -1207,8 +1207,8 @@ $(window).load(function() {
     soundtrack.checkNotificationPermissions();
     return false;
   });
-
-  $('*[data-action=toggle-playlist-visibility]').on('click', function(e) {
+  
+  $(document).on('click', '*[data-action=toggle-playlist-visibility]', function(e) {
     var self = this;
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
       status: ($(self).prop('checked')) ? 'public' : 'private'
@@ -1216,8 +1216,24 @@ $(window).load(function() {
       console.log(data);
     });
   });
+  
+  $(document).on('click', '*[data-action=delete-playlist]', function(e) {
+    var self = this;
+    
+    if (confirm('Are you sure you would like to delete this playlist?')) {
+      $.ajax({
+        url: '/playlists/' + $(self).data('playlist-id'),
+        type: 'DELETE',
+        complete: function() {
+          $(self).parent().parent().slideUp(function() {
+            $( this ).remove();
+          });
+        }
+      });
+    }
+  });
 
-  $('*[data-action=enable-profile-editor]').on('click', function(e) {
+  $(document).on('click', '*[data-action=enable-profile-editor]', function(e) {
     var self = this;
     $('.bio').replaceWith($('#profile-editor').show());
   });

@@ -7,7 +7,6 @@ module.exports = {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      // TODO: use $or to allow user to view non-public
       var slug = req.param('playlistSlug').split('.')[0];
       Playlist.findOne({ $or: [
             { _creator: person._id, public: true }
@@ -41,6 +40,19 @@ module.exports = {
 
     });
   },
+  delete: function(req, res, next) {
+    Playlist.remove({
+      _id: req.param('playlistID'),
+      _creator: req.user._id
+    }).exec(function(err, playlist) {
+      if (err || !playlist) return next();
+      return res.send('ok');
+    });
+  },
+  createForm: function(req, res, next) {
+    if (!req.user) return next();
+    res.render('playlists-create');
+  },
   create: function(req, res, next) {
     var playlist = new Playlist({
         name: req.param('name')
@@ -52,13 +64,23 @@ module.exports = {
       if (track) playlist._tracks.push( track._id );
 
       playlist.save(function(err) {
-        res.send({
-            status: 'success'
-          , results: {
+        res.status(303);
+        
+        res.format({
+          json: function() {
+            res.send({
+              status: 'success'
+              , results: {
                 _id: playlist._id
-              , name: playlist.name
-              , tracks: [ track ]
-            }
+                , name: playlist.name
+                , tracks: [ track ]
+              }
+            });
+          },
+          html: function() {
+            req.flash('info', 'Playlist created successfully!');
+            res.redirect('/' + req.user.slug + '/' + playlist.slug );
+          }
         });
       });
     });
