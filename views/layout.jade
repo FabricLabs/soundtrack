@@ -85,21 +85,16 @@ html(lang="en-US", ng-app="soundtrack-io")
             | soundtrack.io
           .nav-collapse.collapse
             ul.nav
-              li.active
-                a(href="/", ng-class="{active: slug == ''}") Home
               li
                 a(href="/about", ng-class="{active: slug == 'about'}") About
-              li
-                a(href="/history", ng-class="{active: slug == 'history'}") History
               li
                 a(href="/artists", ng-class="{active: slug == 'artists'}") Artists
               li
                 a(href="/tracks", ng-class="{active: slug == 'tracks'}") Tracks
-              if (user)
-                li
-                  a(href="/people") People
-              li(style="margin-left: 10px;")
-                video(id="secondary-player", src="", class="video-js vjs-default-skin", width="75", height="40", preload="auto")
+              li
+                a(href="/sets", ng-class="{active: slug == 'sets'}") Sets
+              li
+                a(href="/people") People
 
             ul.nav.pull-right
               if (user)
@@ -143,13 +138,13 @@ html(lang="en-US", ng-app="soundtrack-io")
                 a(class="btn btn-default", href="bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw", alt="B") Donate 
                   i.fa.fa-bitcoin
                   | itcoin &raquo;
-              p
-                a.btn.btn-default(href="#", data-action="launch-playlist-editor") Edit Sets &raquo;
                 
             .span6
               a(href="/pool") Machine Pool
               |  &bull; 
               a(href="/chat") Chat Logs
+              |  &bull; 
+              a(href="/history") Play History
 
     #settings-modal.modal.hide.fade
       .modal-header
