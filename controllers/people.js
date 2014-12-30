@@ -13,7 +13,7 @@ module.exports = {
             q.public = true;
           }
 
-          Playlist.find( q ).sort('-_id').exec(function(err, playlists) {
+          Playlist.find( q ).sort('-_id').populate('_tracks').exec(function(err, playlists) {
             done( err , playlists );  
           });
         },
@@ -25,9 +25,25 @@ module.exports = {
           });
         }
       ], function(err, results) {
+        
+        var playlists = results[0];
+        // TODO: use reduce();
+        playlists = playlists.map(function(playlist) {
+          
+          playlist.length = 0;
+          
+          playlist._tracks.forEach(function(track) {
+            console.log('track eval', track);
+            
+            playlist.length += track.duration;
+          });
+          
+          return playlist;
+        });
+
         res.render('person', {
             person: person
-          , playlists: results[0]
+          , playlists: playlists
           , plays: results[1]
         });
       });

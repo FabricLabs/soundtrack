@@ -51,6 +51,7 @@ block content
               if (user && user._id.toString() === person._id.toString())
                 th Status
               th Tracks
+              th Length
               if (user && user._id.toString() === person._id.toString())
                 th Controls
           tbody
@@ -71,6 +72,11 @@ block content
                         i.icon-eye-close(title="private")
                         |  private
                 td #{playlist._tracks.length}
+                td
+                  if (playlist.length)
+                    | #{playlist.length.toHHMMSS()}
+                  else
+                    | 00:00
                 if (user && user._id.toString() === person._id.toString())
                   td
                     a(href="#", data-action="delete-playlist", data-playlist-id="#{playlist._id}")

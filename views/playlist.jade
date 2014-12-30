@@ -4,10 +4,11 @@ block content
 
   .well.content-well
     
-    if (user)
-      form.pull-right(action="/#{user.slug}/playlists", method="post")
-        input(type="hidden", name="parentID", value="#{playlist._id}")
-        button.btn.btn-default(type="submit", data-action="fork-playlist", data-playlist-id="#{playlist._id}", title="Make a copy of this set") Fork &raquo;
+    .pull-right
+      if (user)
+        form(action="/#{user.slug}/playlists", method="post")
+          input(type="hidden", name="parentID", value="#{playlist._id}")
+          button.btn.btn-default(type="submit", data-action="fork-playlist", data-playlist-id="#{playlist._id}", title="Make a copy of this set") Fork &raquo;
 
     
     h1
