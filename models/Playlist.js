@@ -13,12 +13,17 @@ var PlaylistSchema = new Schema({
   , updated: { type: Date }
   , _creator: { type: ObjectId, ref: 'Person' }
   , _owner: { type: ObjectId, ref: 'Person' }
+  , _parent: { type: ObjectId, ref: 'Playlist' }
   , _tracks: [ { type: ObjectId, ref: 'Track' } ]
   , _subscribers: [ { type: ObjectId, ref: 'Person' } ]
 });
 
 PlaylistSchema.virtual('isoDate').get(function() {
   return this.timestamp.toISOString();
+});
+
+PlaylistSchema.post('init', function() {
+  if (!this._owner) this._owner = this._creator;
 });
 
 PlaylistSchema.plugin( slug('name') );

@@ -11,7 +11,7 @@ module.exports = {
       Playlist.findOne({ $or: [
             { _creator: person._id, public: true }
           , { _creator: (req.user) ? req.user._id : person._id }
-        ], slug: slug }).populate('_tracks _creator').exec(function(err, playlist) {
+        ], slug: slug }).populate('_tracks _creator _parent').exec(function(err, playlist) {
         if (!playlist) { return next(); }
 
         Artist.populate(playlist, {
@@ -29,8 +29,12 @@ module.exports = {
               res.send( playlist );
             },
             html: function() {
-              res.render('playlist', {
-                playlist: playlist
+              Person.populate( playlist , {
+                path: '_parent._owner'
+              }, function(err, playlist) {
+                res.render('playlist', {
+                  playlist: playlist
+                });
               });
             }
           });
@@ -70,37 +74,43 @@ module.exports = {
     res.render('playlists-create');
   },
   create: function(req, res, next) {
-    var playlist = new Playlist({
-        name: req.param('name')
-      , _creator: req.user._id
-      , public: (req.param('status') === 'public') ? true : false
-    });
-
-    Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
-      if (track) playlist._tracks.push( track._id );
-
-      playlist.save(function(err) {
-        res.status(303);
+    Playlist.findOne({ _id: req.param('parentID') , public: true }).exec(function(err, parent) {
+      console.log(err || parent);
+      
+      var playlist = new Playlist({
+          name: req.param('name') || parent.name
+        , description: req.param('description') || parent.description
+        , public: (req.param('status') === 'public') ? true : false
+        , _creator: req.user._id
+        , _owner: req.user._id
+        , _parent: (req.param('parentID') && parent) ? parent._id : null
+      });
+      
+      Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
+        if (track) playlist._tracks.push( track._id );
         
-        res.format({
-          json: function() {
-            res.send({
-              status: 'success'
-              , results: {
-                _id: playlist._id
-                , name: playlist.name
-                , tracks: [ track ]
-              }
-            });
-          },
-          html: function() {
-            req.flash('info', 'Playlist created successfully!');
-            res.redirect('/' + req.user.slug + '/' + playlist.slug );
-          }
+        playlist.save(function(err) {
+          res.status(303);
+          
+          res.format({
+            json: function() {
+              res.send({
+                status: 'success'
+                , results: {
+                  _id: playlist._id
+                  , name: playlist.name
+                  , tracks: [ track ]
+                }
+              });
+            },
+            html: function() {
+              req.flash('info', 'Playlist created successfully!');
+              res.redirect('/' + req.user.slug + '/' + playlist.slug );
+            }
+          });
         });
       });
     });
-
   },
   import: function(req, res, next) {
     var playlist = new Playlist();
