@@ -84,6 +84,7 @@ module.exports = {
         , _creator: req.user._id
         , _owner: req.user._id
         , _parent: (req.param('parentID') && parent) ? parent._id : null
+        , _tracks: (parent) ? parent._tracks : []
       });
       
       Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
