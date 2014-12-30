@@ -278,7 +278,7 @@ html(lang="en-US", ng-app="soundtrack-io")
             .span4
               i.icon-globe(title="public")
               ul.nav.nav-list(data-for="user-playlists")
-                for playlist in playlists
+                for playlist in user.playlists
                   li(data-playlist-id="#{playlist._id}")
                     a(href="/#{user.slug}/#{playlist.slug}")
                       small.pull-right #{playlist._tracks.length}

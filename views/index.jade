@@ -41,7 +41,7 @@ block content
                 if (playlists.length >= 10)
                   li(data-action="new-playlist")
                     a(href="#create-playlist-modal", data-toggle="modal") Create New &raquo;
-                for playlist in playlists
+                for playlist in user.playlists
                   li(data-playlist-id="#{playlist._id}")
                     a(data-playlist-id="#{playlist._id}", data-action="save-track") #{playlist.name}
                 li(data-action="new-playlist")

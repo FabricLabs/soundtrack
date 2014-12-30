@@ -4,9 +4,6 @@ module.exports = {
       Playlist.find({ _creator: ((req.user) ? req.user._id : undefined) }).sort('name').exec(function(err, playlists) {
         if (err) { console.log(err); }
 
-        console.log('req.user._id', req.user._id );
-        console.log('playlists', playlists);
-
         Artist.populate( messages, {
           path: '_track._artist'
         }, function(err, messages) {

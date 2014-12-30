@@ -92,10 +92,8 @@ app.use(function(req, res, next) {
     if (req.user && !req.user.username) {
       return res.redirect('/set-username');
     }
-    
-    console.log('playlists: ' , playlists);
-    
-    res.locals.playlists = playlists;
+
+    res.locals.user.playlists = playlists;
     
     next();
   });
