@@ -125,11 +125,10 @@ module.exports = {
   },
   create: function(req, res, next) {
     Playlist.findOne({ _id: req.param('parentID') , public: true }).exec(function(err, parent) {
-      console.log(err || parent);
       
       var playlist = new Playlist({
-          name: req.param('name') || (parent) ? parent.name : null
-        , description: req.param('description') || (parent) ? parent.description : null
+          name: req.param('name') || ((parent) ? parent.name : null)
+        , description: req.param('description') || ((parent) ? parent.description : null)
         , public: (req.param('status') === 'public') ? true : false
         , _creator: req.user._id
         , _owner: req.user._id
@@ -141,6 +140,13 @@ module.exports = {
         if (track) playlist._tracks.push( track._id );
         
         playlist.save(function(err) {
+          if (err) {
+            return res.format({
+              json: function() { res.send({ status: 'error', message: err }); },
+              html: function() { res.status(500).render('500'); }
+            });
+          }
+          
           res.status(303);
           
           res.format({
