@@ -128,8 +128,8 @@ module.exports = {
       console.log(err || parent);
       
       var playlist = new Playlist({
-          name: req.param('name') || parent.name
-        , description: req.param('description') || parent.description
+          name: req.param('name') || (parent) ? parent.name : null
+        , description: req.param('description') || (parent) ? parent.description : null
         , public: (req.param('status') === 'public') ? true : false
         , _creator: req.user._id
         , _owner: req.user._id
