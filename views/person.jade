@@ -35,6 +35,31 @@ block content
       .tab-pane.active#profile
         .bio
           | !{marked(person.bio)}
+          
+        .favorites
+          h3 Most Queued Tracks
+          .row-fluid
+            .span6
+              h4 All Time
+              ol
+                for track in favoriteTracks.allTime
+                  li
+                    h4
+                      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+                      |  by 
+                      a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
+                      |  was played <strong>#{track.count}</strong> times.
+                      
+            .span6
+              h4 Past 30 Days
+              ol
+                for track in favoriteTracks.past30days
+                  li
+                    h4
+                      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+                      |  by 
+                      a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
+                      |  was played <strong>#{track.count}</strong> times.
 
       .tab-pane#sets
         h3

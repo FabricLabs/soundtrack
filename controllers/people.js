@@ -1,20 +1,23 @@
 var async = require('async');
+var _ = require('underscore');
 
 module.exports = {
   profile: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
       if (!person) { return next(); }
 
+      var LIMIT = 50;
+
       async.parallel([
         function(done) {
           var q = { _creator: person._id };
-          
+
           if (!req.user || req.user._id.toString() !== person._id.toString()) {
             q.public = true;
           }
 
           Playlist.find( q ).sort('-_id').populate('_tracks').exec(function(err, playlists) {
-            done( err , playlists );  
+            done( err , playlists );
           });
         },
         function(done) {
@@ -23,9 +26,50 @@ module.exports = {
               path: '_track._artist _track._credits'
             }, done );
           });
+        },
+        function(done) {
+          async.parallel([
+            function(complete) {
+              Play.aggregate([
+                { $match: {
+                  _curator: person._id
+                } },
+                { $group: { _id: '$_track', count: { $sum: 1 } } },
+                { $sort: { 'count': -1 } },
+                { $limit: LIMIT }
+              ], function(err, collected) {
+                Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+                  var output = [];
+                  for (var i = 0; i < collected.length; i++) {
+                    output.push( _.extend( collected[i] , input[i] ) );
+                  }
+                  complete( err , output );
+                });
+              } );
+            },
+            function(complete) {
+              Play.aggregate([
+                { $match: {
+                  _curator: person._id,
+                  timestamp: { $gte: new Date((new Date()) - 30 * 24 * 3600 * 1000) }
+                } },
+                { $group: { _id: '$_track', count: { $sum: 1 } } },
+                { $sort: { 'count': -1 } },
+                { $limit: LIMIT }
+              ], function(err, collected) {
+                Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
+                  var output = [];
+                  for (var i = 0; i < collected.length; i++) {
+                    output.push( _.extend( collected[i] , input[i] ) );
+                  }
+                  complete( err , output );
+                });
+              } );
+            }
+          ], done );
         }
       ], function(err, results) {
-        
+
         var playlists = results[0];
         // TODO: use reduce();
         playlists = playlists.map(function(playlist) {
@@ -40,6 +84,14 @@ module.exports = {
             person: person
           , playlists: playlists
           , plays: results[1]
+          , favoriteTracks: {
+              allTime: results[2][0].filter(function(x) {
+                return x._artist;
+              }),
+              past30days: results[2][1].filter(function(x) {
+                return x._artist;
+              })
+            }
         });
       });
     });
