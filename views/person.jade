@@ -57,10 +57,11 @@ block content
                 for track in favoriteTracks.past30days
                   li
                     h4
+                      | queued 
                       a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
                       |  by 
                       a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
-                      |  was queued <strong>#{track.count}</strong> times.
+                      |  <strong>#{track.count}</strong> times.
 
       .tab-pane#sets
         h3
