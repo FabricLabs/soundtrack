@@ -220,6 +220,8 @@ function AppController($scope, $http) {
   window.updatePlaylist = function() {
     console.log('angular updatePlaylist()')
     $http.get('/playlist.json').success(function(data) {
+      if (!data) var data = [];
+
       $scope.tracks = data.map(function(t) {
         if (t.images && t.images.thumbnail && t.images.thumbnail.url) {
           // strip hardcoded http urls
@@ -1207,7 +1209,7 @@ $(window).load(function() {
     soundtrack.checkNotificationPermissions();
     return false;
   });
-  
+
   $(document).on('click', '*[data-action=toggle-playlist-visibility]', function(e) {
     var self = this;
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
@@ -1216,10 +1218,10 @@ $(window).load(function() {
       console.log(data);
     });
   });
-  
+
   $(document).on('click', '*[data-action=delete-playlist]', function(e) {
     var self = this;
-    
+
     if (confirm('Are you sure you would like to delete this playlist?')) {
       $.ajax({
         url: '/playlists/' + $(self).data('playlist-id'),
@@ -1230,10 +1232,10 @@ $(window).load(function() {
       });
     }
   });
-  
+
   $(document).on('click', '*[data-action=remove-track-from-playlist]', function(e) {
     var self = this;
-    
+
     if (confirm('Are you sure you would like to remove this track?')) {
       $.ajax({
         url: '/playlists/' + $(self).data('playlist-id') + '/' + $(self).data('index'),
