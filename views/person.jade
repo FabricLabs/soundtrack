@@ -44,24 +44,20 @@ block content
               ol
                 for track in favoriteTracks.allTime
                   li
-                    h4
-                      | queued 
-                      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-                      |  by 
-                      a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
-                      |  <strong>#{track.count}</strong> times.
+                    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+                    |  by 
+                    a(href="/#{track._artist.slug}") #{track._artist.name}
+                    |  <strong>#{track.count}</strong> times.
                       
             .span6
               h4 Past 30 Days
               ol
                 for track in favoriteTracks.past30days
                   li
-                    h4
-                      | queued 
-                      a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-                      |  by 
-                      a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
-                      |  <strong>#{track.count}</strong> times.
+                    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+                    |  by 
+                    a(href="/#{track._artist.slug}") #{track._artist.name}
+                    |  <strong>#{track.count}</strong> times.
 
       .tab-pane#sets
         h3
