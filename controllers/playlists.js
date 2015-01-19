@@ -69,9 +69,11 @@ module.exports = {
         query._creator = req.user._id;
       }
       
-      if (req.user && req.user._id.toString() !== person._id.toString) {
+      if (req.user && req.user._id.toString() !== person._id.toString()) {
         query.public = true;
       }
+      
+      console.log('query', query );
 
       Playlist.findOne( query ).populate('_tracks _creator _parent').exec(function(err, playlist) {
         if (!playlist) { return next(); }
