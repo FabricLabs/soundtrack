@@ -65,12 +65,13 @@ module.exports = {
 
       if (person) {
         query._creator = person._id;
-        query.public = true;
       } else if (req.user) {
         query._creator = req.user._id;
       }
-
-      console.log( query );
+      
+      if (req.user && req.user._id.toString() !== person._id.toString) {
+        query.public = true;
+      }
 
       Playlist.findOne( query ).populate('_tracks _creator _parent').exec(function(err, playlist) {
         if (!playlist) { return next(); }
