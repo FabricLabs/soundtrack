@@ -434,6 +434,8 @@ $(window).load(function() {
               var rollIt = function() {
                 console.log('rollIt()', sources[0]);
                 if (!sources[0]) return;
+
+                soundtrack.player.error( null );
                 soundtrack.player.poster( sources[0].poster );
 
                 soundtrack.player.pause();
