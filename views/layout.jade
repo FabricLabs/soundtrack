@@ -285,6 +285,9 @@ html(lang="en-US", ng-app="soundtrack-io")
           button.btn.btn-primary.btn-large(data-dismiss="modal") Done
     
       form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
+        input(type="hidden", name="trackID")
+        input(type="hidden", name="current-track-id")
+        
         #create-playlist-modal.modal.hide.fade
           .modal-header
             button.close(data-dismiss="modal") &times;
@@ -303,10 +306,12 @@ html(lang="en-US", ng-app="soundtrack-io")
               |  Public
 
             h4 You'll be adding the following track:
-            h5
+            h5(data-for="track-name")
               span.track-artist foo
               |  &mdash; 
               span.track-title bar
+              
+              div(data-for="track-preview")
 
           .modal-footer
             button.btn.btn(data-dismiss="modal") Cancel

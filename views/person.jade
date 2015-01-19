@@ -75,8 +75,7 @@ block content
                 th Status
               th Tracks
               th Length
-              if (user && user._id.toString() === person._id.toString())
-                th Controls
+              th Controls
           tbody
             for playlist in playlists
               tr
@@ -100,11 +99,15 @@ block content
                     | #{playlist.length.toHHMMSS()}
                   else
                     | 00:00
-                if (user && user._id.toString() === person._id.toString())
-                  td
-                    a(href="#", data-action="delete-playlist", data-playlist-id="#{playlist._id}")
-                      i.icon-remove.icon-white
-                
+                td
+                  .btn-group
+                    if (user && user._id.toString() === person._id.toString())
+                      a.btn.btn-mini(href="#", data-action="delete-playlist", data-playlist-id="#{playlist._id}")
+                        i.icon-remove
+                    a.btn.btn-mini(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
+                    
+                        
+
       .tab-pane#plays
         h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)
         table.table.tablesorter

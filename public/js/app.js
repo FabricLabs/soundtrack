@@ -979,12 +979,61 @@ $(window).load(function() {
   }, 200, true);
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack);
+  
+  $(document).on('click', '*[data-action=queue-set]', function(e) {
+    e.preventDefault();
+    var $self = $(this);
+    $.getJSON('/' + $self.data('set-slug') , function(set) {
+      set._tracks.forEach(function(track) {
+        $.post('/playlist', {
+          source: 'soundtrack',
+          id: track._id
+        }, function(response) {
+          console.log(response);
+        });
+      });
+    });
+    
+    return false;
+  });
 
   $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
     e.preventDefault();
     $('#playlist-modal').modal('show');
     return false;
   });
+
+  $(document).on('click', '*[data-action=launch-playlist-creator]', function(e) {
+    e.preventDefault();
+    var $self = $(this);
+
+    $('#create-playlist-modal').modal('show');
+    $('#create-playlist-form').children('input[name=trackID]').val( $self.data('track') );
+    $('#create-playlist-form').children('input[name=current-track-id]').val( $self.data('track') );
+    
+    // TODO: replace with local data cache / Maki datastore
+    $.getJSON('/tracks/'+$self.data('track'), function(track) {
+      var $track = $('*[data-for=track-name]');
+      $track.children('.track-artist').html( track._artist.name );
+      $track.children('.track-title').html( track.title );
+      
+      $track.children('*[data-for=track-preview]').html( soundtrack._templates.preview( track ) );
+      
+    });
+
+    return false;
+  });
+  
+  soundtrack._templates = {
+    preview: function( track ) {
+      if (track.sources && track.sources.youtube && track.sources.youtube.length) {
+        var video = track.sources.youtube[0];
+        return '<iframe id="ytplayer" type="text/html" width="300" height="170" src="//www.youtube.com/embed/'+ video.id +'" frameborder="0"/>';
+      }
+      
+      return 'no preview available :(';
+    }
+  };
 
   $(document).on('click', '*[data-action=add-track-to-playlist]', function(e) {
     e.preventDefault();
