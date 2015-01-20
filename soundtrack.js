@@ -716,8 +716,14 @@ Room.find().exec(function(err, rooms) {
       if (err) throw new Error( err );
       
       room.save(function(err) {
-        console.log('all configured.  start the process again.');
-        process.exit();
+        // port queue, if any
+        app.redis.get(config.database.name + ':playlist', function(err, playlist) {
+          room.playlist = JSON.parse( playlist );
+          room.savePlaylist(function() {
+            console.log('all configured.  start the process again.');
+            process.exit();
+          });
+        });
       });
     });
 
