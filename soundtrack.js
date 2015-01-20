@@ -133,7 +133,7 @@ function requireRoom(req, res, next) {
   return next();
 }
 function redirectToMainSite(req, res, next) {
-  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( req.protocol + '://' + config.app.host + req.path );
+  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
   return next();
 }
 
@@ -216,7 +216,7 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   app.LastFM = LastFM;
   app.lastfm = lastfm;
   app.get('/auth/lastfm', function(req, res) {
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
     //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
     res.redirect(authUrl);
   });
