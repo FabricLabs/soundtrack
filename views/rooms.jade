@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Rooms
+    
+    table.tablesorter
+      thead
+        tr
+          td Room
+          //-td Host
+          td Currently
+          td Listeners
+      tbody
+        for room in rooms
+          tr
+            td
+              h3
+                a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                p !{marked(room.description || '')}
+            //-td #{room._owner.username}
+            td
+              h5 #{room.track.title} by #{room.track._artist.name}
+            td
+              h5 <abbr>#{Object.keys(room.listeners).length} listeners</abbr>

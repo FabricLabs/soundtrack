@@ -8,6 +8,7 @@ var ChatSchema = new Schema({
   , message: { type: String }
   , _track:  { type: ObjectId, ref: 'Track' }
   , _play:   { type: ObjectId, ref: 'Play' }
+  , _room:   { type: ObjectId, ref: 'Room' }
 });
 
 ChatSchema.virtual('isoDate').get(function() {

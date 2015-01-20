@@ -3,7 +3,11 @@ var _ = require('underscore');
 
 module.exports = {
   index: function(req, res, next) {
-    Chat.find({}).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
+    if (!req.roomObj) return res.render('rooms');
+    
+    Chat.find({
+      _room: req.roomObj._id
+    }).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
       Playlist.find({ _creator: ((req.user) ? req.user._id : undefined) }).sort('name').exec(function(err, playlists) {
         if (err) { console.log(err); }
 
@@ -15,6 +19,9 @@ module.exports = {
             , backup: []
             , playlists: playlists || []
             , room: req.app.room
+            , page: {
+                title: req.roomObj.name
+              }
           });
         })
       });
@@ -25,7 +32,9 @@ module.exports = {
     res.render('about', { });
   },
   history: function(req, res) {
-    Play.find({}).populate('_track _curator').sort('-timestamp').limit(100).exec(function(err, plays) {
+    Play.find({
+      _room: req.roomObj._id
+    }).populate('_track _curator').sort('-timestamp').limit(100).exec(function(err, plays) {
       Artist.populate(plays, {
         path: '_track._artist'
       }, function(err, plays) {
@@ -41,7 +50,10 @@ module.exports = {
     var functions = [
       function collectTopTracks( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: {
+            _curator: { $exists: true },
+            _room: req.roomObj._id
+          } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
@@ -57,7 +69,10 @@ module.exports = {
       },
       function collectTopDJs( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: {
+            _curator: { $exists: true },
+            _room: req.roomObj._id
+          } },
           { $group: { _id: '$_curator', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
