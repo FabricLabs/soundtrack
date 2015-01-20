@@ -115,7 +115,8 @@ RoomSchema.methods.savePlaylist = function( saved ) {
   
   saved();
 };
-RoomSchema.methods.selectTrack = function( gain , failpoint , cb ) {
+
+RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   var room = this;
 
   if (typeof(gain) === 'function') {
@@ -128,11 +129,9 @@ RoomSchema.methods.selectTrack = function( gain , failpoint , cb ) {
     var cb = failpoint;
     var failpoint = 21;
   }
-  
+
   var query = {};
   
-  // from the current room...
-  query._room = room._id;
   // must be queued by a real person
   query._curator = { $exists: true };
   // must have been played in this room
@@ -144,22 +143,29 @@ RoomSchema.methods.selectTrack = function( gain , failpoint , cb ) {
   });
   // but not if it's been played recently!
   // TODO: one level of callbacks to collect this!
-  
+
   // heaven forbid we have nothing.
   // TODO: sane cases.
-  if (gain < failpoint) query = {};
+  if (gain > failpoint) query = {};
   
   Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
     if (err) console.log(err);
     if (!plays || !plays.length || plays.length < 10) {
       console.log('nothing found. womp.');
       // try again, but with 7 more days included...
-      return room.selectTrack( gain + 7 , cb );
+      return room.generatePool( gain + 7 , failpoint , cb );
     }
-  
+    
+    return cb( err , plays , query );
+    
+  });
+};
+RoomSchema.methods.selectTrack = function( cb ) {
+  var room = this;
+
+  room.generatePool(function(err, plays) {
     var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
     Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
-    
   });
 
 };

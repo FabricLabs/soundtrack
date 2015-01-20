@@ -640,9 +640,9 @@ app.get('/history', requireRoom , pages.history);
 app.get('/people', redirectToMainSite , people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
-app.get('/pool', tracks.pool);
-app.get('/chat', chat.view);
-app.get('/chat/since.json', chat.since);
+app.get('/pool', requireRoom , tracks.pool);
+app.get('/chat', requireRoom , chat.view);
+app.get('/chat/since.json', requireRoom , chat.since);
 
 app.get('/:artistSlug/:trackSlug/:trackID',  redirectToMainSite ,  soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);

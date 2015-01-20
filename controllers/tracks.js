@@ -109,13 +109,7 @@ module.exports = {
     });
   },
   pool: function(req, res, next) {
-    var query = { _curator: { $exists: true } };
-
-    query = _.extend( query , {
-      $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7)
-    });
-
-    Play.find( query ).limit(4096).exec(function(err, plays) {
+    req.roomObj.generatePool(function(err, plays, query) {
       Track.find({ _id: { $in: plays.map(function(x) { return x._track; }) } }).populate('_artist _credits').exec(function(err, tracks) {
         res.format({
           json: function() {
@@ -123,8 +117,8 @@ module.exports = {
           },
           html: function() {
             res.render('pool', {
-                tracks: tracks
-              , query: query
+              tracks: tracks,
+              query: query
             });
           }
         });
