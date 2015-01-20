@@ -114,12 +114,18 @@ RoomSchema.methods.savePlaylist = function( saved ) {
   
   saved();
 };
-RoomSchema.methods.selectTrack = function( gain , cb ) {
+RoomSchema.methods.selectTrack = function( gain , failpoint , cb ) {
   var room = this;
 
   if (typeof(gain) === 'function') {
     var cb = gain;
     var gain = 0;
+    var failpoint = 21;
+  }
+  
+  if (typeof(failpoint) === 'function') {
+    var cb = failpoint;
+    var failpoint = 21;
   }
   
   var query = {};
@@ -136,9 +142,14 @@ RoomSchema.methods.selectTrack = function( gain , cb ) {
   // but not if it's been played recently!
   // TODO: one level of callbacks to collect this!
   
+  // heaven forbid we have nothing.
+  // TODO: sane cases.
+  if (gain < failpoint) query = {};
+  
   Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
     if (err) console.log(err);
     if (!plays || !plays.length || plays.length < 10) {
+      console.log('nothing found. womp.');
       // try again, but with 7 more days included...
       return room.selectTrack( gain + 7 , cb );
     }
@@ -148,28 +159,21 @@ RoomSchema.methods.selectTrack = function( gain , cb ) {
     
   });
 
-  return Track.count(function(err, count) {
-    var rand = Math.floor(Math.random() * count);
-    Track.findOne().skip( rand ).exec( cb );
-  });
 };
 RoomSchema.methods.ensureQueue = function(callback) {
   var room = this;
-  
-  if (room.playlist.length === 0) {
-    room.selectTrack(function(err, track) {
-      if (err || !track) return callback( err );
-      track.startTime = Date.now();
-      // TODO: add score: 0 and votes: {}?
-      room.playlist.push( track );
-      room.savePlaylist( callback );
-    });
-  } else {
+  if (room.playlist.length > 0) return callback();
+
+  room.selectTrack(function(err, track) {
+    if (err || !track) return callback( err );
+    track.startTime = Date.now();
+    // TODO: add score: 0 and votes: {}?
+    room.playlist.push( track );
     return callback();
-  }
+  });
   
 };
-RoomSchema.methods.nextSong = function() {
+RoomSchema.methods.nextSong = function( done ) {
   var room = this;
   var app = room.soundtrack.app;
 
@@ -189,6 +193,7 @@ RoomSchema.methods.nextSong = function() {
         //console.log('saved, ', err );
         room.startMusic(function() {
           console.log('nextSong() started music');
+          done();
         });
       });
     });
@@ -228,7 +233,7 @@ RoomSchema.methods.startMusic = function( cb ) {
           sources[ source ] = _.union( sources[ source ] , t.sources[ source ] );
         }
       });
-      
+
       room.broadcast({
         type: 'track',
         data: _.extend( room.track , track ),

@@ -249,33 +249,38 @@ soundtrack.start();
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   var room = app.rooms[ req.room ];
-  /* When first starting server, track is undefined, prevent this from erroring */
-  var title;
-  if (room.track) {
-    title = room.track.title;
-  } else {
-    title = "Unknown";
-  }
-
-  //Announce who skipped this song
-  res.render('partials/announcement', {
-      message: {
-          message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + "."
-        , created: new Date()
-      }
-    }, function(err, html) {
-      room.broadcast({
-          type: 'announcement'
-        , data: {
-              formatted: html
-            , created: new Date()
-          }
-      });
-    }
-  );
   
-  room.nextSong();
-  res.send({ status: 'success' });
+  room.nextSong(function() {
+    console.log('skip.nextSong() called');
+    res.send({ status: 'success' });
+  
+    /* When first starting server, track is undefined, prevent this from erroring */
+    var title;
+    if (room.track) {
+      title = room.track.title;
+    } else {
+      title = "Unknown";
+    }
+  
+    //Announce who skipped this song
+    res.render('partials/announcement', {
+        message: {
+            message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + "."
+          , created: new Date()
+        }
+      }, function(err, html) {
+        room.broadcast({
+            type: 'announcement'
+          , data: {
+                formatted: html
+              , created: new Date()
+            }
+        });
+      }
+    );
+
+  });
+  
 });
 
 /* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
@@ -499,9 +504,10 @@ app.post('/chat', requireLogin, function(req, res) {
 app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, res, next) {
   if (!req.param('index') || req.param('index') == 0) { return next(); }
 
-  app.room.playlist.splice( req.param('index') , 1 );
-  soundtrack.sortPlaylist();
-  app.redis.set( app.config.database.name + ':playlist', JSON.stringify( app.room.playlist ) );
+  var room = app.rooms[ req.room ];
+
+  room.playlist.splice( req.param('index') , 1 );
+  room.sortPlaylist();
 
   soundtrack.broadcast({
     type: 'playlist:update'
