@@ -492,10 +492,6 @@ $(window).load(function() {
 
               var track = msg.data;
 
-              $.getJSON('https://ws.audioscrobbler.com/2.0/?method=track.getsimilar&artist=' + encodeURIComponent(track._artist.name) + '&track=' + encodeURIComponent(track.title) + '&api_key=1a024cc184674f566ac53abf8cc6f137&format=json', function(data) {
-                console.log('similar tracks (e.g., potential follows: ', data);
-              });
-
             }
 
             if ($('#playlist-list li:first').data('track-id') == msg.data._id) {

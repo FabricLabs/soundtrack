@@ -116,8 +116,6 @@ app.use(function(req, res, next) {
 app.use( flashify );
 
 function requireRoom(req, res, next) {
-  console.log( req.headers.host.split(':')[0] , config.app.host );
-    
   if (!req.roomObj) return res.status(404).render('404-room');
   return next();
 }
@@ -445,7 +443,7 @@ app.get('/', function(req, res, next) {
 }, pages.index );
 app.get('/about', redirectToMainSite , pages.about );
 
-app.get('/playlist.json', function(req, res) {
+app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
 });
 

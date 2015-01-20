@@ -3,6 +3,7 @@ var Schema = mongoose.Schema;
 var ObjectId = mongoose.SchemaTypes.ObjectId;
 var slug = require('mongoose-slug');
 var _ = require('underscore');
+var util = require('../util');
 
 // this defines the fields associated with the model,
 // and moreover, their type.
@@ -113,7 +114,40 @@ RoomSchema.methods.savePlaylist = function( saved ) {
   
   saved();
 };
-RoomSchema.methods.selectTrack = function( cb ) {
+RoomSchema.methods.selectTrack = function( gain , cb ) {
+  var room = this;
+
+  if (typeof(gain) === 'function') {
+    var cb = gain;
+    var gain = 0;
+  }
+  
+  var query = {};
+  
+  // must be queued by a real person
+  query._curator = { $exists: true };
+  // must have been played in this room
+  query._room = room._id;
+  // must have been queued within the past 7 days
+  query = _.extend( query , {
+    $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7 + gain ),
+    timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
+  });
+  // but not if it's been played recently!
+  // TODO: one level of callbacks to collect this!
+  
+  Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+    if (err) console.log(err);
+    if (!plays || !plays.length || plays.length < 10) {
+      // try again, but with 7 more days included...
+      return room.selectTrack( gain + 7 , cb );
+    }
+  
+    var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
+    Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
+    
+  });
+
   return Track.count(function(err, count) {
     var rand = Math.floor(Math.random() * count);
     Track.findOne().skip( rand ).exec( cb );
@@ -205,11 +239,10 @@ RoomSchema.methods.startMusic = function( cb ) {
       clearTimeout( room.trackTimer );
       
       console.log('scheduling nextTrack in', room.track.duration - seekTo )
-      
       room.trackTimer = setTimeout(function() {
         room.nextSong();
       }, (room.track.duration - seekTo) * 1000 );
-      
+
       return cb();
       
     });
