@@ -174,6 +174,7 @@ RoomSchema.methods.ensureQueue = function(callback) {
   
 };
 RoomSchema.methods.nextSong = function( done ) {
+  if (!done) var done = new Function();
   var room = this;
   var app = room.soundtrack.app;
 
