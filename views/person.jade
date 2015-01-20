@@ -28,7 +28,7 @@ block content
       if (artist)
         span.badge artist
 
-    if (!artist)
+    if (artist)
       p !{artist.bio}
   
     if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
