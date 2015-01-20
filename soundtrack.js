@@ -710,8 +710,8 @@ Room.find().exec(function(err, rooms) {
     });
     
     async.series([
-      function(done) { Chat.update({}, { $set: { _room: room._id } }).exec( done ); },
-      function(done) { Play.update({}, { $set: { _room: room._id } }).exec( done ); }
+      function(done) { Chat.update({}, { $set: { _room: room._id } }, { multi: true }).exec( done ); },
+      function(done) { Play.update({}, { $set: { _room: room._id } }, { multi: true }).exec( done ); }
     ], function(err, results) {
       if (err) throw new Error( err );
       
