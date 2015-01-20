@@ -265,7 +265,7 @@ RoomSchema.methods.startMusic = function( cb ) {
   });
 };
 
-Room.methods.scrobbleActive = function(requestedTrack, cb) {
+RoomSchema.methods.scrobbleActive = function(requestedTrack, cb) {
   var room = this;
   var app = self.soundtrack.app;
 
