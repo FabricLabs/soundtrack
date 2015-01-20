@@ -106,8 +106,20 @@ app.use(function(req, res, next) {
       if (req.user && !req.user.username) {
         return res.redirect('/set-username');
       }
-  
+      
       res.locals.user.playlists = playlists;
+      
+      var listeningIn = [];
+      for (var name in app.rooms) {
+        listeningIn = _.union( listeningIn , _.toArray(app.rooms[ name ].listeners).map(function(x) {
+          return x._id;
+        }).filter(function(x) {
+          return x.toString() == req.user._id.toString();
+        }).map(function(x) {
+          return name;
+        }) );
+      }
+      res.locals.user.rooms = listeningIn;
       
       next();
     });
@@ -121,7 +133,7 @@ function requireRoom(req, res, next) {
   return next();
 }
 function redirectToMainSite(req, res, next) {
-  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( 'http://' + config.app.host + req.path );
+  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( '//' + config.app.host + req.path );
   return next();
 }
 
@@ -455,6 +467,10 @@ app.get('/playlist.json', requireRoom , function(req, res) {
 
 app.get('/listeners.json', requireRoom , function(req, res) {
   res.send( _.toArray( soundtrack.app.rooms[ req.room ].listeners ) );
+});
+
+app.get('/listening', requireLogin , function(req, res) {
+  res.send( res.locals.user.rooms );
 });
 
 //client requests that we give them a token to auth their socket

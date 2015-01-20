@@ -151,7 +151,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
     if (err) console.log(err);
     if (!plays || !plays.length || plays.length < 10) {
-      console.log('nothing found. womp.');
+      console.log('nothing found. womp.', query );
       // try again, but with 7 more days included...
       return room.generatePool( gain + 7 , failpoint , cb );
     }
