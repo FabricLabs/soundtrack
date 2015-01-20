@@ -13,6 +13,7 @@ var RoomSchema = new Schema({
   , _creator:    { type: ObjectId, ref: 'Person' }
   , _owner:      { type: ObjectId, ref: 'Person' }
   , created:     { type: Date, default: Date.now }
+  , _moderators: [ { type: ObjectId , ref: 'Person' } ]
 });
 
 RoomSchema.plugin( slug('name'), {

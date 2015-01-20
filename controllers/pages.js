@@ -50,7 +50,10 @@ module.exports = {
     var functions = [
       function collectTopTracks( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: {
+            _curator: { $exists: true },
+            _room: req.roomObj._id
+          } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
@@ -66,7 +69,10 @@ module.exports = {
       },
       function collectTopDJs( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: {
+            _curator: { $exists: true },
+            _room: req.roomObj._id
+          } },
           { $group: { _id: '$_curator', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
