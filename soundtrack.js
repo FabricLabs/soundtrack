@@ -550,7 +550,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   });
 });
 
-app.post('/playlist', requireLogin, function(req, res) {
+app.post('/playlist', requireLogin , requireRoom , function(req, res) {
   console.log('playlist endpoint hit with POST...')
 
   soundtrack.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
@@ -716,6 +716,7 @@ Room.find().exec(function(err, rooms) {
       if (err) throw new Error( err );
       
       room.save(function(err) {
+        room.bind( soundtrack );
         // port queue, if any
         app.redis.get(config.database.name + ':playlist', function(err, playlist) {
           room.playlist = JSON.parse( playlist );
