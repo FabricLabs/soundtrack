@@ -22,17 +22,41 @@ block content
       if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
         a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
           img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+      if (artist)
+        span.badge artist
+    if (!artist)
+      p !{artist.bio}
 
     ul.nav.nav-tabs
-      li.active
+      if (artist)
+        li.active
+          a(href="#tracks", data-toggle="tab") Tracks
+      li(class="#{((artist) ? '' : 'active')}")
         a(href="#profile", data-toggle="tab") Profile
       li
         a(href="#sets", data-toggle="tab") Sets
+          if (artist)
+            | /Albums
       li
         a(href="#plays", data-toggle="tab") Plays
 
     .tab-content
-      .tab-pane.active#profile
+      if (artist)
+        .tab-pane.active#tracks
+          h5 #{tracks.length} known tracks
+          table.table.tablesorter
+            thead
+              tr
+                th Artist
+                th Title
+                th Length
+                th Plays
+                th Controls
+            tbody
+              for track in tracks
+                include partials/track-row
+                
+      .tab-pane(class="#{((artist) ? '' : 'active')}")#profile
         .bio
           | !{marked(person.bio)}
           
