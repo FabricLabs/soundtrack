@@ -636,7 +636,7 @@ app.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-app.get('/history', pages.history);
+app.get('/history', requireRoom , pages.history);
 app.get('/people', redirectToMainSite , people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
