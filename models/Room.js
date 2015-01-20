@@ -131,6 +131,8 @@ RoomSchema.methods.selectTrack = function( gain , failpoint , cb ) {
   
   var query = {};
   
+  // from the current room...
+  query._room = room._id;
   // must be queued by a real person
   query._curator = { $exists: true };
   // must have been played in this room
