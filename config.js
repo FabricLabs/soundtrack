@@ -2,7 +2,7 @@ module.exports = {
   app: {
       name: 'soundtrack'
     , safe: process.env.SOUNDTRACK_APP_SAFE || false
-    , host: process.env.SOUNDTRACK_APP_HOST || 'soundtrack.io'
+    , host: process.env.SOUNDTRACK_APP_HOST || 'localhost.localdomain'
     , port: process.env.SOUNDTRACK_APP_PORT || 13000
   },
   database: {
