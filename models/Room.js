@@ -252,7 +252,7 @@ RoomSchema.methods.startMusic = function( cb ) {
       }, (room.track.duration - seekTo) * 1000 );
       
       room.scrobbleTimer = setTimeout(function() {
-        if (app.lastfm) {
+        if (room.soundtrack.app.lastfm) {
           room.scrobbleActive( room.track , function() {
             console.log('scrobbling complete!');
           });
@@ -267,7 +267,7 @@ RoomSchema.methods.startMusic = function( cb ) {
 
 RoomSchema.methods.scrobbleActive = function(requestedTrack, cb) {
   var room = this;
-  var app = self.soundtrack.app;
+  var app = room.soundtrack.app;
 
   console.log('scrobbling to active listeners...');
 
