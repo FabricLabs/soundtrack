@@ -685,7 +685,7 @@ app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker 
 app.get('/tracks/:trackID', redirectToMainSite ,                   soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
-//app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
+app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
 app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);

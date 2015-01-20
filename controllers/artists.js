@@ -123,54 +123,58 @@ module.exports = {
     });
   },
   view: function(req, res, next) {
-    Artist.findOne({ $or: [
-        { slug: req.param('artistSlug') }
-      , { slugs: req.param('artistSlug') }
-    ] }).exec(function(err, artist) {
-      if (!artist) { return next(); }
-      
-      // handle artist renames
-      if (req.param('artistSlug') !== artist.slug) {
-        return res.redirect('/' + artist.slug);
-      }
+    Person.count({ slug: req.param('artistSlug') }).exec(function(err, num) {
+      if (num) return next();
 
-      Track.find({ $or: [
-          { _artist: artist._id }
-        , { _credits: artist._id }
-      ] }).populate('_artist').exec(function(err, tracks) {
+      Artist.findOne({ $or: [
+          { slug: req.param('artistSlug') }
+        , { slugs: req.param('artistSlug') }
+      ] }).exec(function(err, artist) {
+        if (!artist) { return next(); }
+        
+        // handle artist renames
+        if (req.param('artistSlug') !== artist.slug) {
+          return res.redirect('/' + artist.slug);
+        }
 
-        Play.aggregate([
-          { $match: { _track: { $in: tracks.map(function(x) { return x._id; }) } } },
-          { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } }
-        ], function(err, trackScores) {
-          
-          res.format({
-            json: function() {
-              res.send( artist );
-            },
-            html: function() {
-              res.render('artist', {
-                  artist: artist
-                , tracks: tracks.map(function(track) {
-                    var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
-                    track.plays = (plays) ? plays.count : 0;
-                    return track;
-                  }).sort(function(a, b) {
-                    return b.plays - a.plays;
-                  })
-              });
-            }
+        Track.find({ $or: [
+            { _artist: artist._id }
+          , { _credits: artist._id }
+        ] }).populate('_artist').exec(function(err, tracks) {
+
+          Play.aggregate([
+            { $match: { _track: { $in: tracks.map(function(x) { return x._id; }) } } },
+            { $group: { _id: '$_track', count: { $sum: 1 } } },
+            { $sort: { 'count': -1 } }
+          ], function(err, trackScores) {
+            
+            res.format({
+              json: function() {
+                res.send( artist );
+              },
+              html: function() {
+                res.render('artist', {
+                    artist: artist
+                  , tracks: tracks.map(function(track) {
+                      var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
+                      track.plays = (plays) ? plays.count : 0;
+                      return track;
+                    }).sort(function(a, b) {
+                      return b.plays - a.plays;
+                    })
+                });
+              }
+            });
           });
-        });
 
-        req.soundtrack._jobs.enqueue('artist:update', {
-            id: artist._id
-          , timeout: 3 * 60 * 1000
-        }, function(err, job) {
-          console.log('update artist queued');
-        });
+          req.soundtrack._jobs.enqueue('artist:update', {
+              id: artist._id
+            , timeout: 3 * 60 * 1000
+          }, function(err, job) {
+            console.log('update artist queued');
+          });
 
+        });
       });
     });
   }

@@ -4,7 +4,7 @@ var _ = require('underscore');
 module.exports = {
   profile: function(req, res, next) {
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-      if (!person) { return next(); }
+      if (!person) return next();
       
       var LIMIT = 50;
       
