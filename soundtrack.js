@@ -601,10 +601,24 @@ app.get('/register', redirectToMainSite , function(req, res) {
 });
 
 app.post('/register', function(req, res) {
-  Person.findOne({ slug: slug( req.body.username ) }).exec(function(err, user) {
-    if (user) {
+  async.parallel([
+    function(done) {
+      Person.count({ slug: slug( req.body.username ) }).exec(function(err, count) {
+        done( count );
+      });
+    },
+    function(done) {
+      Artist.count({
+        slug: slug( req.body.username ),
+        slugs: slug( req.body.username )
+      }).exec(function(err, count) {
+        done( count );
+      });
+    }
+  ], function(err) {
+    if (err) {
       req.flash('error', 'That username is already taken!');
-      return res.render('register', { user : user });
+      return res.redirect('/register');
     }
 
     Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
@@ -619,6 +633,7 @@ app.post('/register', function(req, res) {
         });
       }
     });
+    
   });
 });
 
