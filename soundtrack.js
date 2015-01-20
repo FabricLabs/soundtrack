@@ -203,8 +203,8 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   app.LastFM = LastFM;
   app.lastfm = lastfm;
   app.get('/auth/lastfm', function(req, res) {
-    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
     res.redirect(authUrl);
   });
   app.get('/auth/lastfm/callback', function(req, res) {
