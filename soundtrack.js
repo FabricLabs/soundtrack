@@ -133,7 +133,7 @@ function requireRoom(req, res, next) {
   return next();
 }
 function redirectToMainSite(req, res, next) {
-  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( '//' + config.app.host + req.path );
+  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( req.protocol + '://' + config.app.host + req.path );
   return next();
 }
 
@@ -567,8 +567,12 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   });
 });
 
-app.post('/playlist', requireLogin , requireRoom , function(req, res) {
-  console.log('playlist endpoint hit with POST...')
+app.post('/playlist', requireLogin , function(req, res) {
+  console.log('playlist endpoint hit with POST...');
+  
+  if (!req.roomObj && res.locals.user.rooms.length) {
+    req.room = res.locals.user.rooms[ 0 ];
+  }
 
   soundtrack.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
     console.log('trackFromSource() callback executing...')
