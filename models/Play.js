@@ -9,6 +9,7 @@ var PlaySchema = new Schema({
   , _artist:    { type: ObjectId, ref: 'Artist' }
   , _artists: [ { type: ObjectId, ref: 'Artist' } ]
   , _curator:   { type: ObjectId, ref: 'Person' }
+  , _room:      { type: ObjectId, ref: 'Room', required: true }
   , timestamp:  { type: Date, default: Date.now }
   , length:     { type: Number }
   , played:     { type: Number }

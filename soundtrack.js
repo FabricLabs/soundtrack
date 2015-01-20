@@ -42,7 +42,7 @@ app.use(express.session({
     key: 'sid'
   , secret: config.sessions.key
   , store: sessionStore
-  , cookie: { maxAge : 604800000 }
+  , cookie: { maxAge : 604800000 , domain: '.' + config.app.host }
 }));
 
 app.use(passport.initialize());
@@ -55,6 +55,7 @@ Play         = require('./models/Play').Play;
 Playlist     = require('./models/Playlist').Playlist;
 Source       = require('./models/Source').Source;
 Chat         = require('./models/Chat').Chat;
+Room         = require('./models/Room').Room;
 
 passport.use(Person.createStrategy());
 
@@ -77,29 +78,53 @@ passport.deserializeUser(function(userID, done) {
   });
 });
 app.use(function(req, res, next) {
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('X-Powered-By', 'beer.');
+
+  res.locals.config = config;
   res.locals.user = req.user;
   res.charset = 'utf-8';
   
+  var parts = req.headers.host.split('.');
+  req.room = parts[0];
+
   if (req.param('iframe')) return res.render('iframe');
-  if (!req.user) return next();
 
-  Playlist.find({
-    _creator: req.user._id
-  }).sort('name').exec(function(err, playlists) {
-    if (err) console.log(err);
-    if (req.user && !req.user.username) {
-      return res.redirect('/set-username');
-    }
+  Room.findOne({ slug: req.room }).exec(function(err, room) {
 
-    res.locals.user.playlists = playlists;
+    req.roomObj = room;
+    res.locals.room = room;
     
-    next();
+    if (!req.user) return next();
+    
+    Playlist.find({
+      _creator: req.user._id
+    }).sort('name').exec(function(err, playlists) {
+      if (err) console.log(err);
+      if (req.user && !req.user.username) {
+        return res.redirect('/set-username');
+      }
+  
+      res.locals.user.playlists = playlists;
+      
+      next();
+    });
   });
 
 });
 app.use( flashify );
+
+function requireRoom(req, res, next) {
+  console.log( req.headers.host.split(':')[0] , config.app.host );
+    
+  if (!req.roomObj) return res.status(404).render('404-room');
+  return next();
+}
+function redirectToMainSite(req, res, next) {
+  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( 'http://' + config.app.host + req.path );
+  return next();
+}
 
 // 
 var otherMarked = require('./lib/marked');
@@ -186,8 +211,6 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   });
   app.get('/auth/lastfm/callback', function(req, res) {
     lastfm.authenticate( req.param('token') , function(err, session) {
-      console.log(session);
-
       if (err) {
         console.log(err);
         req.flash('error', 'Something went wrong with authentication.');
@@ -227,10 +250,11 @@ soundtrack.start();
 
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
+  var room = app.rooms[ req.room ];
   /* When first starting server, track is undefined, prevent this from erroring */
   var title;
-  if (app.room.track) {
-    title = app.room.track.title;
+  if (room.track) {
+    title = room.track.title;
   } else {
     title = "Unknown";
   }
@@ -242,7 +266,7 @@ app.post('/skip', requireLogin, function(req, res) {
         , created: new Date()
       }
     }, function(err, html) {
-      soundtrack.broadcast({
+      room.broadcast({
           type: 'announcement'
         , data: {
               formatted: html
@@ -252,7 +276,7 @@ app.post('/skip', requireLogin, function(req, res) {
     }
   );
   
-  soundtrack.nextSong();
+  room.nextSong();
   res.send({ status: 'success' });
 });
 
@@ -285,6 +309,9 @@ app.post('/skip', requireLogin, function(req, res) {
 sock.on('connection', function(conn) {
   
   app.clients[ conn.id ] = conn;
+  var room = conn.headers.host.split('.')[0];
+  if (!app.rooms[ room ]) return;
+  var connRoom = app.rooms[ room ];
 
   conn.pongTime = (new Date()).getTime();
 
@@ -311,11 +338,11 @@ sock.on('connection', function(conn) {
           matches[0].user.connId = conn.id;
           matches[0].time = 0; //prohibit reuse
           conn.user = matches[0].user; //keep information for quits
-          
+
           // TODO: strip salt, hash, etc.
           // We do this on /listeners.json, but if nothing else, we save memory.
-          var previous = soundtrack.app.room.listeners[ matches[0].user._id ] || { ids: [] };
-          soundtrack.app.room.listeners[ matches[0].user._id ] = {
+          var previous = connRoom.listeners[ matches[0].user._id ] || { ids: [] };
+          connRoom.listeners[ matches[0].user._id ] = {
               _id: matches[0].user._id
             , slug: matches[0].user.slug
             , username: matches[0].user.username
@@ -325,7 +352,7 @@ sock.on('connection', function(conn) {
             , avatar: matches[0].user.avatar
           };
           
-          soundtrack.broadcast({
+          connRoom.broadcast({
               type: 'join'
             , data: {
                   _id: matches[0].user._id
@@ -333,7 +360,7 @@ sock.on('connection', function(conn) {
                 , slug: matches[0].user.slug
               }
           });
-          
+
         } else {
           console.log("Connection auth failure!");
           conn.close();
@@ -347,20 +374,15 @@ sock.on('connection', function(conn) {
     }
   });
 
-  if (app.room.playlist[0]) {
-    Track.findOne({ _id: app.room.playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
+  if (app.rooms[ room ].playlist[0]) {
+    Track.findOne({ _id: app.rooms[ room ].playlist[0]._id }).populate('_artist _artists').exec(function(err, track) {
       if (err) { console.log(err); }
       if (!track) { return; }
 
       // temporary collect exact matches... 
       // testing for future merging of track data for advances
       var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
-      console.log(query);
-
       Track.find( query ).lean().exec(function(err, tracks) {
-
-        console.log('HEYYYYYYYYYYYYYYYYYY YOUUUUUUUUUUUUUUUUUUUUUUUUU')
-        console.log(err || tracks);
 
         var sources = track.sources;
         tracks.forEach(function(t) {
@@ -371,8 +393,8 @@ sock.on('connection', function(conn) {
 
         conn.write(JSON.stringify({
             type: 'track'
-          , data: _.extend( app.room.playlist[0] , track )
-          , seekTo: (Date.now() - app.room.playlist[0].startTime) / 1000
+          , data: _.extend( app.rooms[ room ].playlist[0] , track )
+          , seekTo: (Date.now() - app.rooms[ room ].playlist[0].startTime) / 1000
           , sources: sources
         }));
 
@@ -384,16 +406,16 @@ sock.on('connection', function(conn) {
     if (conn.user) {
       console.log("connection closed for user " + conn.user.username);
 
-      if (conn.user && app.room.listeners[ conn.user._id ]) {
-        app.room.listeners[ conn.user._id ].ids = _.reject( app.room.listeners[ conn.user._id ].ids , function(x) {
+      if (conn.user && app.rooms[ room ].listeners[ conn.user._id ]) {
+        app.rooms[ room ].listeners[ conn.user._id ].ids = _.reject( app.rooms[ room ].listeners[ conn.user._id ].ids , function(x) {
           return x == conn.id;
         });
       }
 
-      for (var userID in app.room.listeners) {
-        if (app.room.listeners[ userID ].ids.length === 0) {
-          delete app.room.listeners[ userID ];
-          soundtrack.broadcast({
+      for (var userID in app.rooms[ room ].listeners) {
+        if (app.rooms[ room ].listeners[ userID ].ids.length === 0) {
+          delete app.rooms[ room ].listeners[ userID ];
+          connRoom.broadcast({
               type: 'part'
             , data: {
                 _id: userID
@@ -416,18 +438,19 @@ var soundtracker = function(req, res, next) {
 };
 
 app.get('/', function(req, res, next) {
-  console.log( 'HOSTNAME: ' + req.headers.host );
-  //console.log(req);
-  next();
-}, pages.index);
-app.get('/about', pages.about);
+  if (req.roomObj) return next();
+  if (req.headers.host.split(':')[0] === config.app.host) return next();
+
+  return res.render('404-room');
+}, pages.index );
+app.get('/about', redirectToMainSite , pages.about );
 
 app.get('/playlist.json', function(req, res) {
-  res.send( app.room.playlist );
+  res.send( app.rooms[ req.room ].playlist );
 });
 
-app.get('/listeners.json', function(req, res) {
-  res.send( _.toArray( soundtrack.app.room.listeners ) );
+app.get('/listeners.json', requireRoom , function(req, res) {
+  res.send( _.toArray( soundtrack.app.rooms[ req.room ].listeners ) );
 });
 
 //client requests that we give them a token to auth their socket
@@ -437,10 +460,14 @@ app.get('/listeners.json', function(req, res) {
 app.post('/socket-auth', requireLogin, auth.configureToken);
 
 app.post('/chat', requireLogin, function(req, res) {
+  var room = app.rooms[ req.room ];
+  if (!room) return next();
+  
   var chat = new Chat({
       _author: req.user._id
     , message: req.param('message')
-    , _track: (app.room.playlist[0]) ? app.room.playlist[0]._id : undefined
+    , _track: (room.playlist[0]) ? room.playlist[0]._id : undefined
+    , _room: (room) ? room._id : undefined
   });
   chat.save(function(err) {
     res.render('partials/message', {
@@ -448,10 +475,10 @@ app.post('/chat', requireLogin, function(req, res) {
           _author: req.user
         , message: req.param('message')
         , created: chat.created
-        , _track: app.room.playlist[0]
+        , _track: room.playlist[0]
       }
     }, function(err, html) {
-      soundtrack.broadcast({
+      room.broadcast({
           type: 'chat'
         , data: {
               _id: chat._id
@@ -463,7 +490,7 @@ app.post('/chat', requireLogin, function(req, res) {
             , message: req.param('message')
             , formatted: html
             , created: new Date()
-            , _track: app.room.playlist[0]
+            , _track: room.playlist[0]
           }
       });
       res.send({ status: 'success' });
@@ -489,33 +516,34 @@ app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, re
 });
 
 app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
-
-  var playlistMap = app.room.playlist.map(function(x) {
+  var room = app.rooms[ req.room ];
+  
+  var playlistMap = room.playlist.map(function(x) {
     return x._id.toString();
   });
   var index = playlistMap.indexOf( req.param('trackID') );
 
   if (!index) { return next(); }
-  if (!app.room.playlist[ index].votes) { app.room.playlist[ index].votes = {}; }
+  if (!room.playlist[ index ].votes) { room.playlist[ index ].votes = {}; }
 
-  app.room.playlist[ index].votes[ req.user._id ] = (req.param('v') == 'up') ? 1 : -1;
-  app.room.playlist[ index].score = _.reduce( app.room.playlist[ index].votes , function(score, vote) {
+  room.playlist[ index ].votes[ req.user._id ] = (req.param('v') == 'up') ? 1 : -1;
+  room.playlist[ index ].score = _.reduce( room.playlist[ index ].votes , function(score, vote) {
     return score + vote;
   }, 0);
 
-  console.log('track score: ' + app.room.playlist[ index].score);
-  console.log('track votes: ' + JSON.stringify(app.room.playlist[ index].votes));
+  console.log('track score: ' + room.playlist[ index ].score);
+  console.log('track votes: ' + JSON.stringify(room.playlist[ index ].votes));
 
-  soundtrack.sortPlaylist();
-
-  soundtrack.broadcast({
-    type: 'playlist:update'
+  room.sortPlaylist();
+  room.savePlaylist(function() {
+    room.broadcast({
+      type: 'playlist:update'
+    });
+  
+    res.send({
+      status: 'success'
+    });
   });
-
-  res.send({
-    status: 'success'
-  });
-
 });
 
 app.post('/playlist', requireLogin, function(req, res) {
@@ -527,8 +555,8 @@ app.post('/playlist', requireLogin, function(req, res) {
       console.log(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
-
-    soundtrack.queueTrack(track, req.user, function() {
+    
+    app.rooms[ req.room ].queueTrack(track, req.user, function() {
       console.log( 'queueTrack() callback executing... ');
       res.send({ status: 'success', message: 'Track added successfully!' });
     });
@@ -543,7 +571,7 @@ app.post('/:usernameSlug/sets', requireLogin, playlists.create );
 app.post('/:usernameSlug/sets/:playlistID', requireLogin, playlists.addTrack );
 app.post('/:usernameSlug/sets/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
-app.get('/register', function(req, res) {
+app.get('/register', redirectToMainSite , function(req, res) {
   res.render('register');
 });
 
@@ -605,36 +633,36 @@ app.get('/logout', function(req, res) {
 });
 
 app.get('/history', pages.history);
-app.get('/people', people.list);
+app.get('/people', redirectToMainSite , people.list);
 app.get('/artists', artists.list);
 app.get('/tracks', tracks.list);
 app.get('/pool', tracks.pool);
 app.get('/chat', chat.view);
 app.get('/chat/since.json', chat.since);
 
-app.get('/:artistSlug/:trackSlug/:trackID',                        soundtracker , tracks.view);
+app.get('/:artistSlug/:trackSlug/:trackID',  redirectToMainSite ,  soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
-app.get('/tracks/:trackID',                                        soundtracker , tracks.view );
+app.get('/tracks/:trackID', redirectToMainSite ,                   soundtracker , tracks.view );
 app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
 
-app.get('/:artistSlug', soundtracker , artists.view);
+app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
 app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
-app.get('/sets', playlists.list );
+app.get('/sets', redirectToMainSite , playlists.list );
 app.get('/stats', pages.stats );
 
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
-app.get('/:usernameSlug/sets/new', playlists.createForm);
-app.get('/:usernameSlug/sets', playlists.listPerson);
-app.get('/:usernameSlug/playlists/new', playlists.createForm);
+app.get('/:usernameSlug/sets/new',  redirectToMainSite , playlists.createForm);
+app.get('/:usernameSlug/sets',  redirectToMainSite , playlists.listPerson);
+app.get('/:usernameSlug/playlists/new', redirectToMainSite , playlists.createForm);
 
 app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug/mentions', people.mentions);
-app.get('/:usernameSlug', people.profile);
+app.get('/:usernameSlug', redirectToMainSite , people.profile);
 app.post('/:usernameSlug', people.edit);
 
 // catch-all route (404)
@@ -669,30 +697,73 @@ app.redis.on('error', function(err) {
   console.error("Error connecting to redis", err);
 });
 
-app.redis.get(config.database.name + ':playlist', function(err, playlist) {
-  playlist = JSON.parse(playlist);
-
-  if (!playlist || !playlist.length) {
-    playlist = [];
-  }
-
-  app.room = {
-      track: undefined
-    , playlist: playlist
-    , listeners: {}
-  };
-
-  server.listen(config.app.port, function(err) {
-    console.log('Listening on port ' + config.app.port + ' for HTTP');
-    console.log('Must have redis listening on port 6379');
-    console.log('Must have mongodb listening on port 27017');
-
-    soundtrack.startMusic(function(err, track) {
-      /*/var seekTo = (Date.now() - app.room.playlist[0].startTime) / 1000;
-
-      clearTimeout( soundtrack.timeout );
-      soundtrack.timeout = setTimeout( soundtrack.nextSong , (app.room.playlist[0].duration - seekTo) * 1000 ); /**/
+Room.find().exec(function(err, rooms) {
+  if (!rooms.length) {
+    console.log('no known rooms.  configuring...');
+    var room = new Room({
+      name: 'Coding Soundtrack',
+      slug: 'coding'
     });
-  });
+    
+    async.series([
+      function(done) { Chat.update({}, { $set: { _room: room._id } }).exec( done ); },
+      function(done) { Play.update({}, { $set: { _room: room._id } }).exec( done ); }
+    ], function(err, results) {
+      if (err) throw new Error( err );
+      
+      room.save(function(err) {
+        console.log('all configured.  start the process again.');
+        process.exit();
+      });
+    });
+
+  } else {
+      
+      // monolithic core for now.
+      app.rooms = {};
+      var jobs = rooms.map(function(room) {
+        return function(done) {
+          app.redis.get(config.database.name + ':rooms:' + room.slug + ':playlist', function(err, playlist) {
+            playlist = JSON.parse(playlist);
+            room.playlist = playlist;
+            //console.log('room playlist:', room.playlist );// process.exit();
+        
+            if (!playlist || !playlist.length) playlist = [];
+            
+            app.rooms[ room.slug ] = room;
+            app.rooms[ room.slug ].playlist = playlist;
+            app.rooms[ room.slug ].listeners = {};
+            
+            app.rooms[ room.slug ].bind( soundtrack );
+            
+            function errorHandler(err) {
+              if (err) {
+                return app.rooms[ room.slug ].retryTimer = setTimeout(function() {
+                  app.rooms[ room.slug ].startMusic( errorHandler );
+                }, 5000 );
+              }
+              
+              return done();
+            }
+            
+            app.rooms[ room.slug ].startMusic( errorHandler );
+    
+          });
+        };
+      });
+      
+      console.log( jobs.length.toString() , 'rooms found, configuring...');
+    
+      async.parallel( jobs , function(err, results) {
+        
+        app.locals.rooms = app.rooms;
+        
+        server.listen(config.app.port, function(err) {
+          console.log('Listening on port ' + config.app.port + ' for HTTP');
+          console.log('Must have redis listening on port 6379');
+          console.log('Must have mongodb listening on port 27017');
+        });
+      });
+  }
 
 });

@@ -80,7 +80,7 @@ html(lang="en-US", ng-app="soundtrack-io")
             i.icon-bar
           a.brand(href="/")
             img(src="/favicon.ico")
-            | soundtrack.io
+            | #{(room) ? room.name : 'soundtrack.io'}
           .nav-collapse.collapse
             ul.nav
               li
@@ -138,7 +138,7 @@ html(lang="en-US", ng-app="soundtrack-io")
                   | itcoin &raquo;
                 if (user)
                   |  
-                  a(class="btn btn-default", href="/#{user.slug}/sets") Manage Sets &raquo;
+                  a(class="btn btn-default", href="//#{config.app.host}/#{user.slug}/sets") Manage Sets &raquo;
                 
             .span6
               a(href="/pool") Machine Pool
