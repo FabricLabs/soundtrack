@@ -81,6 +81,7 @@ app.use(function(req, res, next) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('X-Powered-By', 'beer.');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
 
   res.locals.config = config;
   res.locals.user = req.user;
