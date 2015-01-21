@@ -12,7 +12,7 @@ block content
     
     .clearfix
     
-    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideDown(); return false;") create your own &raquo;
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h2 Rooms
     
     form#room-creation-form(action="/rooms", method="post").span12.hide

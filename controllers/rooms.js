@@ -1,4 +1,4 @@
-var slug = require('mongoose-slug');
+var slugify = require('mongoose-slug');
 
 module.exports = {
   list: function(req, res, next) {
@@ -10,13 +10,15 @@ module.exports = {
   },
   create: function(req, res, next) {
     var name = req.param('name');
-    var slug = slug( req.param('slug') );
+    var slug = req.param('slug');
     var description = req.param('description');
     
     if (!name || !slug) {
       res.flash('error', 'You must provide a name and a slug!');
       return res.redirect('back');
     }
+    
+    slug = slugify( slug );
     
     Room.count({ slug: slug }).exec(function(err, count) {
       if (count) {
