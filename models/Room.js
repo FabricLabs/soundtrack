@@ -311,6 +311,7 @@ RoomSchema.methods.scrobbleActive = function(requestedTrack, cb) {
         lastfm.track.scrobble({
             artist: track._artist.name
           , track: track.title
+          , duration: track.duration
           , timestamp: Math.floor((new Date()).getTime() / 1000)
         }, function(err, scrobbles) {
           if (err) { return console.log('le fail...', err); }
@@ -352,6 +353,7 @@ RoomSchema.methods.setListeningActive = function(requestedTrack, cb) {
         lastfm.track.updateNowPlaying({
             artist: track._artist.name
           , track: track.title
+          , duration: track.duration
         }, function(err, scrobbles) {
           if (err) { return console.log('le fail...', err); }
 
