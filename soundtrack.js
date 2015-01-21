@@ -162,12 +162,13 @@ String.prototype.capitalize = function(){
 };
 
 var auth = require('./controllers/auth')
-  , pages = require('./controllers/pages')
-  , people = require('./controllers/people')
-  , playlists = require('./controllers/playlists')
-  , artists = require('./controllers/artists')
-  , tracks = require('./controllers/tracks')
-  , chat = require('./controllers/chat');
+var pages = require('./controllers/pages')
+var people = require('./controllers/people')
+var playlists = require('./controllers/playlists')
+var artists = require('./controllers/artists')
+var tracks = require('./controllers/tracks')
+var chat = require('./controllers/chat');
+var rooms = require('./controllers/rooms');
 
 function requireLogin(req, res, next) {
   if (req.user) {
@@ -690,6 +691,8 @@ app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
+app.get('/rooms', rooms.list );
+app.post('/rooms', requireLogin , soundtracker , rooms.create );
 app.get('/sets', redirectToMainSite , playlists.list );
 app.get('/stats', pages.stats );
 

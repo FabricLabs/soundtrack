@@ -4,6 +4,17 @@ block content
   .well.content-well
     h1 Rooms
     
+    form(action="/rooms", method="post")
+
+      label(for="slug") URL
+      input(type="text", name="slug").span2
+      | .soundtrack.io
+      
+      label(for="name") Name
+      input(type="text", name="name")
+        
+      input.btn(type="submit") submit
+    
     table.table.tablesorter
       thead
         tr

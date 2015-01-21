@@ -333,8 +333,6 @@ RoomSchema.methods.setListeningActive = function(requestedTrack, cb) {
 
     Person.find({ _id: { $in: _.toArray( room.listeners ).map(function(x) { return x._id; }) } }).exec(function(err, people) {
       _.filter( people , function(x) {
-        console.log('evaluating listener:');
-        console.log(x);
         return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
       } ).forEach(function(user) {
         console.log('listener available:' + user._id + ' ' + user.username );
@@ -355,9 +353,7 @@ RoomSchema.methods.setListeningActive = function(requestedTrack, cb) {
           , track: track.title
           , duration: Math.floor(track.duration)
         }, function(err, scrobbles) {
-          if (err) { return console.log('le fail...', err); }
-
-          console.log(scrobbles);
+          if (err) return console.log('le fail...', err);
           cb();
         });
       });
