@@ -3,30 +3,55 @@ var _ = require('underscore');
 
 module.exports = {
   index: function(req, res, next) {
-    if (!req.roomObj) return res.render('rooms');
+    if (!req.roomObj) {
+      var sortedRooms = [];
+      
+      Object.keys( req.app.locals.rooms ).forEach(function( roomName ) {
+        var room = req.app.locals.rooms[ roomName ];
+        room.listenerCount = Object.keys( room.listeners ).length;
+        sortedRooms.push( room );
+      });
+      
+      sortedRooms = sortedRooms.sort(function(a, b) {
+        return b.listenerCount - a.listenerCount;
+      });
+      
+      return res.render('rooms', {
+        rooms: sortedRooms
+      });
+    }
     
-    Chat.find({
-      _room: req.roomObj._id
-    }).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
-      Playlist.find({ _creator: ((req.user) ? req.user._id : undefined) }).sort('name').exec(function(err, playlists) {
-        if (err) { console.log(err); }
+    async.parallel([
+      collectChats,
+      collectPlaylists
+    ], function(err, results) {
+      var messages = results[0].reverse();
+      var playlists = results[1];
 
+      res.render('index', {
+          messages: messages
+        , backup: []
+        , playlists: playlists || []
+        , room: req.app.room
+        , page: {
+            title: req.roomObj.name
+          }
+      });
+      
+    });
+    
+    function collectChats( done ) {
+      Chat.find({
+        _room: req.roomObj._id
+      }).limit(10).sort('-created').populate('_author _track _play').exec(function(err, messages) {
         Artist.populate( messages, {
           path: '_track._artist'
-        }, function(err, messages) {
-          res.render('index', {
-              messages: messages.reverse()
-            , backup: []
-            , playlists: playlists || []
-            , room: req.app.room
-            , page: {
-                title: req.roomObj.name
-              }
-          });
-        })
+        }, done );
       });
-
-    });
+    }
+    function collectPlaylists( done ) {
+      Playlist.find({ _creator: ((req.user) ? req.user._id : undefined) }).sort('name').exec( done );
+    }
   },
   about: function(req, res, next) {
     res.render('about', { });

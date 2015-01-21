@@ -17,11 +17,11 @@ block content
     
     form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
-      input(type="text", name="slug").span2
+      input.required(type="text", name="slug", required).span2
       | .soundtrack.io
       
       label(for="name") Name
-      input(type="text", name="name")
+      input.required(type="text", name="name", required)
       
       label(for="description") Description (markdown-enabled)
       textarea(name="description")
@@ -32,7 +32,7 @@ block content
       thead
         tr
           td Room
-          //-td Host
+          td Host
           td Currently
           td Listeners
       tbody
@@ -41,9 +41,9 @@ block content
             td
               h3
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
-                p !{marked(room.description || '')}
-            //-td #{room._owner.username}
+              p !{marked(room.description || '')}
+            td #{(room._owner) ? room._owner.username : ''}
             td
               h5 #{room.track.title} by #{room.track._artist.name}
             td
-              h5 <abbr>#{Object.keys(room.listeners).length} listeners</abbr>
+              h5 <abbr>#{room.listenerCount} listeners</abbr>
