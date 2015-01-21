@@ -2,18 +2,21 @@ extends layout
 
 block content
   .well.content-well
+    a.btn.btn-mini.pull-right(href="#", onclick="$('#room-creation-form').slideDown(); return false;") new
     h1 Rooms
     
-    form(action="/rooms", method="post")
-
+    form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
       input(type="text", name="slug").span2
       | .soundtrack.io
       
       label(for="name") Name
       input(type="text", name="name")
-        
-      input.btn(type="submit") submit
+      
+      label(for="description") Description (markdown-enabled)
+      textarea(name="description")
+      .clearfix
+      input.btn.offset1(type="submit", value="create »");
     
     table.table.tablesorter
       thead
