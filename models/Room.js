@@ -259,13 +259,22 @@ RoomSchema.methods.startMusic = function( cb ) {
         room.nextSong();
       }, (room.track.duration - seekTo) * 1000 );
       
-      room.scrobbleTimer = setTimeout(function() {
-        if (room.soundtrack.app.lastfm) {
-          room.scrobbleActive( room.track , function() {
-            console.log('scrobbling complete!');
-          });
-        }
-      }, 30 * 1000 );
+      room.setListeningActive( room.track , function() {
+        console.log('updated nowPlaying for active listeners...');
+      });
+      
+      if (room.track.duration > 30) {
+        var FOUR_MINUTES = 4 * 60;
+        var scrobbleTime = (room.track.duration > FOUR_MINUTES) ? FOUR_MINUTES : room.track.duration / 2;
+        
+        room.scrobbleTimer = setTimeout(function() {
+          if (room.soundtrack.app.lastfm) {
+            room.scrobbleActive( room.track , function() {
+              console.log('scrobbling complete!');
+            });
+          }
+        }, scrobbleTime * 1000 );
+      }
 
       return cb();
       
@@ -274,6 +283,45 @@ RoomSchema.methods.startMusic = function( cb ) {
 };
 
 RoomSchema.methods.scrobbleActive = function(requestedTrack, cb) {
+  var room = this;
+  var app = room.soundtrack.app;
+
+  console.log('scrobbling to active listeners...');
+
+  Track.findOne({ _id: requestedTrack._id }).populate('_artist').exec(function(err, track) {
+    if (!track || track._artist.name && track._artist.name.toLowerCase() == 'gobbly') { return false; }
+
+    Person.find({ _id: { $in: _.toArray( room.listeners ).map(function(x) { return x._id; }) } }).exec(function(err, people) {
+      _.filter( people , function(x) {
+        return (x.profiles && x.profiles.lastfm && x.profiles.lastfm.username && x.preferences.scrobble);
+      } ).forEach(function(user) {
+        console.log('listener available:' + user._id + ' ' + user.username );
+
+        var lastfm = new app.LastFM({
+            api_key: app.config.lastfm.key
+          , secret:  app.config.lastfm.secret
+        });
+
+        var creds = {
+            username: user.profiles.lastfm.username
+          , key: user.profiles.lastfm.key
+        };
+
+        lastfm.setSessionCredentials( creds.username , creds.key );
+        lastfm.track.scrobble({
+            artist: track._artist.name
+          , track: track.title
+          , timestamp: Math.floor((new Date()).getTime() / 1000)
+        }, function(err, scrobbles) {
+          if (err) { return console.log('le fail...', err); }
+          cb();
+        });
+      });
+    });
+  });
+}
+
+RoomSchema.methods.setListeningActive = function(requestedTrack, cb) {
   var room = this;
   var app = room.soundtrack.app;
 
@@ -301,10 +349,9 @@ RoomSchema.methods.scrobbleActive = function(requestedTrack, cb) {
         };
 
         lastfm.setSessionCredentials( creds.username , creds.key );
-        lastfm.track.scrobble({
+        lastfm.track.updateNowPlaying({
             artist: track._artist.name
           , track: track.title
-          , timestamp: Math.floor((new Date()).getTime() / 1000) - 300
         }, function(err, scrobbles) {
           if (err) { return console.log('le fail...', err); }
 
