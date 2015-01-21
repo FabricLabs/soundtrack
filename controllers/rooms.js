@@ -46,6 +46,8 @@ module.exports = {
         app.rooms[ room.slug ].startMusic( errorHandler );
         
         function done() {
+          app.locals.rooms = app.rooms;
+          
           var config = req.app.config;
           return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + slug + '.' + config.app.host );
         }
