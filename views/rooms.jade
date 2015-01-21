@@ -2,8 +2,18 @@ extends layout
 
 block content
   .well.content-well
-    a.btn.btn-mini.pull-right(href="#", onclick="$('#room-creation-form').slideDown(); return false;") new
-    h1 Rooms
+    
+    h1 Music for everyone.
+    h2 Listen to music with your friends.
+    
+    p.span6(style="font-size: 1.2em; line-height: 1.75em;") We are an <em>experimental</em> Internet radio platform.  Vote on what plays next, like Reddit for music.  We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em>.
+    
+    p.span6(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a>.
+    
+    .clearfix
+    
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideDown(); return false;") new
+    h2 Rooms
     
     form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
