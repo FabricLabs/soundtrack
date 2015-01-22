@@ -17,14 +17,10 @@ module.exports = {
       });
       
       return async.map( sortedRooms , function( room , done ) {
-        console.log('populating room', room);
         Person.populate( room , {
           path: '_owner'
         }, done );
       } , function(err, finalRooms) {
-        
-        console.log('final rooms', finalRooms );
-        
         return res.render('rooms', {
           rooms: finalRooms
         });

@@ -46,6 +46,9 @@ block content
               if (room._owner)
                 a(href="/#{room._owner.slug}") #{room._owner.username}
             td
-              h5 #{room.track.title} by #{room.track._artist.name}
+              h5
+                a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                |  by 
+                a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>
