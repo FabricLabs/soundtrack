@@ -42,7 +42,9 @@ block content
               h3
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
               p !{marked(room.description || '')}
-            td #{(room._owner) ? room._owner.username : ''}
+            td
+              if (room._owner)
+                a(href="/#{room._owner.slug}") #{room._owner.username}
             td
               h5 #{room.track.title} by #{room.track._artist.name}
             td
