@@ -680,6 +680,10 @@ app.get('/tracks', tracks.list);
 app.get('/pool', requireRoom , tracks.pool);
 app.get('/chat', requireRoom , chat.view);
 app.get('/chat/since.json', requireRoom , chat.since);
+app.get('/rooms', rooms.list );
+app.post('/rooms', requireLogin , soundtracker , rooms.create );
+app.get('/sets', redirectToMainSite , playlists.list );
+app.get('/stats', pages.stats );
 
 app.get('/:artistSlug/:trackSlug/:trackID',  redirectToMainSite ,  soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
@@ -690,11 +694,6 @@ app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
 app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
-
-app.get('/rooms', rooms.list );
-app.post('/rooms', requireLogin , soundtracker , rooms.create );
-app.get('/sets', redirectToMainSite , playlists.list );
-app.get('/stats', pages.stats );
 
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
