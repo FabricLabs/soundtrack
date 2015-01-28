@@ -37,19 +37,19 @@ block content
       thead
         tr
           td Room
-          td Host
           td Currently
           td Listeners
       tbody
         for room in rooms
           tr
             td
-              h3
+              h3(style="line-height: 16px;")
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                if (room._owner)
+                  br
+                  small hosted by 
+                    a(href="/#{room._owner.slug}") #{room._owner.username}
               p !{marked(room.description || '')}
-            td
-              if (room._owner)
-                a(href="/#{room._owner.slug}") #{room._owner.username}
             td
               h5
                 a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
