@@ -30,9 +30,6 @@ var Agency = require('mongoose-agency');
 app.agency = new Agency( database.source , {
   // timeout: 0.01
 });
-app.agency.publish('test', { foo: 'bar'}, function(err) {
-  console.log('job complete');
-});
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');

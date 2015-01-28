@@ -223,16 +223,8 @@ module.exports = {
         return res.render('500');
       }
 
-      console.log('playlist req: ' , playlist );
-      
       var url = 'users/' + playlist.user + '/playlists/' + playlist.id;
-      
-      console.log('requesting ', url );
-
       spotify.get( url ).on('complete', function(spotifyPlaylist , response ) {
-
-        console.log('spotifyPlaylist', spotifyPlaylist );
-
         if (!spotifyPlaylist || response.statusCode !== 200) {
           req.flash('error', 'Could not retrieve list from Spotify. ' + response.statusCode );
           return res.redirect('back');
@@ -287,10 +279,6 @@ module.exports = {
       
     } else {
       spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results) {
-        
-        console.log('api response:', results);
-        console.log('token:' , req.user.profiles.spotify);
-        
         res.render('sets-import', {
           playlists: results.items
         });
