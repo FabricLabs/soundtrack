@@ -18,3 +18,7 @@ block content
             | 
             a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
               img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+          if (person.profiles && person.profiles.spotify && person.profiles.spotify.id)
+            | 
+            a(href="https://play.spotify.com/user/#{person.profiles.spotify.id}")
+              img(src="/img/spotify.png", title="#{person.profiles.spotify.id}")

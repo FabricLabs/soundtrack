@@ -22,7 +22,7 @@ var PersonSchema = new Schema({
         , updated: Date
       },
       spotify: {
-        id: Number,
+        id: String,
         username: String,
         token: String,
         updated: Date,
