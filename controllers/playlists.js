@@ -217,7 +217,26 @@ module.exports = {
     var playlist = req.param('playlist');
   
     if (playlist) {
-      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists/' + playlist ).on('complete', function(spotifyPlaylist) {
+      try {
+        playlist = JSON.parse( playlist );
+      } catch (e) {
+        return res.render('500');
+      }
+
+      console.log('playlist req: ' , playlist );
+      
+      var url = 'users/' + playlist.user + '/playlists/' + playlist.id;
+      
+      console.log('requesting ', url );
+
+      spotify.get( url ).on('complete', function(spotifyPlaylist , response ) {
+
+        console.log('spotifyPlaylist', spotifyPlaylist );
+
+        if (!spotifyPlaylist || response.statusCode !== 200) {
+          req.flash('error', 'Could not retrieve list from Spotify. ' + response.statusCode );
+          return res.redirect('back');
+        }
 
         var tracks = spotifyPlaylist.tracks.items.map(function(x) {
           return {
@@ -250,6 +269,7 @@ module.exports = {
           var playlist = new Playlist({
             name: spotifyPlaylist.name,
             description: spotifyPlaylist.description,
+            public: spotifyPlaylist.public,
             _creator: req.user._id,
             _owner: req.user._id,
             _tracks: tracks.map(function(x) { return x._id }),
@@ -269,6 +289,7 @@ module.exports = {
       spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results) {
         
         console.log('api response:', results);
+        console.log('token:' , req.user.profiles.spotify);
         
         res.render('sets-import', {
           playlists: results.items

@@ -204,7 +204,7 @@ module.exports = {
         function(done) {
           Play.find({
             _curator: person._id,
-            _room: req.roomObj._id
+            _room: (req.roomObj) ? req.roomObj._id : undefined
           }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'

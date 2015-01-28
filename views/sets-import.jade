@@ -11,6 +11,6 @@ block content
             td #{playlist.name}
             td #{playlist.tracks.total} tracks
             td
-              a.btn(href="/sets/sync/spotify?playlist=#{playlist.id}") import &raquo;
+              a.btn(href="/sets/sync/spotify?playlist=#{JSON.stringify({ source: 'spotify', id: playlist.id, user: playlist.owner.id })}") import &raquo;
     else
       p You don't have any playlists on Spotify. :(

@@ -5,7 +5,7 @@ console.log('config, database loaded');
 
 var Agency = require('mongoose-agency');
 var agency = new Agency( database.source , {
-  timeout: 0.01
+  // timeout: 0.01
 });
 
 var Soundtrack = require('./lib/soundtrack');
@@ -23,7 +23,7 @@ Source = require('./models/Source').Source;
 var rest  = require('restler');
 var async = require('async');
 
-var TOP_TRACK_COUNT = 100;
+var TOP_TRACK_COUNT = 10;
 
 var processors = {
   'test': function( data , jobIsDone ) {
