@@ -278,7 +278,8 @@ module.exports = {
       });
       
     } else {
-      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results) {
+      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results, response) {
+        if (response.statusCode == 401) return res.redirect('/auth/spotify');
         res.render('sets-import', {
           playlists: results.items
         });
