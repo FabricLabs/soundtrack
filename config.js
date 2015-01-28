@@ -27,5 +27,9 @@ module.exports = {
   soundcloud: {
       id: process.env.SOUNDTRACK_SOUNDCLOUD_ID         || 'id here'
     , secret: process.env.SOUNDTRACK_SOUNDCLOUD_SECRET || 'secret here'
+  },
+  spotify: {
+    id: process.env.SOUNDTRACK_SPOTIFY_ID || 'id here',
+    secret: process.env.SOUNDTRACK_SPOTIFY_SECRET || 'secret here'
   }
 }

@@ -202,7 +202,10 @@ module.exports = {
           Playlist.find({ _creator: person._id, public: true }).exec( done );
         },
         function(done) {
-          Play.find({ _curator: person._id }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
+          Play.find({
+            _curator: person._id,
+            _room: req.roomObj._id
+          }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'
             }, done );

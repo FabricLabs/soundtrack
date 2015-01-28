@@ -22,9 +22,14 @@ block content
       img.avatar-large.pull-left(src="#{person.avatar.url}")
 
     h1 #{person.username} 
-      if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
-        a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
-          img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+      if (person.profiles)
+        if (person.profiles.lastfm && person.profiles.lastfm.username)
+          a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
+            img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+        if (person.profiles.spotify && person.profiles.spotify.id)
+          a(href="https://play.spotify.com/user/#{person.profiles.spotify.id}")
+            img(src="/img/spotify.png", title="#{person.profiles.spotify.username}")
+  
       if (artist)
         span.badge artist
 

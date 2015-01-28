@@ -17,6 +17,7 @@ var config = require('./config')
   , passport = require('passport')
   , pkgcloud = require('pkgcloud')
   , LocalStrategy = require('passport-local').Strategy
+  , SpotifyStrategy = require('passport-spotify').Strategy
   , mongooseRedisCache = require('mongoose-redis-cache')
   , RedisStore = require('connect-redis')(express)
   , sessionStore = new RedisStore()
@@ -208,6 +209,43 @@ var backupTracks = [];
 app.socketAuthTokens = [];
 
 app.config = config;
+
+if (config.spotify && config.spotify.id && config.spotify.secret) {
+  passport.use(new SpotifyStrategy({
+    clientID: config.spotify.id,
+    clientSecret: config.spotify.secret,
+    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/spotify/callback',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+    console.log('spotify profile', profile);
+    
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.spotify.id': profile.id }
+    ]}).exec(function(err, person) {
+      if (!person) var person = new Person({ username: profile.username });
+      
+      person.profiles.spotify = {
+        id: profile.id,
+        key: accessToken,
+        updated: new Date()
+      }
+      
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+      
+    });
+  }));
+  
+  app.get('/auth/spotify', passport.authenticate('spotify') );
+  app.get('/auth/spotify/callback', passport.authenticate('spotify') , function(req, res) {
+    res.redirect('/');
+  });
+  
+  
+}
 
 if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   var lastfm = new LastFM({
