@@ -16,6 +16,12 @@ var PlaylistSchema = new Schema({
   , _parent: { type: ObjectId, ref: 'Playlist' }
   , _tracks: [ { type: ObjectId, ref: 'Track' } ]
   , _subscribers: [ { type: ObjectId, ref: 'Person' } ]
+  , remotes: {
+      spotify: {
+        id: String,
+        updated: { type: Date , default: Date.now }
+      }
+    }
 });
 
 PlaylistSchema.virtual('isoDate').get(function() {

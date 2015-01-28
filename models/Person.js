@@ -24,8 +24,9 @@ var PersonSchema = new Schema({
       spotify: {
         id: Number,
         username: String,
-        key: String,
-        updated: Date
+        token: String,
+        updated: Date,
+        expires: Number
       }
     }
   , preferences: {

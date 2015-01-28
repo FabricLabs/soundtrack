@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Import Set
+    
+    if (playlists.length)
+      table.table.tablesorter
+        for playlist in playlists
+          tr
+            td #{playlist.name}
+            td #{playlist.tracks.total} tracks
+            td
+              a.btn(href="/sets/sync/spotify?playlist=#{playlist.id}") import &raquo;
+    else
+      p You don't have any playlists on Spotify. :(

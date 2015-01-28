@@ -196,6 +196,87 @@ module.exports = {
     }
 
   },
+  syncSetup: function(req, res, next) {
+    
+    if (!req.user) return res.redirect('/login');
+    if (!req.user.profiles || !req.user.profiles.spotify) return res.redirect('/auth/spotify');
+    if (!req.user.profiles.spotify.token) return res.redirect('/auth/spotify');
+    //if (req.user.profiles.spotify.expires < Date.now()) return res.redirect('/auth/spotify');
+    
+    // stub for spotify API auth
+    var spotify = {
+      get: function( path ) {
+        return rest.get('https://api.spotify.com/v1/' + path , {
+          headers: {
+            'Authorization': 'Bearer ' + req.user.profiles.spotify.token
+          }
+        });
+      }
+    }
+    
+    var playlist = req.param('playlist');
+  
+    if (playlist) {
+      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists/' + playlist ).on('complete', function(spotifyPlaylist) {
+
+        var tracks = spotifyPlaylist.tracks.items.map(function(x) {
+          return {
+            title: x.track.name,
+            artist: x.track.artists[0].name,
+            credits: x.track.artists.map(function(y) {
+              return y.name
+            }),
+            duration: x.track.duration_ms / 1000
+          }
+        });
+
+        var pushers = [];
+        tracks.forEach(function(track) {
+          pushers.push(function(done) {
+            req.soundtrack.trackFromSource('object', track , done );
+          });
+        });
+        
+        async.series( pushers , function(err, tracks) {
+          
+          tracks.forEach(function(track) {
+            req.app.agency.publish('track:crawl', {
+              id: track._id
+            }, function(err) {
+              console.log('track crawled, doing stuff in initiator');
+            });
+          });
+          
+          var playlist = new Playlist({
+            name: spotifyPlaylist.name,
+            description: spotifyPlaylist.description,
+            _creator: req.user._id,
+            _owner: req.user._id,
+            _tracks: tracks.map(function(x) { return x._id }),
+            remotes: {
+              spotify: {
+                id: spotifyPlaylist.id
+              }
+            }
+          });
+          playlist.save(function(err) {
+            res.redirect('/' + req.user.slug + '/' + playlist.slug );
+          });
+        });
+      });
+      
+    } else {
+      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results) {
+        
+        console.log('api response:', results);
+        
+        res.render('sets-import', {
+          playlists: results.items
+        });
+      });
+    }
+
+  },
   edit: function(req, res, next) {
     Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
       if (!playlist) { return next(); }

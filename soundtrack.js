@@ -1,30 +1,38 @@
-var config = require('./config')
-  , database = require('./db')
-  , util = require('./util')
-  , express = require('express')
-  , app = express()
-  , sys = require('sys')
-  , http = require('http')
-  , rest = require('restler')
-  , slug = require('speakingurl')
-  , async = require('async')
-  , redis = require('redis')
-  , sockjs = require('sockjs')
-  , LastFM = require('lastfmapi')
-  , _ = require('underscore')
-  , mongoose = require('mongoose')
-  , flashify = require('flashify')
-  , passport = require('passport')
-  , pkgcloud = require('pkgcloud')
-  , LocalStrategy = require('passport-local').Strategy
-  , SpotifyStrategy = require('passport-spotify').Strategy
-  , mongooseRedisCache = require('mongoose-redis-cache')
-  , RedisStore = require('connect-redis')(express)
-  , sessionStore = new RedisStore()
-  , cachify = require('connect-cachify')
-  , crypto = require('crypto')
-  , marked = require('marked')
-  , validator = require('validator');
+var config = require('./config');
+var database = require('./db');
+var util = require('./util');
+var express = require('express');
+var app = express();
+var sys = require('sys');
+var http = require('http');
+var rest = require('restler');
+var slug = require('speakingurl');
+var async = require('async');
+var redis = require('redis');
+var sockjs = require('sockjs');
+var LastFM = require('lastfmapi');
+var _ = require('underscore');
+var mongoose = require('mongoose');
+var flashify = require('flashify');
+var passport = require('passport');
+var pkgcloud = require('pkgcloud');
+var LocalStrategy = require('passport-local').Strategy;
+var SpotifyStrategy = require('passport-spotify').Strategy;
+var mongooseRedisCache = require('mongoose-redis-cache');
+var RedisStore = require('connect-redis')(express);
+var sessionStore = new RedisStore();
+var cachify = require('connect-cachify');
+var crypto = require('crypto');
+var marked = require('marked');
+var validator = require('validator');
+  
+var Agency = require('mongoose-agency');
+app.agency = new Agency( database.source , {
+  timeout: 0.01
+});
+app.agency.publish('test', { foo: 'bar'}, function(err) {
+  console.log('job complete');
+});
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -209,90 +217,6 @@ var backupTracks = [];
 app.socketAuthTokens = [];
 
 app.config = config;
-
-if (config.spotify && config.spotify.id && config.spotify.secret) {
-  passport.use(new SpotifyStrategy({
-    clientID: config.spotify.id,
-    clientSecret: config.spotify.secret,
-    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/spotify/callback',
-    passReqToCallback: true
-  }, function(req, accessToken, refreshToken, profile, done) {
-    console.log('spotify profile', profile);
-    
-    Person.findOne({ $or: [
-        { _id: (req.user) ? req.user._id : undefined }
-      , { 'profiles.spotify.id': profile.id }
-    ]}).exec(function(err, person) {
-      if (!person) var person = new Person({ username: profile.username });
-      
-      person.profiles.spotify = {
-        id: profile.id,
-        key: accessToken,
-        updated: new Date()
-      }
-      
-      person.save(function(err) {
-        if (err) console.log('serious error', err );
-        done(err, person);
-      });
-      
-    });
-  }));
-  
-  app.get('/auth/spotify', passport.authenticate('spotify') );
-  app.get('/auth/spotify/callback', passport.authenticate('spotify') , function(req, res) {
-    res.redirect('/');
-  });
-  
-  
-}
-
-if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
-  var lastfm = new LastFM({
-      api_key: config.lastfm.key
-    , secret:  config.lastfm.secret
-  });
-  app.LastFM = LastFM;
-  app.lastfm = lastfm;
-  app.get('/auth/lastfm', function(req, res) {
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
-    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
-    res.redirect(authUrl);
-  });
-  app.get('/auth/lastfm/callback', function(req, res) {
-    lastfm.authenticate( req.param('token') , function(err, session) {
-      if (err) {
-        console.log(err);
-        req.flash('error', 'Something went wrong with authentication.');
-        return res.redirect('/');
-      }
-
-      Person.findOne({ $or: [
-          { _id: (req.user) ? req.user._id : undefined }
-        , { 'profiles.lastfm.username': session.username }
-      ]}).exec(function(err, person) {
-
-        if (!person) {
-          var person = new Person({ username: 'reset this later ' });
-        }
-
-        person.profiles.lastfm = {
-            username: session.username
-          , key: session.key
-          , updated: new Date()
-        };
-
-        person.save(function(err) {
-          if (err) { console.log(err); }
-          req.session.passport.user = person._id;
-          res.redirect('/');
-        });
-
-      });
-
-    });
-  });
-}
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
@@ -491,6 +415,95 @@ var soundtracker = function(req, res, next) {
   req.soundtrack = soundtrack;
   next();
 };
+
+
+if (config.spotify && config.spotify.id && config.spotify.secret) {
+  passport.use(new SpotifyStrategy({
+    clientID: config.spotify.id,
+    clientSecret: config.spotify.secret,
+    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/spotify/callback',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+    console.log('spotify profile', profile);
+    console.log('access token', accessToken);
+    console.log('refreshToken', refreshToken);
+    
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.spotify.id': profile.id }
+    ]}).exec(function(err, person) {
+      if (!person) var person = new Person({ username: profile.username });
+      
+      person.profiles.spotify = {
+        id: profile.id,
+        token: accessToken,
+        updated: new Date(),
+        expires: null
+      }
+      
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+      
+    });
+  }));
+  
+  app.get('/auth/spotify', passport.authenticate('spotify') );
+  app.get('/auth/spotify/callback', passport.authenticate('spotify') , function(req, res) {
+    res.redirect('/');
+  });
+  
+  app.get('/sets/sync/spotify', soundtracker , playlists.syncSetup );
+  
+}
+
+if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
+  var lastfm = new LastFM({
+      api_key: config.lastfm.key
+    , secret:  config.lastfm.secret
+  });
+  app.LastFM = LastFM;
+  app.lastfm = lastfm;
+  app.get('/auth/lastfm', function(req, res) {
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
+    res.redirect(authUrl);
+  });
+  app.get('/auth/lastfm/callback', function(req, res) {
+    lastfm.authenticate( req.param('token') , function(err, session) {
+      if (err) {
+        console.log(err);
+        req.flash('error', 'Something went wrong with authentication.');
+        return res.redirect('/');
+      }
+
+      Person.findOne({ $or: [
+          { _id: (req.user) ? req.user._id : undefined }
+        , { 'profiles.lastfm.username': session.username }
+      ]}).exec(function(err, person) {
+
+        if (!person) {
+          var person = new Person({ username: 'reset this later ' });
+        }
+
+        person.profiles.lastfm = {
+            username: session.username
+          , key: session.key
+          , updated: new Date()
+        };
+
+        person.save(function(err) {
+          if (err) { console.log(err); }
+          req.session.passport.user = person._id;
+          res.redirect('/');
+        });
+
+      });
+
+    });
+  });
+}
 
 app.get('/', function(req, res, next) {
   if (req.roomObj) return next();

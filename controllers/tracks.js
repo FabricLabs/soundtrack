@@ -307,11 +307,10 @@ module.exports = {
           , { slug: req.param('trackSlug') }
         ] }).populate('_artist _credits').exec(function(err, track) {
 
-          req.soundtrack._jobs.enqueue('track:crawl', {
-              id: track._id
-            , timeout: 3 * 60 * 1000
+          req.app.agency.publish('track:crawl', {
+            id: track._id
           }, function(err) {
-            console.log('track crawling queued');
+            console.log('track crawling completed');
           });
 
           res.format({

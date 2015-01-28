@@ -4,8 +4,10 @@ block content
   .well.content-well
     
     h1
-      if (user)
-        a.btn.pull-right(href="/#{user.slug}/playlists/new") Create a Set &raquo;
+      .btn-group.pull-right
+        if (user)
+          a.btn(href="/sets/sync/spotify") Import from Spotify &raquo;
+          a.btn(href="/#{user.slug}/playlists/new") Create a Set &raquo;
       | Public Sets
 
     table.table.tablesorter
