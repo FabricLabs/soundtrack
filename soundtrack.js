@@ -619,6 +619,8 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 app.post('/playlist', requireLogin , function(req, res) {
   console.log('playlist endpoint hit with POST...');
   
+  if (!req.room) res.send({ status: 'error', message: 'No room to queue to.' });
+  
   if (!req.roomObj && res.locals.user.rooms.length) {
     req.room = res.locals.user.rooms[ 0 ];
   }
