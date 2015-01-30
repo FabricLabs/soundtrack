@@ -223,12 +223,15 @@ module.exports = {
         return res.render('500');
       }
 
-      var url = 'users/' + playlist.user + '/playlists/' + playlist.id;
+      var url = 'users/' + playlist.user + '/playlists/' + playlist.id + '?limit=250';
       spotify.get( url ).on('complete', function(spotifyPlaylist , response ) {
         if (!spotifyPlaylist || response.statusCode !== 200) {
           req.flash('error', 'Could not retrieve list from Spotify. ' + response.statusCode );
           return res.redirect('back');
         }
+        
+        console.log('spotifyPlaylist', spotifyPlaylist);
+        console.log('will be public: ', spotifyPlaylist.public);
 
         var tracks = spotifyPlaylist.tracks.items.map(function(x) {
           return {
@@ -251,11 +254,11 @@ module.exports = {
         async.series( pushers , function(err, tracks) {
           
           tracks.forEach(function(track) {
-            req.app.agency.publish('track:crawl', {
+            /* req.app.agency.publish('track:crawl', {
               id: track._id
             }, function(err) {
               console.log('track crawled, doing stuff in initiator');
-            });
+            }); */
           });
           
           var playlist = new Playlist({

@@ -307,11 +307,11 @@ module.exports = {
           , { slug: req.param('trackSlug') }
         ] }).populate('_artist _credits').exec(function(err, track) {
 
-          req.app.agency.publish('track:crawl', {
+          /* req.app.agency.publish('track:crawl', {
             id: track._id
           }, function(err) {
             console.log('track crawling completed');
-          });
+          }); */
 
           res.format({
             json: function() {

@@ -167,12 +167,12 @@ module.exports = {
             });
           });
 
-          req.app.agency.publish('artist:update', {
+          /* req.app.agency.publish('artist:update', {
               id: artist._id
             , timeout: 3 * 60 * 1000
           }, function(err, job) {
             console.log('update artist completed');
-          });
+          }); */
 
         });
       });

@@ -26,10 +26,10 @@ var crypto = require('crypto');
 var marked = require('marked');
 var validator = require('validator');
   
-var Agency = require('mongoose-agency');
+/* var Agency = require('mongoose-agency');
 app.agency = new Agency( database.source , {
   // timeout: 0.01
-});
+}); */
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
