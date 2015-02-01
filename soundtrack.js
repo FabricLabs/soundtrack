@@ -223,17 +223,18 @@ app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   var room = app.rooms[ req.room ];
   
+  /* When first starting server, track is undefined, prevent this from erroring */
+  var title;
+  if (room.track) {
+    title = room.track.title;
+  } else {
+    title = "Unknown";
+  }
+
   room.nextSong(function() {
     console.log('skip.nextSong() called');
     res.send({ status: 'success' });
   
-    /* When first starting server, track is undefined, prevent this from erroring */
-    var title;
-    if (room.track) {
-      title = room.track.title;
-    } else {
-      title = "Unknown";
-    }
   
     //Announce who skipped this song
     res.render('partials/announcement', {
