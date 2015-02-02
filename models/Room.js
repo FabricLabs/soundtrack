@@ -56,7 +56,7 @@ RoomSchema.methods.queueTrack = function( track , curator , callback ) {
     var playableSources = 0;
     for (var source in playlistItem.sources) {
       for (var i = 0; i < playlistItem.sources[ source ].length; i++) {
-        if (['soundcloud', 'youtube'].indexOf( source ) >= 0) playableSources += 1;
+        if (['soundcloud', 'youtube', 'bandcamp'].indexOf( source ) >= 0) playableSources += 1;
         delete playlistItem.sources[ source ][ i ].data;
       }
     }

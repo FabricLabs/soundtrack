@@ -431,6 +431,16 @@ $(window).load(function() {
                 });
               }
 
+              if (msg.data.sources.bandcamp) {
+                msg.data.sources.bandcamp.forEach(function(item) {
+                  sources.push({
+                    type: 'audio/mp3',
+                    src: item.data.url,
+                    poster: (item.data) ? item.data.artwork_url : undefined
+                  });
+                });
+              }
+
               var rollIt = function() {
                 console.log('rollIt()', sources[0]);
                 if (!sources[0]) return;

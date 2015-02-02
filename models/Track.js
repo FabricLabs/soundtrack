@@ -41,6 +41,10 @@ var TrackSchema = new Schema({
           id: { type: String, required: true }
         , data: {}
       })],
+      bandcamp: [ new Schema({
+          id: { type: String, required: true }
+        , data: {}
+      })],
       vimeo: [ new Schema({
           id: { type: String, required: true }
         , data: {}
