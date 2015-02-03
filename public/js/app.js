@@ -472,8 +472,11 @@ $(window).load(function() {
 
                 var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
                 var ensureTrackPlaying = setInterval(function() {
-                  if (soundtrack.player.currentTime() > 0 || !sources.length) {
-                    console.log('track is playing (yay!), or there are no remaining sources (boo). clearing interval.');
+                  if (!sources.length) {
+                    console.log('sources length is zero.  sad day.  failing out.');
+                    clearInterval( ensureTrackPlaying );
+                  } else if (soundtrack.player.currentTime() > 0) {
+                    console.log('track is playing (yay!).  clearing interval.');
                     clearInterval( ensureTrackPlaying )
                   } else {
                     console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
