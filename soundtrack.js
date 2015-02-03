@@ -293,8 +293,10 @@ sock.on('connection', function(conn) {
   app.clients[ conn.id ] = conn;
   var room = conn.headers.host.split('.')[0];
   if (!app.rooms[ room ]) return;
+
   var connRoom = app.rooms[ room ];
 
+  conn.room = connRoom._id.toString();
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {
