@@ -443,6 +443,9 @@ $(window).load(function() {
 
               var rollIt = function() {
                 console.log('rollIt()', sources[0]);
+                
+                soundtrack.player.currentTime( 0.0 );
+                
                 if (!sources[0]) return;
 
                 soundtrack.player.error( null );
@@ -467,6 +470,7 @@ $(window).load(function() {
                   console.log('submitted the track as needing more sources: ', data);
                 });
               } else {
+                
                 rollIt();
                 // track should now be playing.
 
