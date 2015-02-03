@@ -125,7 +125,7 @@ module.exports = {
     var queries = [];
 
     if (!interval) { var interval = 24; }
-    if (!skip)     { var skip = 1; }
+    if (!skip)     { var skip = 1000 * 60 * 60 * 24; }
     if (!limit)    { var limit = 24; }
 
     var halfTime = interval / 2; // moving window
@@ -135,7 +135,7 @@ module.exports = {
       var start = new Date();
       var end = new Date( start.getTime() );
 
-      start = new Date( start           - ((i+1)  * 1000 * 60 * 60 * 24) );
+      start = new Date( start           - ((i+1)  * skip) );
       end   = new Date( start.getTime() + interval );
 
       var query = {};

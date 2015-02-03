@@ -51,9 +51,10 @@ block content
                     a(href="/#{room._owner.slug}") #{room._owner.username}
               p !{marked(room.description || '')}
             td
-              h5
-                a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
-                |  by 
-                a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
+              if (room.track)
+                h5
+                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                  |  by 
+                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>
