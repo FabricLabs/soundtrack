@@ -180,13 +180,13 @@ module.exports = {
 
         // find the edited track...
         Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
-          if (err || !track) { return next(); }
+          if (err || !track) return next();
 
           // get the artist parsed from the new artist name...
           Artist.findOne({ name: parts.artist }).exec(function(err, artist) {
-            if (err) { console.log(err); }
+            if (err) console.log(err);
 
-            if (!artist ) { var artist = new Artist({ name: req.param('artistName') }); }
+            if (!artist ) var artist = new Artist({ name: req.param('artistName') });
 
             // go ahead and issue a save for it (so it exists when we save the track)
             artist.save(function(err) {
@@ -212,7 +212,6 @@ module.exports = {
                       }
                   }
                 ).exec(function(err, numAffected) {
-                  console.log(err || numAffected);
 
                   res.send({
                       status: 'success'
@@ -222,6 +221,7 @@ module.exports = {
                   // prepare for over-the-wire broadcast...
                   track = track.toObject();
                   track._artist = artist;
+                  track.title = parts.title || track.title;
 
                   req.soundtrack.broadcast({
                       type: 'edit'

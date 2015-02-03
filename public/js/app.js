@@ -68,7 +68,7 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
 
     $editor.data('track-id',    track._id );
     $editor.data('artist-slug', track._artist.slug );
-    $editor.data('artist-id',   track._artist._d );
+    $editor.data('artist-id',   track._artist._id );
     $editor.data('track-slug',  track.slug );
 
     $editor.find('input[name=trackArtistID]').val( track._artist._id );
