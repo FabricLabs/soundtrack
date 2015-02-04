@@ -209,6 +209,8 @@ function authorize(role) {
     break;
     case 'host':
       return function( req, res, next ) {
+        if (~req.user.roles.indexOf('admin')) return next();
+        
         if (!app.rooms[ req.room ]) return res.status(404).end();
         if (!app.rooms[ req.room ]._owner) return res.status(404).end();
         if (app.rooms[ req.room ]._owner.toString() !== req.user._id.toString()) {
