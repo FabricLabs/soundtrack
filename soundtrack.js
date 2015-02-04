@@ -207,6 +207,20 @@ function authorize(role) {
         }
       };
     break;
+    case 'host':
+      return function( req, res, next ) {
+        if (!app.rooms[ req.room ]) return res.status(404).end();
+        if (!app.rooms[ req.room ]._owner) return res.status(404).end();
+        if (app.rooms[ req.room ]._owner.toString() !== req.user._id.toString()) {
+          return res.status(401).send({
+              status: 'error'
+            , message: 'Not authorized.'
+          });
+        } else {
+          return next();
+        }
+      }
+    break;
   }
 }
 
@@ -575,7 +589,7 @@ app.post('/chat', requireLogin, function(req, res) {
   });
 });
 
-app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, res, next) {
+app.del('/playlist/:trackID', requireLogin, requireRoom , authorize('host'), function(req, res, next) {
   if (!req.param('index') || req.param('index') == 0) { return next(); }
 
   var room = app.rooms[ req.room ];
