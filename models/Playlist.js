@@ -12,7 +12,7 @@ var PlaylistSchema = new Schema({
   , created: { type: Date, default: Date.now }
   , updated: { type: Date }
   , _creator: { type: ObjectId, ref: 'Person' }
-  , _owner: { type: ObjectId, ref: 'Person' }
+  , _owner: { type: ObjectId, ref: 'Person', index: true }
   , _parent: { type: ObjectId, ref: 'Playlist' }
   , _tracks: [ { type: ObjectId, ref: 'Track' } ]
   , _subscribers: [ { type: ObjectId, ref: 'Person' } ]

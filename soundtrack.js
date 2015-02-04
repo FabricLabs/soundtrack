@@ -26,10 +26,10 @@ var crypto = require('crypto');
 var marked = require('marked');
 var validator = require('validator');
   
-/* var Agency = require('mongoose-agency');
+var Agency = require('mongoose-agency');
 app.agency = new Agency( database.source , {
   // timeout: 0.01
-}); */
+});
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -609,8 +609,8 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
     return score + vote;
   }, 0);
 
-  console.log('track score: ' + room.playlist[ index ].score);
-  console.log('track votes: ' + JSON.stringify(room.playlist[ index ].votes));
+  //console.log('track score: ' + room.playlist[ index ].score);
+  //console.log('track votes: ' + JSON.stringify(room.playlist[ index ].votes));
 
   room.sortPlaylist();
   room.savePlaylist(function() {
