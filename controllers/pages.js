@@ -38,7 +38,7 @@ module.exports = {
           messages: messages
         , backup: []
         , playlists: playlists || []
-        , room: req.app.room
+        , room: req.app.rooms[ req.room ]
         , page: {
             title: req.roomObj.name
           }

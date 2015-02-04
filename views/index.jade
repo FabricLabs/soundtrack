@@ -63,7 +63,7 @@ block content
                   span.pull-right {{track.duration | toHHMMSS }}
                   a(href="{{track.curator.slug}}") {{track.curator.username}}
                   |  wants to play 
-                  if (user &&user.roles.indexOf('admin') >= 0)
+                  if (user && user._id.toString() === room._owner.toString() )
                     |  
                     a(href="#", data-action="remove-queued-track", data-track-id="{{track._id}}", data-track-index="{{$index}}")
                       i.icon-remove.icon-white
