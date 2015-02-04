@@ -455,12 +455,9 @@ $(window).load(function() {
               var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
               
               function rollTrack() {
-                console.log('rollTrack()', sources );
-                console.log('current source:', soundtrack.player.src() );
+                if (soundtrack.debug) console.log('rollTrack()', sources );
+                if (soundtrack.debug) console.log('current source:', soundtrack.player.src() );
                 if (!sources[0]) return;
-
-                //soundtrack.player.youtube.destroy();
-                console.log( soundtrack.player );
 
                 soundtrack.player.error( null );
                 soundtrack.player.poster( sources[0].poster );
@@ -470,16 +467,16 @@ $(window).load(function() {
                 soundtrack.player.load();
 
                 soundtrack.player.one('playing', function() {
-                  console.log('playing event');
+                  if (soundtrack.debug) console.log('playing event');
                   clearInterval( ensureTrackPlaying );
                   jumpIfNecessary();
                 });
                 
                 // TODO: find a better event to listen for!  this is terrible.
                 soundtrack.player.one('durationchange', function() {
-                  console.log('durationchange event');
-                  console.log('setting current time 0 and src...');
-                  console.log('source is now', soundtrack.player.src() );
+                  if (soundtrack.debug) console.log('durationchange event');
+                  if (soundtrack.debug) console.log('setting current time 0 and src...');
+                  if (soundtrack.debug) console.log('source is now', soundtrack.player.src() );
                   soundtrack.player.currentTime( 0 );
                   soundtrack.player.play();
                 });
@@ -487,23 +484,22 @@ $(window).load(function() {
               
               function verifyTrackPlaying() {
                 if (!sources.length) {
-                  console.log('sources length is zero.  sad day.  failing out.');
+                  if (soundtrack.debug) console.log('sources length is zero.  sad day.  failing out.');
                   clearInterval( ensureTrackPlaying );
                 } else if (soundtrack.player.currentTime() > 0) {
-                  console.log('track is playing (yay!).  clearing interval.');
+                  if (soundtrack.debug) console.log('track is playing (yay!).  clearing interval.');
                   clearInterval( ensureTrackPlaying )
                 } else {
-                  console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
-                  console.log('failed to load: ', sources[0] );
+                  if (soundtrack.debug) console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
+                  if (soundtrack.debug) console.log('failed to load: ', sources[0] );
 
                   sources.shift();
-                  console.log('shifted sources: ', sources );
                   rollTrack();
                 }
               }
               
               function jumpIfNecessary() {
-                console.log( 'now calling jumpIfNecessary()' );
+                if (soundtrack.debug) console.log( 'now calling jumpIfNecessary()' );
 
                 var now = new Date();
                 var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
