@@ -218,7 +218,6 @@ angular.module('soundtrack-io', ['timeFilters']);
 
 function AppController($scope, $http) {
   window.updatePlaylist = function() {
-    console.log('angular updatePlaylist()')
     $http.get('/playlist.json').success(function(data) {
       if (!data) var data = [];
 
@@ -316,13 +315,9 @@ $(window).load(function() {
   soundtrack = new Soundtrack();
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
-      techOrder: ['html5', 'youtube', 'flash'],
-      forceHTML5: true,
-      forceSSL: true,
-      controls: true,
-      autoload: true
+      techOrder: ['html5', 'youtube', 'flash']
     });
-    soundtrack.player.controls(true);
+    soundtrack.player.controls(false);
   } //else {
   //  soundtrack.player = videojs('#secondary-player', {
   //  techOrder: ['html5', 'youtube']
@@ -367,6 +362,7 @@ $(window).load(function() {
           case 'track':
             updatePlaylist();
 
+            // TODO: replace with proper 2-way databinding
             if (msg.data._artist) {
               $('#track-title').attr('href', '/' + msg.data._artist.slug + '/' + msg.data.slug + '/' + msg.data._id);
 
@@ -390,8 +386,6 @@ $(window).load(function() {
             } else {
               $('#track-curator').html('the machine');
             }
-
-            console.log('STREAMING : ' + soundtrack.settings.streaming);
 
             if (soundtrack.settings.streaming) {
               var sources = [];
@@ -441,24 +435,8 @@ $(window).load(function() {
                 });
               }
 
-              var rollIt = function() {
-                console.log('rollIt()', sources[0]);
-                
-                soundtrack.player.currentTime( 0.0 );
-                
-                if (!sources[0]) return;
-
-                soundtrack.player.error( null );
-                soundtrack.player.poster( sources[0].poster );
-
-                soundtrack.player.pause();
-                soundtrack.player.src( [ sources[0] ] );
-                soundtrack.player.play();
-              }
-
-              console.log('sources: ', sources);
               if (!sources.length) {
-                $.ajax({
+                return $.ajax({
                   url: '/tracks/' + msg.data._id,
                   method: 'PUT',
                   data: {
@@ -469,31 +447,64 @@ $(window).load(function() {
                 }, function(data) {
                   console.log('submitted the track as needing more sources: ', data);
                 });
-              } else {
-                
-                rollIt();
-                // track should now be playing.
-
-                var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
-                var ensureTrackPlaying = setInterval(function() {
-                  if (!sources.length) {
-                    console.log('sources length is zero.  sad day.  failing out.');
-                    clearInterval( ensureTrackPlaying );
-                  } else if (soundtrack.player.currentTime() > 0) {
-                    console.log('track is playing (yay!).  clearing interval.');
-                    clearInterval( ensureTrackPlaying )
-                  } else {
-                    console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
-                    console.log('failed to load: ', sources[0] );
-
-                    sources.shift();
-                    console.log('shifted sources: ', sources );
-                    rollIt();
-                  }
-                }, maxTimeToPlayTrack );
               }
 
-              var bufferEvaluator = function() {
+              rollTrack();
+
+              var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
+              var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
+              
+              function rollTrack() {
+                console.log('rollTrack()', sources );
+                console.log('current source:', soundtrack.player.src() );
+                if (!sources[0]) return;
+
+                //soundtrack.player.youtube.destroy();
+                console.log( soundtrack.player );
+
+                soundtrack.player.error( null );
+                soundtrack.player.poster( sources[0].poster );
+
+                soundtrack.player.pause();
+                soundtrack.player.src( sources[0] );
+                soundtrack.player.load();
+
+                soundtrack.player.one('playing', function() {
+                  console.log('playing event');
+                  clearInterval( ensureTrackPlaying );
+                  jumpIfNecessary();
+                });
+                
+                // TODO: find a better event to listen for!  this is terrible.
+                soundtrack.player.one('durationchange', function() {
+                  console.log('durationchange event');
+                  console.log('setting current time 0 and src...');
+                  console.log('source is now', soundtrack.player.src() );
+                  soundtrack.player.currentTime( 0 );
+                  soundtrack.player.play();
+                });
+              }
+              
+              function verifyTrackPlaying() {
+                if (!sources.length) {
+                  console.log('sources length is zero.  sad day.  failing out.');
+                  clearInterval( ensureTrackPlaying );
+                } else if (soundtrack.player.currentTime() > 0) {
+                  console.log('track is playing (yay!).  clearing interval.');
+                  clearInterval( ensureTrackPlaying )
+                } else {
+                  console.log('track is NOT playing after %dms... advancing to next source', maxTimeToPlayTrack);
+                  console.log('failed to load: ', sources[0] );
+
+                  sources.shift();
+                  console.log('shifted sources: ', sources );
+                  rollTrack();
+                }
+              }
+              
+              function jumpIfNecessary() {
+                console.log( 'now calling jumpIfNecessary()' );
+
                 var now = new Date();
                 var estimatedSeekTo = (msg.seekTo * 1000) + (now - received);
                 var estimatedProgress = estimatedSeekTo / (msg.data.duration * 1000);
@@ -504,10 +515,6 @@ $(window).load(function() {
 
                 ensureVolumeCorrect();
               };
-
-              soundtrack.player.one('playing', bufferEvaluator );
-
-              var track = msg.data;
 
             }
 
