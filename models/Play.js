@@ -5,7 +5,7 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var PlaySchema = new Schema({
-    _track:     { type: ObjectId, ref: 'Track' }
+    _track:     { type: ObjectId, ref: 'Track' , index: true }
   , _artist:    { type: ObjectId, ref: 'Artist' }
   , _artists: [ { type: ObjectId, ref: 'Artist' } ]
   , _curator:   { type: ObjectId, ref: 'Person', index: true }
