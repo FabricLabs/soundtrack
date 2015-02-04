@@ -25,9 +25,14 @@
   videojs.Youtube = videojs.MediaTechController.extend({
     /** @constructor */
     init: function(player, options, ready) {
+      // Save this for internal usage
+      this.player_ = player;
+      
       // No event is triggering this for YouTube
       this['featuresProgressEvents'] = false;
       this['featuresTimeupdateEvents'] = false;
+      // Enable rate changes
+      this['featuresPlaybackRate'] = true;
 
       videojs.MediaTechController.call(this, player, options, ready);
 
@@ -35,6 +40,11 @@
       this.isAndroid = /(Android)/g.test( navigator.userAgent );
       //used to prevent play events on IOS7 and Android > 4.2 until the user has clicked the player
       this.playVideoIsAllowed = !(this.isIos || this.isAndroid);
+      
+      // autoplay is disabled for mobile
+      if (this.isIos || this.isAndroid) {
+        this.player_.options()['autoplay'] = false;
+      }
 
       // Copy the JavaScript options if they exists
       if(typeof options['source'] !== 'undefined') {
@@ -47,8 +57,6 @@
 
       this.userQuality = videojs.Youtube.convertQualityName(player.options()['quality']);
 
-      // Save those for internal usage
-      this.player_ = player;
       this.playerEl_ = document.getElementById(player.id());
       this.playerEl_.className += ' vjs-youtube';
 
@@ -103,7 +111,7 @@
 
       this.parseSrc(player.options()['src']);
 
-      this.playOnReady = this.player_.options()['autoplay'] || false;
+      this.playOnReady = this.player_.options()['autoplay'] && this.playVideoIsAllowed;
       this.forceSSL = !!(
         typeof this.player_.options()['forceSSL'] === 'undefined' ||
           this.player_.options()['forceSSL'] === true
@@ -118,7 +126,7 @@
       var self = this;
 
       player.ready(function() {
-        if (self.player_.options()['controlBar']) {
+        if (self.player_.options()['controls']) {
           var controlBar = self.playerEl_.querySelectorAll('.vjs-control-bar')[0];
           if (controlBar) {
             controlBar.appendChild(self.qualityButton);
@@ -426,6 +434,15 @@
     this.player_.trigger('timeupdate');
     this.player_.trigger('seeking');
     this.isSeeking = true;
+  };
+  videojs.Youtube.prototype.playbackRate = function() {
+    return (this.ytplayer && this.ytplayer.getPlaybackRate) ? this.ytplayer.getPlaybackRate() : 1.0;
+  };
+  videojs.Youtube.prototype.setPlaybackRate = function(suggestedRate) {
+    if (this.ytplayer && this.ytplayer.setPlaybackRate) {
+      this.ytplayer.setPlaybackRate(suggestedRate);
+      this.player_.trigger('ratechange');
+    }
   };
   videojs.Youtube.prototype.duration = function() {
     return (this.ytplayer && this.ytplayer.getDuration) ? this.ytplayer.getDuration() : 0;

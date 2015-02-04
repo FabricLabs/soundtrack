@@ -139,7 +139,12 @@ function requireRoom(req, res, next) {
   return next();
 }
 function redirectToMainSite(req, res, next) {
-  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
+  if (process.env.NODE_ENV === 'dev') {
+    if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + ':' + config.app.port + req.path );
+  } else {
+    if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
+  }
+  
   return next();
 }
 
@@ -288,8 +293,10 @@ sock.on('connection', function(conn) {
   app.clients[ conn.id ] = conn;
   var room = conn.headers.host.split('.')[0];
   if (!app.rooms[ room ]) return;
+
   var connRoom = app.rooms[ room ];
 
+  conn.room = connRoom._id.toString();
   conn.pongTime = (new Date()).getTime();
 
   conn.on('data', function(message) {

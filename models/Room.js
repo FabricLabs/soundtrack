@@ -35,8 +35,10 @@ RoomSchema.methods.broadcast = function( msg , GLOBAL ) {
   }) );
 
   var json = JSON.stringify(msg);
-  for (var id in app.clients ) {
-    if (~myClients.indexOf( id )) app.clients[id].write(json);
+  for (var id in app.clients) {
+    if (app.clients[id].room === room._id.toString()) {
+      app.clients[id].write(json);
+    }
   }
 };
 RoomSchema.methods.queueTrack = function( track , curator , callback ) {
