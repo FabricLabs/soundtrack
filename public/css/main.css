@@ -117,7 +117,7 @@ footer {
 }
 .navbar a.brand img {
   max-height: 1em;
-  padding-right: 0.5em;
+  /* padding-right: 0.5em; */
   margin-bottom: -0.2em;
   vertical-align: top;
 }
