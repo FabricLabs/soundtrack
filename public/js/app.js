@@ -997,9 +997,9 @@ $(window).load(function() {
 
   var selectSet = _.debounce(function(e) {
     e.preventDefault();
-    var self = this;
+    var $self = $(this);
 
-    $(self).slideUp(function() {
+    $self.slideUp(function() {
       $(this).remove();
     });
 
