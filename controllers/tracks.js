@@ -358,7 +358,7 @@ module.exports = {
                       }).exec(function(err, playlists) {
                         
                         Play.aggregate([
-                          { $match: { _curator: { $exists: true } } },
+                          { $match: { _track: track._id } },
                           { $group: { _id: '$_room', count: { $sum: 1 } } },
                           { $sort: { 'count': -1 } },
                           //{ $limit: LIMIT }
