@@ -301,7 +301,6 @@ promise.done(function() {
       $el.html( moment( $el.attr('title') ).fromNow() );
     });
 
-
   }, 1000);
 });
 
@@ -996,11 +995,14 @@ $(window).load(function() {
     return false;
   }, 200, true);
 
-  $(document).on('click', '*[data-action=queue-track]', selectTrack);
-  
-  $(document).on('click', '*[data-action=queue-set]', function(e) {
+  var selectSet = _.debounce(function(e) {
     e.preventDefault();
-    var $self = $(this);
+    var self = this;
+
+    $(self).slideUp(function() {
+      $(this).remove();
+    });
+
     $.getJSON('/' + $self.data('set-slug') , function(set) {
       set._tracks.forEach(function(track) {
         $.post('/playlist', {
@@ -1011,9 +1013,13 @@ $(window).load(function() {
         });
       });
     });
-    
+
     return false;
-  });
+  }, 200, true);
+
+  $(document).on('click', '*[data-action=queue-track]', selectTrack);
+  
+  $(document).on('click', '*[data-action=queue-set]', selectSet );
 
   $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
     e.preventDefault();
