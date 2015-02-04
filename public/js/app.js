@@ -308,7 +308,7 @@ promise.done(function() {
 $(window).load(function() {
 
   var sockjs = null;
-  var retryTimes = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000, 86400000]; //in ms
+  var retryTimes = [100, 1000, 2500, 5000, 10000, 30000, 60000, 120000, 300000, 600000, 86400000]; //in ms
   var retryIdx = 0;
 
   // must be after DOM loads so we have access to the user-model
