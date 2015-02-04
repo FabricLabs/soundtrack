@@ -78,9 +78,16 @@ html(lang="en-US", ng-app="soundtrack-io")
             i.icon-bar
             i.icon-bar
             i.icon-bar
-          a.brand(href="/")
-            img(src="/favicon.ico")
-            | #{(room) ? room.name : 'soundtrack.io'}
+          if (room)
+            a.brand.tooltipped(href="//#{config.app.host}", title="browse all rooms")
+              img(src="//#{config.app.host}/favicon.ico")
+            a.brand(href="//#{ room.slug + '.' + config.app.host }")
+              | #{room.name}
+          else
+            a.brand(href="//#{config.app.host}", title="music for all.")
+              img(src="/favicon.ico")
+              | soundtrack.io
+              
           .nav-collapse.collapse
             ul.nav
               li
