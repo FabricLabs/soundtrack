@@ -149,36 +149,43 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   // but not if it's been played recently!
   // TODO: one level of callbacks to collect this!
 
-  // heaven forbid we have nothing.
-  // TODO: sane cases.
-  if (gain > failpoint) query = {};
-  
-  Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
-    if (err) console.log(err);
-
-    Play.find({
-      _room: room._id,
-      timestamp: { $gte: (new Date()) - 3600 * 3 * 1000 }
-    }).exec(function(err, exclusions) {
-      query.exclusionIDs = exclusions.map(function(x) { return x._track.toString(); });
-      
-      plays = plays.filter(function(x) {
-        //console.log('exclusions checker,', x._track.toString() , 'in' , query.exclusionIDs , '?');
-        //console.log(!~query.exclusionIDs.indexOf( x._track.toString() ));
-        return !~query.exclusionIDs.indexOf( x._track.toString() );
-      });
+  Play.count({ _room: room._id }).exec(function(err, totalPlays) {
+    if (!totalPlays) {
+      // no tracks have ever been played.  full query.
+      query = {};
+    } else if (gain > failpoint) {
+      // just query the whole damned room.
+      query = { _room: room._id };
+    }
     
-      if (!plays || !plays.length || plays.length < 10) {
-        //console.log('nothing found. womp.', query );
-        // try again, but with 7 more days included...
-        return room.generatePool( gain + 7 , failpoint , cb );
-      }
+    Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+      if (err) console.log(err);
 
-      return cb( err , plays , query );
+      Play.find({
+        _room: room._id,
+        timestamp: { $gte: (new Date()) - 3600 * 3 * 1000 }
+      }).exec(function(err, exclusions) {
+        query.exclusionIDs = exclusions.map(function(x) { return x._track.toString(); });
+        
+        plays = plays.filter(function(x) {
+          //console.log('exclusions checker,', x._track.toString() , 'in' , query.exclusionIDs , '?');
+          //console.log(!~query.exclusionIDs.indexOf( x._track.toString() ));
+          return !~query.exclusionIDs.indexOf( x._track.toString() );
+        });
+      
+        if (!plays || !plays.length || plays.length < 10) {
+          //console.log('nothing found. womp.', query );
+          // try again, but with 7 more days included...
+          return room.generatePool( gain + 7 , failpoint , cb );
+        }
+
+        return cb( err , plays , query );
+        
+      });
       
     });
-    
   });
+
 };
 RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;

@@ -8,8 +8,8 @@ var PlaySchema = new Schema({
     _track:     { type: ObjectId, ref: 'Track' }
   , _artist:    { type: ObjectId, ref: 'Artist' }
   , _artists: [ { type: ObjectId, ref: 'Artist' } ]
-  , _curator:   { type: ObjectId, ref: 'Person' }
-  , _room:      { type: ObjectId, ref: 'Room', required: true }
+  , _curator:   { type: ObjectId, ref: 'Person', index: true }
+  , _room:      { type: ObjectId, ref: 'Room', required: true , index: true }
   , timestamp:  { type: Date, default: Date.now }
   , length:     { type: Number }
   , played:     { type: Number }

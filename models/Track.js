@@ -12,7 +12,7 @@ var mongoose = require('mongoose')
 var TrackSchema = new Schema({
     title: { type: String, required: true }
   , titles: [ { type: String } ]
-  , _artist: { type: ObjectId, ref: 'Artist' }
+  , _artist: { type: ObjectId, ref: 'Artist', index: true }
   , _credits: [ { type: ObjectId, ref: 'Artist' } ]
   , duration: { type: Number } // time in seconds
   , flags: {
