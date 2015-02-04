@@ -114,8 +114,8 @@ html(lang="en-US", ng-app="soundtrack-io")
                   a(href="/logout") Logout
               else
                 form.navbar-form(action="/login", method="post")
-                  input.span2(type="text", placeholder="Username", name="username")
-                  input.span2(type="password", placeholder="Password", name="password")
+                  input.span2(type="text", placeholder="Username", name="username", style="width: 100px;")
+                  input.span2(type="password", placeholder="Password", name="password", style="width: 100px;")
                   button.btn.btn-primary(type="submit") Sign In &raquo;
                   a.btn(href="/register") Register &raquo;
 

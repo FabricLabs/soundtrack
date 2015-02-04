@@ -318,7 +318,7 @@ module.exports = {
               res.send( track );
             },
             html: function() {
-              Play.find({ _track: track._id }).sort('-timestamp').populate('_curator').exec(function(err, history) {
+              Play.find({ _track: track._id }).sort('-timestamp').populate('_curator _room').exec(function(err, history) {
                 if (err) { console.log(err); }
 
                 var queries = [];

@@ -38,6 +38,8 @@ block content
                 a(href="/#{play._curator.slug}") #{play._curator.username}
               else
                 strong THE MACHINE
+              |  in 
+              a(href="//#{play._room.slug}.#{config.app.host}") #{play._room.name}
               | .
 
       .tab-pane#sources
