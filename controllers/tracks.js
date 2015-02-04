@@ -356,14 +356,31 @@ module.exports = {
                       Playlist.find({
                         _creator: (req.user) ? req.user._id : undefined
                       }).exec(function(err, playlists) {
-                        res.render('track', {
-                          track: track
-                          , history: history
-                          , playsPerDay: playsPerDay
-                          , chats: chats
-                          , dupes: dupes
-                          , playlists: playlists
+                        
+                        Play.aggregate([
+                          { $match: { _curator: { $exists: true } } },
+                          { $group: { _id: '$_room', count: { $sum: 1 } } },
+                          { $sort: { 'count': -1 } },
+                          //{ $limit: LIMIT }
+                        ], function(err, topRooms) {
+                          
+                          Room.populate( topRooms , {
+                            path: '_id'
+                          }, function(err, populatedTopRooms) {
+                            res.render('track', {
+                              track: track
+                              , history: history
+                              , playsPerDay: playsPerDay
+                              , chats: chats
+                              , dupes: dupes
+                              , playlists: playlists
+                              , topRooms: topRooms
+                            });
+                          });
+                          
+
                         });
+
                       });
                     });
                   }

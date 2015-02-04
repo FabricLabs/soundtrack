@@ -19,6 +19,8 @@ PlaySchema.virtual('isoDate').get(function() {
   return this.timestamp.toISOString();
 });
 
+PlaySchema.index({ timestamp: 1 , _room: 1 });
+
 var Play = mongoose.model('Play', PlaySchema);
 
 // export the model to anything requiring it.

@@ -41,6 +41,15 @@ block content
               |  in 
               a(href="//#{play._room.slug}.#{config.app.host}") #{play._room.name}
               | .
+              
+        h4 Top Rooms
+        ul
+          for room in topRooms
+            li
+              a(href="//#{room._id.slug}.#{config.app.host}") #{room._id.name}
+              |  played this track 
+              strong #{ room.count }
+              |  times!
 
       .tab-pane#sources
         h3 Available Sources
