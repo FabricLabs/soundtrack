@@ -10,7 +10,7 @@ var PlaySchema = new Schema({
   , _artists: [ { type: ObjectId, ref: 'Artist' } ]
   , _curator:   { type: ObjectId, ref: 'Person', index: true }
   , _room:      { type: ObjectId, ref: 'Room', required: true , index: true }
-  , timestamp:  { type: Date, default: Date.now }
+  , timestamp:  { type: Date, default: Date.now, index: true }
   , length:     { type: Number }
   , played:     { type: Number }
 });
@@ -19,6 +19,7 @@ PlaySchema.virtual('isoDate').get(function() {
   return this.timestamp.toISOString();
 });
 
+PlaySchema.index({ timestamp: 1 , _room: 1 });
 PlaySchema.index({ timestamp: 1 , _room: 1 });
 
 var Play = mongoose.model('Play', PlaySchema);

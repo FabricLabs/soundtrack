@@ -15,6 +15,8 @@ ChatSchema.virtual('isoDate').get(function() {
   return this.created.toISOString();
 });
 
+ChatSchema.index({ _room: 1 , created: -1 });
+
 var Chat = mongoose.model('Chat', ChatSchema);
 
 // export the model to anything requiring it.

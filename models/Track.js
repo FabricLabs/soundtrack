@@ -27,18 +27,18 @@ var TrackSchema = new Schema({
   , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
       lastfm: [ new Schema({
-          id: { type: String , required: true }
+          id: { type: String , required: true , index: true }
         , duration: { type: Number }
         , data: {}
       }) ],
       youtube: [ new Schema({
-          id: { type: String, required: true }
+          id: { type: String, required: true , index: true }
         , start: { type: Number, default: 0 }
         , duration: { type: Number }
         , data: {}
       })],
       soundcloud: [ new Schema({
-          id: { type: String, required: true }
+          id: { type: String, required: true , index: true }
         , data: {}
       })],
       bandcamp: [ new Schema({

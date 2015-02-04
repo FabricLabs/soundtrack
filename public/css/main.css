@@ -107,6 +107,9 @@ footer {
   border-bottom-left-radius: 3px;
   margin: -5px;
 }
+.navbar .brand {
+  padding: 10px 0px 10px;
+}
 .navbar a.brand {
   padding-left: 12px;
   margin-left: 0;
