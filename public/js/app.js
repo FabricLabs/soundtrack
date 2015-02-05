@@ -457,6 +457,15 @@ $(window).load(function() {
                 if (soundtrack.debug) console.log('rollTrack()', sources );
                 if (soundtrack.debug) console.log('current source:', soundtrack.player.src() );
                 if (!sources[0]) return;
+                
+                // this is an egregious and terrifying hack
+                // TODO: not use this hack
+                soundtrack.player.dispose();
+                $('<video id="main-player" class="video-js vjs-default-skin" width="100%" height="295"></video>').appendTo('#screen-one');
+                soundtrack.player = videojs('#main-player', {
+                  techOrder: ['html5', 'youtube', 'flash']
+                });
+                soundtrack.player.controls(false);
 
                 soundtrack.player.error( null );
                 soundtrack.player.poster( sources[0].poster );
