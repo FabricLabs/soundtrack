@@ -10,9 +10,11 @@ block content
     
     p.span6(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a>.
     
-    p.span6
-      a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
-    
+    if (!user)
+      p.span6
+        a.btn.btn-large.pull-right(href="/register") Get Started &raquo;
+        //-a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
+      
     .clearfix
     
     hr

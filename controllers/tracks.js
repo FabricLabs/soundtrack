@@ -6,11 +6,14 @@ module.exports = {
   list: function(req, res, next) {
     var LIMIT = 10;
     
+    var roomID = undefined;
+    if (req.roomObj) roomID = req.roomObj._id;
+    
     var functions = [];
     if (!req.param('q')) {
-      functions.push( function( done ) {
+      functions.push( function collectAllTime( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: { _curator: { $exists: true }, _room: roomID } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } },
           { $limit: LIMIT }
@@ -25,10 +28,11 @@ module.exports = {
         } );
       } );
 
-      functions.push( function( done ) {
+      functions.push( function collectThirtyDays( done ) {
         Play.aggregate([
           { $match: {
             _curator: { $exists: true },
+            _room: roomID,
             timestamp: { $gte: new Date((new Date()) - 30 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
@@ -45,10 +49,11 @@ module.exports = {
         } );
       } );
       
-      functions.push( function( done ) {
+      functions.push( function collectSevenDays( done ) {
         Play.aggregate([
           { $match: {
             _curator: { $exists: true },
+            _room: roomID,
             timestamp: { $gte: new Date((new Date()) - 7 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
