@@ -316,7 +316,7 @@ $(window).load(function() {
     soundtrack.player = videojs('#main-player', {
       techOrder: ['html5', 'youtube', 'flash']
     });
-    soundtrack.player.controls(false);
+    soundtrack.player.controls( true );
   } //else {
   //  soundtrack.player = videojs('#secondary-player', {
   //  techOrder: ['html5', 'youtube']
@@ -465,7 +465,7 @@ $(window).load(function() {
                 soundtrack.player = videojs('#main-player', {
                   techOrder: ['html5', 'youtube', 'flash']
                 });
-                soundtrack.player.controls(false);
+                soundtrack.player.controls( true );
 
                 soundtrack.player.error( null );
                 soundtrack.player.poster( sources[0].poster );
