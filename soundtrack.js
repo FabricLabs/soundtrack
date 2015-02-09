@@ -278,32 +278,6 @@ app.post('/skip', requireLogin, function(req, res) {
   
 });
 
-/* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
-/* this will be in MongoDB soon...*/
-/*/ async.parallel([
-  function(done) {
-    var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
-    async.series(fallbackVideos.map(function(videoID) {
-      return function(callback) {
-        util.getYoutubeVideo(videoID, function(track) {
-          if (track) { backupTracks.push( track.toObject() ); }
-          callback();
-        });
-      };
-    }), done);
-  },
-  function(done) {
-    Track.find({}).limit(100).exec(function(err, fallbackVideos) {
-      fallbackVideos.forEach(function(track) {
-        if (track) { backupTracks.push( track.toObject() ); }
-      });
-      done();
-    });
-  }
-], function(err, trackLists) {
-  //app.nextSong();
-}); /**/
-
 sock.on('connection', function(conn) {
   
   app.clients[ conn.id ] = conn;
