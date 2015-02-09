@@ -426,6 +426,7 @@ $(window).load(function() {
 
               if (msg.data.sources.bandcamp) {
                 msg.data.sources.bandcamp.forEach(function(item) {
+                  if (!item || !item.data) return console.log('bandcamp shit breaking.  totally chrisinajar\'s fault.  deets: ' , item );
                   sources.push({
                     type: 'audio/mp3',
                     src: item.data.url,
