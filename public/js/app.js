@@ -6,9 +6,9 @@ var COOKIE_EXPIRES          = 604800;
 var Soundtrack = function() {
   this.settings = {
       notifications:        $.cookie('notificationsEnabled')
-    , streaming:           ($.cookie('streaming') !== 'false') ? true : false
-    , avoidVideo:          ($.cookie('avoidVideo') === 'true') ? true : false
-    , maxTimeToPlaySource: $.cookie('maxTimeToPlaySource', Number) || DEFAULT_MAX_SOURCE_TIME
+    , streaming:            $.cookie('streaming') !== 'false'
+    , avoidVideo:           $.cookie('avoidVideo') === 'true'
+    , maxTimeToPlaySource:  $.cookie('maxTimeToPlaySource', Number) || DEFAULT_MAX_SOURCE_TIME
   };
   this.user = {
     username: $('a[data-for=user-model]').data('username')
@@ -22,7 +22,7 @@ var Soundtrack = function() {
   };
   this.controls = {
     volume: {}
-  }
+  };
   // stub out the player, since sometimes we don't load it.
   this.player = {
     ready:       function( callback )     { return callback(); },
@@ -35,7 +35,7 @@ var Soundtrack = function() {
     currentTime: function( t )            { return 0; },
     duration:    function( t )            { return 0; },
     error:       function( e )            { return this; },
-  }
+  };
 };
 Soundtrack.prototype.checkNotificationPermissions = function(callback) {
   if (window.webkitNotifications.checkPermission() != 0) {
@@ -43,7 +43,7 @@ Soundtrack.prototype.checkNotificationPermissions = function(callback) {
       console.log(e);
     });
   }
-}
+};
 Soundtrack.prototype.notify = function(img, title, content, callback) {
 
   if (!this.settings.notifications) { return false; }
@@ -53,11 +53,11 @@ Soundtrack.prototype.notify = function(img, title, content, callback) {
     setTimeout(function() {
       e.currentTarget.cancel();
     }, 15000);
-  }
+  };
   notification.onclick = function() {
     window.focus();
     this.cancel();
-  }
+  };
   notification.show();
 };
 Soundtrack.prototype.editTrackID = function( trackID ) {
@@ -106,7 +106,7 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
 
     $editor.modal();
   });
-}
+};
 
 function volumeChangeHandler(e) {
   var vol = Number( e.value );
@@ -137,7 +137,7 @@ function unmutePlayer() {
 
 function ensureVolumeCorrect() {
   var lastVol = $.cookie('lastVolume', Number);
-  console.log('setting volume to ', lastVol / 100);
+  if (soundtrack.debug) console.log('setting volume to ', lastVol / 100);
 
   soundtrack.player.volume( lastVol / 100 );
 
@@ -330,7 +330,7 @@ $(window).load(function() {
   $('*[data-for=max-source-load-time]').val( $.cookie('maxTimeToPlaySource', Number) );
 
   soundtrack.player.ready(function() {
-    console.log('player loaded. :)');
+    if (soundtrack.debug) console.log('player loaded. :)');
 
     soundtrack.startSockJs = function() {
       soundtrack.sockjs = new SockJS('/stream');
@@ -350,10 +350,10 @@ $(window).load(function() {
         var received = new Date();
 
         var msg = JSON.parse(e.data);
-        console.log(msg);
+        if (soundtrack.debug) console.log(msg);
 
         switch (msg.type) {
-          default: console.log('unhandled message: ' + msg);
+          default: console.warn('unhandled message: ' + msg);
           break;
           case 'edit':
             updatePlaylist();
@@ -444,7 +444,7 @@ $(window).load(function() {
                     }
                   }
                 }, function(data) {
-                  console.log('submitted the track as needing more sources: ', data);
+                  if (soundtrack.debug) console.log('submitted the track as needing more sources: ', data);
                 });
               }
 
@@ -562,7 +562,7 @@ $(window).load(function() {
             soundtrack.sockjs.send(JSON.stringify({
               type: 'pong'
             }));
-            console.log("Ping Pong\'d");
+            if (soundtrack.debug) console.log("Ping Pong\'d");
           break;
           case 'announcement':
             $( unescape( msg.data.formatted ) ).appendTo('#messages');
@@ -572,9 +572,9 @@ $(window).load(function() {
       };
 
       soundtrack.sockjs.onclose = function() {
-        console.log('Lost our connection, lets retry!');
+        if (soundtrack.debug) console.log('Lost our connection, lets retry!');
         if (retryIdx < retryTimes.length) {
-          console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
+          if (soundtrack.debug) console.log("Retrying connection in " + retryTimes[retryIdx] + 'ms');
           setTimeout(restartSockJs, retryTimes[retryIdx++]);
         } else {
           alert('Bummer. We lost connection.');
@@ -904,7 +904,7 @@ $(window).load(function() {
         }
       }
       if (A === null) {
-        console.warn("Could not find a node of the right size. Please try a different page.");
+        if (soundtrack.debug) console.warn("Could not find a node of the right size. Please try a different page.");
         return
       }
       c();
@@ -953,7 +953,7 @@ $(window).load(function() {
         index: $(self).data('track-index')
       }
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
     return false;
@@ -963,7 +963,7 @@ $(window).load(function() {
     e.preventDefault();
     $('*[data-for=track-search-results]').html('');
     $('*[data-for=track-search-query]').val('');
-    $('#search-modal *[data-for=track-search-query]').focus();
+    $('#search-modal').find('*[data-for=track-search-query]').focus();
     $('*[data-for=track-search-select-source]').removeClass('btn-primary');
     return false;
   });
@@ -998,7 +998,7 @@ $(window).load(function() {
       source: $(self).data('source'),
       id: $(self).data('id')
     }, function(response) {
-      console.log(response);
+      if (soundtrack.debug) console.log(response);
     });
 
     return false;
@@ -1018,7 +1018,7 @@ $(window).load(function() {
           source: 'soundtrack',
           id: track._id
         }, function(response) {
-          console.log(response);
+          if (soundtrack.debug) console.log(response);
         });
       });
     });
@@ -1080,7 +1080,7 @@ $(window).load(function() {
       trackID: $(self).data('track-id')
     }, function(data) {
       // TODO: update UI with correct count
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
     return false;
@@ -1147,13 +1147,14 @@ $(window).load(function() {
 
     $('#create-playlist-modal').modal('hide');
     // TODO: use real username, if only for rest purposes.
+    var form = $('#create-playlist-form');
     $.post('/username/playlists', {
-      name: $('#create-playlist-form input[name=name]').val(),
-      description: $('#create-playlist-form textarea[name=description]').val(),
+      name: form.find('input[name=name]').val(),
+      description: form.find('textarea[name=description]').val(),
       trackID: $('input[name=current-track-id]').val(),
-      status: ($('#create-playlist-form input[name=status]').prop('checked')) ? 'public' : 'private'
+      status: (form.find('input[name=status]').prop('checked')) ? 'public' : 'private'
     }, function(data) {
-      console.log('playlist created!');
+      if (soundtrack.debug) console.log('playlist created!');
 
       $('<li data-playlist-id="' + data.results._id + '" data-action="save-track"><a data-playlist-id="' + data.results._id + '" data-action="save-track">' + data.results.name + '</a></li>').insertBefore('ul[data-for=user-playlists] li:last-child');
 
@@ -1176,7 +1177,7 @@ $(window).load(function() {
     $.post('/tracks/' + trackID, {
       nsfw: true
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
   });
@@ -1189,7 +1190,7 @@ $(window).load(function() {
     $.post('/tracks/' + trackID, {
       live: true
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
   });
@@ -1198,7 +1199,7 @@ $(window).load(function() {
     e.preventDefault();
     var self = this;
 
-    console.log('track edit submission...');
+    if (soundtrack.debug) console.log('track edit submission...');
 
     var trackID    = $(self).data('track-id')
       , artistSlug = $(self).data('artist-slug')
@@ -1210,7 +1211,7 @@ $(window).load(function() {
       artistName: $(self).find('input[name=artist]').val(),
       artistID: $(self).find('input[name=trackArtistID]').val()
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
       $(self).modal('hide');
     });
 
@@ -1221,11 +1222,12 @@ $(window).load(function() {
     e.preventDefault();
     var self = this;
 
-    var currentArtist = $('form[data-for=edit-track]').find('input[name=artist]').val();
-    var currentTitle = $('form[data-for=edit-track]').find('input[name=title]').val();
+    var form = $('form[data-for=edit-track]');
+    var currentArtist = form.find('input[name=artist]').val();
+    var currentTitle = form.find('input[name=title]').val();
 
-    $('form[data-for=edit-track]').find('input[name=artist]').val( currentTitle );
-    $('form[data-for=edit-track]').find('input[name=title]').val( currentArtist );
+    form.find('input[name=artist]').val( currentTitle );
+    form.find('input[name=title]').val( currentArtist );
 
     return false;
   });
@@ -1237,7 +1239,7 @@ $(window).load(function() {
       trackID: $('input[name=current-track-id]').val()
     }, function(data) {
       // TODO: update UI with correct count
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
   });
 
@@ -1248,7 +1250,7 @@ $(window).load(function() {
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'up'
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
     return false;
@@ -1261,7 +1263,7 @@ $(window).load(function() {
     $.post('/playlist/' + $(self).data('track-id'), {
       v: 'down'
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
 
     return false;
@@ -1270,8 +1272,9 @@ $(window).load(function() {
   $(document).on('click', '.message *[data-role=author]', function(e) {
     e.preventDefault();
     var self = this;
-    $('#chat-input').val( $('#chat-input').val() + ' @' + $(self).data('user-username') + ' ');
-    $('#chat-input').focus();
+    var input = $('#chat-input');
+    input.val( input.val() + ' @' + $(self).data('user-username') + ' ');
+    input.focus();
     return false;
   });
 
@@ -1281,7 +1284,7 @@ $(window).load(function() {
 
   $(document).on('keyup mouseup', '*[data-for=max-source-load-time]', function(e) {
     var self = this;
-    console.log('max wait time: ', $(self).val());
+    if (soundtrack.debug) console.log('max wait time: ', $(self).val());
     $.cookie('maxTimeToPlaySource', $(self).val());
     soundtrack.settings.maxTimeToPlaySource = Number($(self).val());
   });
@@ -1297,7 +1300,7 @@ $(window).load(function() {
     $.post('/fakeuser/playlists/' + $(self).data('playlist-id') + '/edit', {
       status: ($(self).prop('checked')) ? 'public' : 'private'
     }, function(data) {
-      console.log(data);
+      if (soundtrack.debug) console.log(data);
     });
   });
 
@@ -1341,14 +1344,14 @@ $(window).load(function() {
       $.post('/settings', {
         scrobble: true
       }, function(data) {
-        console.log(data);
+        if (soundtrack.debug) console.log(data);
       });
     } else {
       $.cookie('scrobblingEnabled', false, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         scrobble: false
       }, function(data) {
-        console.log(data);
+        if (soundtrack.debug) console.log(data);
       });
     }
   });
@@ -1360,14 +1363,14 @@ $(window).load(function() {
       $.post('/settings', {
         avoidVideo: true
       }, function(data) {
-        console.log(data);
+        if (soundtrack.debug) console.log(data);
       });
     } else {
       $.cookie('avoidVideo', false, { expires: COOKIE_EXPIRES });
       $.post('/settings', {
         avoidVideo: false
       }, function(data) {
-        console.log(data);
+        if (soundtrack.debug) console.log(data);
       });
     }
   });
@@ -1409,11 +1412,11 @@ $(window).load(function() {
   $('*[data-action=toggle-link-warning]').on('click', function(e) {
     var self = this;
     if ($(self).prop('checked')) {
-      console.log('enabling link warning...');
+      if (soundtrack.debug) console.log('enabling link warning...');
       $(document).on('click', '.message-content a', warnBeforeInterrupting);
       $.cookie('warnBeforeInterrupting', true, { expires: COOKIE_EXPIRES });
     } else {
-      console.log('disabling link warning...');
+      if (soundtrack.debug) console.log('disabling link warning...');
       $(document).off('click', '.message-content a', warnBeforeInterrupting);
       $.cookie('warnBeforeInterrupting', false, { expires: COOKIE_EXPIRES });
     }
