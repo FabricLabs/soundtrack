@@ -1,3 +1,4 @@
+var heapdump = require('heapdump');
 var config = require('./config');
 var database = require('./db');
 var util = require('./util');
