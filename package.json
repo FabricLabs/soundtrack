@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./soundtrack.js"
   },
-  "repository": "",
-  "author": "",
+  "repository": "git@github.com:martindale/soundtrack.io.git",
+  "author": "Eric Martindale",
   "license": "MIT",
   "dependencies": {
     "async": "~0.2.9",
