@@ -30,5 +30,6 @@ Deleting tracks:
 `$.ajax('/playlist/520e6bda3cb680003700049c', { type: 'DELETE', data: { index: 1 } });`
 
 ## Contributing
+Want to help?  Claim something in [the "ready" column on our Waffle.io](https://waffle.io/martindale/soundtrack.io) by assigning it to yourself.
 
 [Fork. Commit. Pull request.](https://help.github.com/articles/fork-a-repo)
