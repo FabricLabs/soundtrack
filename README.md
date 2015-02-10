@@ -3,7 +3,7 @@ soundtrack.io
 [![Build Status](https://img.shields.io/travis/martindale/soundtrack.io.svg?branch=soundtrack.io&style=flat-square)](https://travis-ci.org/martindale/soundtrack.io)
 [![Coverage Status](https://img.shields.io/coveralls/martindale/soundtrack.io.svg?style=flat-square)](https://coveralls.io/r/martindale/soundtrack.io)
 
-soundtrack.io is a collaborative online jukebox.
+soundtrack.io is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
 
 ## Getting Started
 
