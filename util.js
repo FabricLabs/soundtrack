@@ -1,6 +1,5 @@
 var async = require('async')
   , rest = require('restler')
-  , slug = require('slug-component')
   , config = require('./config');
 
 var DEBUG = false;

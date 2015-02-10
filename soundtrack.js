@@ -1,32 +1,42 @@
 var heapdump = require('heapdump');
+
+// config, general requirements
 var config = require('./config');
 var database = require('./db');
 var util = require('./util');
 var express = require('express');
+
+// application setup
 var app = express();
-var sys = require('sys');
 var http = require('http');
 var rest = require('restler');
-var slug = require('speakingurl');
 var async = require('async');
 var redis = require('redis');
 var sockjs = require('sockjs');
-var LastFM = require('lastfmapi');
+
+// some convenience helpers
 var _ = require('underscore');
+var slug = require('speakingurl');
+
+// Auth and external services
 var mongoose = require('mongoose');
 var flashify = require('flashify');
 var passport = require('passport');
-var pkgcloud = require('pkgcloud');
 var LocalStrategy = require('passport-local').Strategy;
 var SpotifyStrategy = require('passport-spotify').Strategy;
-var mongooseRedisCache = require('mongoose-redis-cache');
-var RedisStore = require('connect-redis')(express);
+var LastFM = require('lastfmapi');
+
+// session management
+var session = require('express-session');
+var RedisStore = require('connect-redis')( session );
 var sessionStore = new RedisStore();
-var cachify = require('connect-cachify');
-var crypto = require('crypto');
+var bodyParser = require('body-parser');
+
+// markdown-related things
 var marked = require('marked');
 var validator = require('validator');
-  
+
+// job queuing mechanism
 var Agency = require('mongoose-agency');
 app.agency = new Agency( database.source , {
   // timeout: 0.01
@@ -35,21 +45,22 @@ app.agency = new Agency( database.source , {
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.set('strict routing', true);
-app.use(cachify.setup( require('./assets') , {
-  root: __dirname + '/public',
-  production: true
-}));
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.methodOverride());
-app.use(express.cookieParser(config.sessions.key));
-app.use(express.bodyParser());
-app.use(express.errorHandler());
-app.use(express.session({
-    key: 'sid'
-  , secret: config.sessions.key
-  , store: sessionStore
-  , cookie: { maxAge : 604800000 , domain: '.' + config.app.host }
+app.use( bodyParser.json() );
+app.use( bodyParser.urlencoded({
+  extended: true
+}) );
+//app.use(express.errorHandler());
+app.use( session({
+  name: 'soundtrack.id',
+  secret: config.sessions.key,
+  store: sessionStore,
+  cookie: {
+    maxAge : 30 * 24 * 60 * 60 * 1000 ,
+    domain: '.' + config.app.host
+  },
+  rolling: true
 }));
 
 app.use(passport.initialize());
