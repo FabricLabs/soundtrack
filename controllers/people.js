@@ -40,6 +40,14 @@ module.exports = {
           , artist: (results[3]) ? results[3].artist : null
           , tracks: (results[3]) ? results[3].tracks : null
         });
+
+        req.app.agency.publish('artist:update', {
+            id: artist._id
+          , timeout: 3 * 60 * 1000
+        }, function(err, job) {
+          console.log('update artist completed');
+        });
+
       });
 
       function collectUserPlays(done) {
