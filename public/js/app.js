@@ -451,11 +451,6 @@ $(window).load(function() {
                 });
               }
 
-              rollTrack();
-
-              var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
-              var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
-              
               function rollTrack() {
                 if (soundtrack.debug) console.log('rollTrack()', sources );
                 if (soundtrack.debug) console.log('current source:', soundtrack.player.src() );
@@ -521,7 +516,13 @@ $(window).load(function() {
                 }
 
                 ensureVolumeCorrect();
-              };
+              }
+
+              rollTrack();
+
+              var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
+              var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
+              
 
             }
 
