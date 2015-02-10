@@ -5,7 +5,8 @@
   "main": "soundtrack.js",
   "scripts": {
     "test": "mocha",
-    "start": "node ./soundtrack.js"
+    "coverage": "NODE_ENV=test istanbul cover _mocha -- --recursive",
+    "start": "node ./soundtrack.js",
   },
   "repository": "git@github.com:martindale/soundtrack.io.git",
   "author": "Eric Martindale",
