@@ -229,11 +229,13 @@ function AppController($scope, $http) {
         return t;
       });
 
-      $scope.playlistLength = data.map(function(x) {
-        return x.duration;
-      }).reduce(function(prev, now) {
-        return prev + now;
-      });
+      if (data.length) {
+        $scope.playlistLength = data.map(function(x) {
+          return x.duration;
+        }).reduce(function(prev, now) {
+          return prev + now;
+        });
+      }
 
       if (typeof(soundtrack) != 'undefined') {
         soundtrack.room.track = data[0];
