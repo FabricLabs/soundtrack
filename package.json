@@ -1,10 +1,10 @@
 {
   "name": "soundtrack.io",
   "version": "0.0.0",
-  "description": "ERROR: No README.md file found!",
+  "description": "soundtrack.io is a collaborative online jukebox.",
   "main": "soundtrack.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "node ./soundtrack.js"
   },
   "repository": "git@github.com:martindale/soundtrack.io.git",
