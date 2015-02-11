@@ -42,7 +42,7 @@ module.exports = {
         });
 
         req.app.agency.publish('artist:update', {
-            id: artist._id
+            id: (results[3]) ? results[3].artist._id : null
           , timeout: 3 * 60 * 1000
         }, function(err, job) {
           console.log('update artist completed');
