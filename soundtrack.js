@@ -1,7 +1,7 @@
 var heapdump = require('heapdump');
 
 // config, general requirements
-var config = require('./config');
+var config = require('./config');   config.jobs = { enabled: false };
 var database = require('./db');
 var util = require('./util');
 var express = require('express');
@@ -37,10 +37,12 @@ var marked = require('marked');
 var validator = require('validator');
 
 // job queuing mechanism
-var Agency = require('mongoose-agency');
-app.agency = new Agency( database.source , {
-  // timeout: 0.01
-});
+if (config.jobs && config.jobs.enabled) {
+  var Agency = require('mongoose-agency');
+  app.agency = new Agency( database.source , {
+    // timeout: 0.01
+  });
+}
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
