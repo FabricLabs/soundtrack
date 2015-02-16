@@ -25,7 +25,7 @@ module.exports = {
           return playlist;
         });
 
-        res.render('person', {
+        return res.render('person', {
             person: person
           , playlists: playlists
           , plays: results[1]
@@ -39,6 +39,7 @@ module.exports = {
             }
           , artist: (results[3]) ? results[3].artist : null
           , tracks: (results[3]) ? results[3].tracks : null
+          , trackCount: (results[3]) ? results[3].trackCount : null
         });
 
         if (req.app.config.jobs && req.app.config.jobs.enabled) {
@@ -123,7 +124,8 @@ module.exports = {
           
           // handle artist renames
           if (req.param('usernameSlug') !== artist.slug) {
-            return res.redirect('/' + artist.slug);
+            res.redirect('/' + artist.slug);
+            return artistComplete('redirected');
           }
 
           Track.find({ $or: [
@@ -136,18 +138,23 @@ module.exports = {
               { $group: { _id: '$_track', count: { $sum: 1 } } },
               { $sort: { 'count': -1 } }
             ], function(err, trackScores) {
+
+              tracks = tracks.map(function(track) {
+                var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
+                track.plays = (plays) ? plays.count : 0;
+                return track;
+              }).sort(function(a, b) {
+                return b.plays - a.plays;
+              });
+
+              var trackCount = tracks.length;
               
-              console.log( 'ARTIST CALLBACK', artist );
-              
-              artistComplete( null , {
+              tracks = tracks.slice( 0 , LIMIT - 1 );
+
+              return artistComplete( null , {
                   artist: artist
-                , tracks: tracks.map(function(track) {
-                    var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
-                    track.plays = (plays) ? plays.count : 0;
-                    return track;
-                  }).sort(function(a, b) {
-                    return b.plays - a.plays;
-                  })
+                , tracks: tracks
+                , trackCount: trackCount
               });
             });
 
