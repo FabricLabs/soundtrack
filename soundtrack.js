@@ -1,5 +1,5 @@
 var heapdump = require('heapdump');
-
+  
 // config, general requirements
 var config = require('./config');   config.jobs = { enabled: false };
 var database = require('./db');
@@ -293,11 +293,11 @@ app.post('/skip', requireLogin, function(req, res) {
 });
 
 sock.on('connection', function(conn) {
-  
-  app.clients[ conn.id ] = conn;
+
   var room = conn.headers.host.split('.')[0];
   if (!app.rooms[ room ]) return;
 
+  app.clients[ conn.id ] = conn;
   var connRoom = app.rooms[ room ];
 
   conn.room = connRoom._id.toString();
@@ -433,10 +433,7 @@ if (config.spotify && config.spotify.id && config.spotify.secret) {
     callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/spotify/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
-    console.log('spotify profile', profile);
-    console.log('access token', accessToken);
-    console.log('refreshToken', refreshToken);
-    
+
     Person.findOne({ $or: [
         { _id: (req.user) ? req.user._id : undefined }
       , { 'profiles.spotify.id': profile.id }
