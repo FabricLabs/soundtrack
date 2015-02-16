@@ -1,5 +1,3 @@
-var heapdump = require('heapdump');
-  
 // config, general requirements
 var config = require('./config');   config.jobs = { enabled: false };
 var database = require('./db');
@@ -636,15 +634,26 @@ app.post('/playlist', requireLogin , function(req, res) {
   if (!app.rooms[ req.room ]) return res.send({ status: 'error', message: 'No room to queue to.' });
 
   soundtrack.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
-    console.log('trackFromSource() callback executing...')
+    console.log('trackFromSource() callback executing...', err || track._id );
     if (err || !track) {
       console.log(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
     
+    var queueWasEmpty = false;
+    if (!app.rooms[ req.room ].playlist.length) queueWasEmpty = true;
     app.rooms[ req.room ].queueTrack(track, req.user, function() {
       console.log( 'queueTrack() callback executing... ');
       res.send({ status: 'success', message: 'Track added successfully!' });
+      
+      if (queueWasEmpty) {
+        app.rooms[ req.room ].broadcast({
+          type: 'track',
+          data: track,
+          //sources: sources,
+          seekTo: 0.0
+        });
+      }
     });
   });
 });
