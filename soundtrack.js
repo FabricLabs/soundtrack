@@ -1,5 +1,5 @@
 // config, general requirements
-var config = require('./config');   config.jobs = { enabled: false };
+var config = require('./config');
 var database = require('./db');
 var util = require('./util');
 var express = require('express');
