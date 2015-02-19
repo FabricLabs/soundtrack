@@ -28,20 +28,9 @@ RoomSchema.methods.bind = function( soundtrack ) {
 };
 RoomSchema.methods.broadcast = function( msg , GLOBAL ) {
   if (GLOBAL) return this.soundtrack.broadcast( msg );
-  
   var room = this;
-  var app = room.soundtrack.app;
-
-  var myClients = _.flatten( _.toArray( room.listeners ).map(function(l) {
-    return l.ids;
-  }) );
-
   var json = JSON.stringify(msg);
-  for (var id in app.clients) {
-    if (app.clients[id].room === room._id.toString()) {
-      app.clients[id].write(json);
-    }
-  }
+  this.soundtrack.pub.publish('soundtrack:rooms:' + room.slug , json );
 };
 RoomSchema.methods.queueTrack = function( track , curator , callback ) {
   var room = this;
@@ -87,7 +76,7 @@ RoomSchema.methods.queueTrack = function( track , curator , callback ) {
     
     room.savePlaylist(function() {
       room.broadcast({
-        type: 'playlist:add',
+        type: 'queue',
         data: track
       });
       return callback();
@@ -107,23 +96,15 @@ RoomSchema.methods.sortPlaylist = function() {
 RoomSchema.methods.savePlaylist = function( saved ) {
   if (!saved) var saved = new Function();
   var self = this;
-  var app = self.soundtrack.app;
-
-  //console.log('saving playlist');
-  //console.log('as exists', self.playlist );
-  //console.log('as stringified', JSON.stringify( self.playlist ));
-
-  app.redis.set( app.config.database.name + ':rooms:' + self.slug + ':playlist', JSON.stringify( self.playlist ) );
-  
-  app.rooms[ self.slug ] = self;
-  
+  var json = JSON.stringify( self.playlist );
+  self.soundtrack.pub.set( self.soundtrack.config.database.name + ':rooms:' + self.slug + ':playlist', json );
   saved();
 };
 
 RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   var room = this;
-  var MAXIMUM_PLAY_AGE = 180
-
+  var MAXIMUM_PLAY_AGE = 180;
+  
   if (typeof(gain) === 'function') {
     var cb = gain;
     var gain = 0;
@@ -134,6 +115,13 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     var cb = failpoint;
     var failpoint = MAXIMUM_PLAY_AGE;
   }
+  
+  if (!gain) var gain = 0;
+  if (!failpoint) var failpoint = MAXIMUM_PLAY_AGE;
+
+  
+  console.log('generatePool()', gain , failpoint);
+
 
   var query = {};
   
@@ -159,6 +147,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     }
     
     Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+      if (gain > failpoint) return cb('init');
       if (err || !plays) return room.generatePool( gain + 7 , failpoint , cb );
 
       Play.find({
@@ -192,6 +181,12 @@ RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;
 
   room.generatePool(function(err, plays) {
+    if (err || !plays) {
+      return room.soundtrack.trackFromSource('youtube', 'wZThMWK9GxA', function(err, track) {
+        Artist.populate( track , '_artist' , cb );
+      });
+    }
+    
     var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
     Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
   });
@@ -200,6 +195,8 @@ RoomSchema.methods.selectTrack = function( cb ) {
 RoomSchema.methods.ensureQueue = function(callback) {
   var room = this;
   if (room.playlist.length > 0) return callback();
+
+  console.log('ensureQueue needed, selecting track...');
 
   room.selectTrack(function(err, track) {
     if (err || !track) return callback( err );
@@ -211,18 +208,19 @@ RoomSchema.methods.ensureQueue = function(callback) {
   
 };
 RoomSchema.methods.nextSong = function( done ) {
+  console.log('nextSong!()')
+  
   if (!done) var done = new Function();
   var room = this;
-  var app = room.soundtrack.app;
 
-  //console.log('old playlist length', room.playlist.length);
   var lastTrack = room.playlist.shift();
-  //console.log('lastTrack was', lastTrack);
-  //console.log('new playlist length', room.playlist.length);
+
+  console.log('lastTrack:' , lastTrack );
 
   room.ensureQueue(function() {
-    room.savePlaylist(function() {
-      //console.log('saved, ', err );
+    console.log('queueEnsured...')
+    room.savePlaylist(function(err) {
+      console.log('playlist saved, ', err );
       room.startMusic(function() {
         console.log('nextSong() started music');
         done();
@@ -279,9 +277,9 @@ RoomSchema.methods.startMusic = function( cb ) {
 
       room.trackTimer = setTimeout(function() {
         room.nextSong();
-      }, (room.track.duration - seekTo) * 1000 );
+      }, (room.track.duration - seekTo) * 1000);
       
-      if (room.soundtrack.app.lastfm) {
+      if (room.soundtrack.lastfm) {
         room.setListeningActive( room.track , new Function() );
       }
 
@@ -310,7 +308,7 @@ RoomSchema.methods.startMusic = function( cb ) {
           }
           
           function scrobbleIfEnabled( done ) {
-            if (!room.soundtrack.app.lastfm) return done();
+            if (!room.soundtrack.lastfm) return done();
             room.scrobbleActive( room.track , done );
           }
 
