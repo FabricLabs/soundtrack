@@ -290,7 +290,7 @@ app.post('/skip', requireLogin, function(req, res) {
   
 });
 
-sock.on('connection', function(conn) {
+sock.on('connection', function socketConnectionHandler(conn) {
 
   var room = conn.headers.host.split('.')[0];
   if (!app.rooms[ room ]) return;
@@ -301,7 +301,7 @@ sock.on('connection', function(conn) {
   conn.room = connRoom._id.toString();
   conn.pongTime = (new Date()).getTime();
 
-  conn.on('data', function(message) {
+  conn.on('data', function socketDataHandler(message) {
     var data = JSON.parse(message);
     switch (data.type) {
       //respond to pings
