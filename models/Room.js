@@ -135,6 +135,9 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     var failpoint = MAXIMUM_PLAY_AGE;
   }
 
+  if (!gain) var gain = 0;
+  if (!failpoint) var failpoint = MAXIMUM_PLAY_AGE;
+
   var query = {};
   
   // must be queued by a real person
@@ -159,6 +162,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     }
     
     Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+      if (gain > failpoint) return cb('init');
       if (err || !plays) return room.generatePool( gain + 7 , failpoint , cb );
 
       Play.find({
@@ -192,6 +196,12 @@ RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;
 
   room.generatePool(function(err, plays) {
+    if (err || !plays) {
+      return room.soundtrack.trackFromSource('youtube', 'wZThMWK9GxA', function(err, track) {
+        Artist.populate( track , '_artist' , cb );
+      });
+    }
+
     var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
     Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
   });
