@@ -115,6 +115,7 @@ module.exports = {
   },
   pool: function(req, res, next) {
     req.roomObj.generatePool(function(err, plays, query) {
+      if (!plays || !plays.length) var plays = [];
       Track.find({ _id: { $in: plays.map(function(x) { return x._track; }) } }).populate('_artist _credits').exec(function(err, tracks) {
         res.format({
           json: function() {

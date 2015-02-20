@@ -122,7 +122,7 @@ RoomSchema.methods.savePlaylist = function( saved ) {
 
 RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   var room = this;
-  var MAXIMUM_PLAY_AGE = 180
+  var MAXIMUM_PLAY_AGE = 180;
 
   if (typeof(gain) === 'function') {
     var cb = gain;
@@ -135,6 +135,9 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     var failpoint = MAXIMUM_PLAY_AGE;
   }
 
+  if (!gain) var gain = 0;
+  if (!failpoint) var failpoint = MAXIMUM_PLAY_AGE;
+
   var query = {};
   
   // must be queued by a real person
@@ -146,9 +149,9 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7 + gain ),
     timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
   });
+
   // but not if it's been played recently!
   // TODO: one level of callbacks to collect this!
-
   Play.count({ _room: room._id }).exec(function(err, totalPlays) {
     if (!totalPlays) {
       // no tracks have ever been played.  full query.
@@ -157,9 +160,10 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
       // just query the whole damned room.
       query = { _room: room._id };
     }
-    
+
     Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
-      if (err || !plays) return room.generatePool( gain + 7 , failpoint , cb );
+      if (err || !plays && (gain <= failpoint)) return room.generatePool( gain + 7 , failpoint , cb );
+      if (!plays && gain > failpoint) return cb('init');
 
       Play.find({
         _room: room._id,
@@ -192,6 +196,12 @@ RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;
 
   room.generatePool(function(err, plays) {
+    if (err || !plays) {
+      return room.soundtrack.trackFromSource('youtube', 'wZThMWK9GxA', function(err, track) {
+        Artist.populate( track , '_artist' , cb );
+      });
+    }
+
     var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
     Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
   });
