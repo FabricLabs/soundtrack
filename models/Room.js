@@ -147,7 +147,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   // must have been queued within the past 7 days
   query = _.extend( query , {
     $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7 + gain ),
-    timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
+    //timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
   });
 
   // but not if it's been played recently!
@@ -162,9 +162,6 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     }
 
     Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
-      if (err || !plays && (gain <= failpoint)) return room.generatePool( gain + 7 , failpoint , cb );
-      if (!plays && gain > failpoint) return cb('init');
-
       Play.find({
         _room: room._id,
         timestamp: { $gte: (new Date()) - 3600 * 3 * 1000 }
@@ -177,9 +174,12 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
           //console.log(!~query.exclusionIDs.indexOf( x._track.toString() ));
           return !~query.exclusionIDs.indexOf( x._track.toString() );
         });
-      
+
+        if (err) console.error( err );
+        if ((!plays || plays.length < 10) && (gain <= failpoint)) return room.generatePool( gain + 7 , failpoint , cb );
+        if ((!plays) && (gain > failpoint)) return cb('init');
+        
         if (!plays || !plays.length || plays.length < 10) {
-          //console.log('nothing found. womp.', query );
           // try again, but with 7 more days included...
           return room.generatePool( gain + 7 , failpoint , cb );
         }
