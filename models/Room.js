@@ -178,11 +178,6 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
         if (err) console.error( err );
         if ((!plays || plays.length < 10) && (gain <= failpoint)) return room.generatePool( gain + 7 , failpoint , cb );
         if ((!plays) && (gain > failpoint)) return cb('init');
-        
-        if (!plays || !plays.length || plays.length < 10) {
-          // try again, but with 7 more days included...
-          return room.generatePool( gain + 7 , failpoint , cb );
-        }
 
         return cb( err , plays , query );
         
