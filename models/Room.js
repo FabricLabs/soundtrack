@@ -191,7 +191,8 @@ RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;
 
   room.generatePool(function(err, plays) {
-    if (err || !plays) {
+    if (err || !plays || plays.length === 0) {
+      console.log('room ' + room.slug + ' has no pool (POOL\'S CLOSED!)');
       return room.soundtrack.trackFromSource('youtube', 'wZThMWK9GxA', function(err, track) {
         Artist.populate( track , '_artist' , cb );
       });
