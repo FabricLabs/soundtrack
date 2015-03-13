@@ -4,5 +4,26 @@ block content
   .well.content-well
     h1 Chats
 
-    each message in chats
-      include partials/message
+    table.table.tablesorter
+      thead
+        tr
+          th Author
+          th Message
+          th Timestamp
+      tbody
+        each message in chats
+          tr
+            td(style="text-align: right;")
+              img.user-avatar-small(src="#{message._author.avatar.url}")
+              strong(data-role="author", data-user-username="#{message._author.username}") #{message._author.username}
+            td
+              if (message.message.substring(0, 4) == '/me ')
+                span.message-content  !{sanitize(lexers.chat.output(message.message.substring(4))).xss()}
+              else
+                span.message-content  !{sanitize(lexers.chat.output(message.message)).xss()}
+            
+            td
+              if (message._track && message._track._id)
+                abbr.timestamp.pull-right(title="#{moment(message.created).format()}\n\"#{message._track.title}\" by #{message._track._artist.name} was playing.") #{moment(message.created).format('HH:mm:ss')}
+              else
+                abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
