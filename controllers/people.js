@@ -209,20 +209,22 @@ module.exports = {
     });
   },
   listPlays: function(req, res, next) {
+    var query = {};
     var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 1000000;
 
+    if (req.roomObj) query['_room'] = req.roomObj._id;
+
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-      if (!person) { return next(); }
+      if (!person) return next();
+      
+      query['_curator'] = person._id;
 
       async.parallel([
         function(done) {
           Playlist.find({ _creator: person._id, public: true }).exec( done );
         },
         function(done) {
-          Play.find({
-            _curator: person._id,
-            _room: (req.roomObj) ? req.roomObj._id : undefined
-          }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
+          Play.find( query ).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'
             }, done );
