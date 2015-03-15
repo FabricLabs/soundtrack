@@ -210,7 +210,7 @@ module.exports = {
   },
   listPlays: function(req, res, next) {
     var query = {};
-    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 1000000;
+    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
 
     if (req.roomObj) query['_room'] = req.roomObj._id;
 
@@ -224,11 +224,14 @@ module.exports = {
           Playlist.find({ _creator: person._id, public: true }).exec( done );
         },
         function(done) {
-          Play.find( query ).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
+          Play.find( query ).sort('-timestamp').populate('_track _curator _room').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'
             }, done );
           });
+        },
+        function(done) {
+          Play.count( query ).exec( done );
         }
       ], function(err, results) {
         res.format({
@@ -237,9 +240,11 @@ module.exports = {
           },
           html: function() {
             res.render('person-plays', {
-                person: person
-              , playlists: results[0]
-              , plays: results[1]
+              person: person,
+              playlists: results[0],
+              plays: results[1],
+              count: results[2],
+              limit: limit
             });
           }
         });

@@ -7,6 +7,8 @@ var _ = require('underscore');
 var async = require('async');
 var util = require('../util');
 
+var config = require('../config');
+
 // this defines the fields associated with the model,
 // and moreover, their type.
 var RoomSchema = new Schema({
@@ -22,6 +24,11 @@ RoomSchema.plugin( slug('name'), {
   required: true
 } );
 RoomSchema.index({ slug: 1 });
+
+RoomSchema.virtual('index').get(function() {
+  var protocol = (config.app.safe) ? 'https' : 'http';
+  return protocol + '://' + this.slug + '.' + config.app.host;
+});
 
 RoomSchema.methods.bind = function( soundtrack ) {
   this.soundtrack = soundtrack;
