@@ -15,7 +15,7 @@ block content
             |  edit user
           if (!person.profiles || !person.profiles.lastfm || !person.profiles.lastfm.username)
             a.btn(href="/auth/lastfm") add last.fm &raquo;
-          if (!person.profiles || !person.profiles.spotify || !person.profiles.spotify.username)
+          if (!person.profiles || !person.profiles.spotify || !person.profiles.spotify.id)
             a.btn(href="/auth/spotify") add spotify &raquo;
 
     if (artist)
