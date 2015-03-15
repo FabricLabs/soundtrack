@@ -12,5 +12,7 @@ if (typeof(play._track._artist) != 'undefined' && play._track._artist)
     td
       a(href="/#{play._track._artist.slug}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
     td
+      a(href="#{play._room.index}") #{play._room.name}
+    td
       - var track = play._track
       include track-controls
