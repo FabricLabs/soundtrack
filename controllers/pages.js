@@ -65,7 +65,7 @@ module.exports = {
   history: function(req, res) {
     Play.find({
       _room: req.roomObj._id
-    }).populate('_track _curator').sort('-timestamp').limit(100).exec(function(err, plays) {
+    }).populate('_track _curator _room').sort('-timestamp').limit(100).exec(function(err, plays) {
       Artist.populate(plays, {
         path: '_track._artist'
       }, function(err, plays) {
