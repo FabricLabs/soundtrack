@@ -67,6 +67,8 @@ block content
           if (artist)
             | /Albums
       li
+        a(href="#rooms", data-toggle="tab") Rooms
+      li
         a(href="#plays", data-toggle="tab") Plays
 
     .tab-content
@@ -162,7 +164,15 @@ block content
                         i.icon-remove
                     a.btn.btn-mini(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
                     
-                        
+      .tab-pane#rooms
+        h3 Rooms
+        
+        .row-fluid
+          .span6
+            h4 Most Queues
+            each room in topRoomsByQueues
+              li queued <strong>#{room.count}</strong> tracks in 
+                a(href="#{room._room.index}") #{room._room.name}
 
       .tab-pane#plays
         h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)

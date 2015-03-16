@@ -12,7 +12,8 @@ module.exports = {
         collectUserPlaylists,
         collectUserPlays,
         collectPlayStats,
-        collectArtistData
+        collectArtistData,
+        collectRooms
       ], function(err, results) {
 
         var playlists = results[0];
@@ -40,6 +41,7 @@ module.exports = {
           , artist: (results[3]) ? results[3].artist : null
           , tracks: (results[3]) ? results[3].tracks : null
           , trackCount: (results[3]) ? results[3].trackCount : null
+          , topRoomsByQueues: results[4]
         });
 
         if (req.app.config.jobs && req.app.config.jobs.enabled) {
@@ -52,6 +54,30 @@ module.exports = {
         }
 
       });
+      
+      function collectRooms(done) {
+        Play.aggregate([
+          { $match: {
+            _curator: person._id
+          } },
+          { $group: { _id: '$_room', count: { $sum: 1 } } },
+          { $sort: { 'count': -1 } },
+          { $limit: LIMIT }
+        ], function(err, collected) {
+          Room.populate( collected , {
+            path: '_id'
+          }, function(err, topRooms) {
+            topRooms = topRooms.map(function(x) {
+              return {
+                _room: x._id,
+                count: x.count
+              };
+            });
+            
+            done( null , topRooms );
+          });
+        });
+      }
 
       function collectUserPlays(done) {
         Play.find({ _curator: person._id }).sort('-timestamp').limit(20).populate('_track _curator _room').exec(function(err, plays) {
