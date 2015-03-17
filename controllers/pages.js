@@ -62,6 +62,9 @@ module.exports = {
   about: function(req, res, next) {
     res.render('about', { });
   },
+  help: function(req, res, next) {
+    res.render('help', { });
+  },
   history: function(req, res) {
     Play.find({
       _room: req.roomObj._id

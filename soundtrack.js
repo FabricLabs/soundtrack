@@ -1,6 +1,7 @@
 // config, general requirements
 var config = require('./config');
 var database = require('./db');
+var lang = require('./lang');
 var util = require('./util');
 var express = require('express');
 
@@ -104,6 +105,8 @@ app.use(function(req, res, next) {
   res.locals.config = config;
   res.locals.user = req.user;
   res.charset = 'utf-8';
+  
+  res.locals.lang = lang['en'];
   
   var parts = req.headers.host.split('.');
   req.room = parts[0];
@@ -516,6 +519,7 @@ app.get('/', function(req, res, next) {
   return res.render('404-room');
 }, pages.index );
 app.get('/about', redirectToMainSite , pages.about );
+app.get('/help', redirectToMainSite , pages.help );
 
 app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
@@ -698,7 +702,7 @@ app.post('/register', function(req, res) {
         return res.render('register', { user : user });
       } else {
         req.logIn(user, function(err) {
-          req.flash('info', '<strong>Welcome to soundtrack.io!</strong><br />Thanks for joining.  You\'ll notice we didn\'t collect your email address, so make sure to remember your password – we can\'t recover it for you.  Maybe add one of our supported services so you can log in without it?<br /><br /><strong>Some First Steps:</strong><br /><br /><ul><li><a href="/auth/spotify" class="btn btn-mini">Connect Spotify &raquo;</a>  This will enable your ability to import playlists from Spotify.</li><li><a href="/auth/lastfm" class="btn btn-mini">Connect LastFM &raquo;</a>  This enables your ability to Scrobble to LastFM and track your listening trends!</li><li><a href="/'+ user.slug +'#enable-profile-editor" class="btn btn-mini">Set Gravatar &raquo;</a>  Click "edit profile" and add your email address, and we can add an image for you.</li></ul>');
+          req.flash('info', lang.en.intro );
           res.redirect('/');
         });
       }
