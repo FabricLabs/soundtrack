@@ -215,7 +215,7 @@ module.exports = {
           return res.redirect('back');
         break;
         case 'youtube':
-          req.youtube.get('playlistItems?playlistId='+playlist.id+'&part=contentDetails').on('complete', function(data) {
+          req.youtube.get('playlistItems?playlistId='+playlist.id+'&part=contentDetails&maxResults=50').on('complete', function(data) {
             
             var pullers = data.items.map(function( track ) {
               return function( trackComplete ) {
