@@ -451,6 +451,15 @@ var externalizer = function(req, res, next) {
   return next();
 }
 
+var redirectSetup = function(req, res, next) {
+  if (req.param('next')) {
+    req.session.next = req.param('next');
+    req.session.save( next );
+  } else {
+    return next();
+  }
+}
+
 if (config.google && config.google.id && config.google.secret) {
   var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
   passport.use(new GoogleStrategy({
@@ -461,11 +470,7 @@ if (config.google && config.google.id && config.google.secret) {
     scope: 'profile email https://www.googleapis.com/auth/youtube',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
-    console.log('accessToken:', accessToken );
-    console.log('profile:', profile );
-    
-    console.log('req.user', req.user)
-    
+
     Person.findOne({ $or: [
         { _id: (req.user) ? req.user._id : undefined }
       , { 'profiles.google.id': profile.id }
@@ -490,8 +495,9 @@ if (config.google && config.google.id && config.google.secret) {
     
   }));
   
-  app.get('/auth/google', passport.authenticate('google') );
+  app.get('/auth/google', redirectSetup , passport.authenticate('google') );
   app.get('/auth/google/callback', passport.authenticate('google') , function(req, res) {
+    if (req.session.next) return res.redirect( req.session.next );
     res.redirect('/');
   });
   
@@ -528,8 +534,9 @@ if (config.spotify && config.spotify.id && config.spotify.secret) {
     });
   }));
   
-  app.get('/auth/spotify', passport.authenticate('spotify') );
+  app.get('/auth/spotify', redirectSetup , passport.authenticate('spotify') );
   app.get('/auth/spotify/callback', passport.authenticate('spotify') , function(req, res) {
+    if (req.session.next) return res.redirect( req.session.next );
     res.redirect('/');
   });
   
