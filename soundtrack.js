@@ -942,8 +942,9 @@ Room.find().exec(function(err, rooms) {
               return done();
             }
             
-            app.rooms[ room.slug ].startMusic( errorHandler );
-    
+            //app.rooms[ room.slug ].startMusic( errorHandler );
+            app.rooms[ room.slug ].startMusic( done );
+
           });
         };
       });
