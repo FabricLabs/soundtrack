@@ -232,12 +232,8 @@ module.exports = {
             var path = 'playlistItems?playlistId='+playlist.id+'&part=contentDetails&maxResults=' + PER_PAGE;
 
             if (typeof(pageToken) == 'string') path += '&pageToken=' + pageToken;
-            
-            console.log( path );
-            
+
             req.youtube.get( path ).on('complete', function(data) {
-              console.log(data);
-              
               data.items.map(function( track ) {
                 return function( trackComplete ) {
                   req.soundtrack.trackFromSource('youtube', track.contentDetails.videoId , trackComplete );
@@ -256,12 +252,19 @@ module.exports = {
           
           getSet( 1 , function() {
             async.series( pullers , function(err, results) {
+              
+              var trackIDs = results.map(function(x) {
+                return x._id;
+              }).filter(function(x) {
+                return x;
+              });
+
               var createdPlaylist = new Playlist({
                 name: playlist.name,
                 public: true,
                 _creator: req.user._id,
                 _owner: req.user._id,
-                _tracks: results.map(function(x) { return x._id; })
+                _tracks: trackIDs
               });
               createdPlaylist.save(function(err) {
                 if (err) console.log(err);
@@ -335,7 +338,7 @@ module.exports = {
       youtube: syncYoutube,
       spotify: syncSpotify
     }, function(err, results) {
-      if (~querySources.indexOf('youtube') && !results.youtube) return res.redirect('/auth/google?next=/sets/import');
+      //if (~querySources.indexOf('youtube') && !results.youtube) return res.redirect('/auth/google?next=/sets/import');
       if (~querySources.indexOf('spotify') && !results.spotify) return res.redirect('/auth/spotify?next=/sets/import');
 
       res.render('sets-import', {
