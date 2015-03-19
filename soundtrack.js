@@ -431,7 +431,11 @@ var externalizer = function(req, res, next) {
 
   req.youtube = {
     get: function( path ) {
-      return rest.get('https://www.googleapis.com/youtube/v3/' + path + '&access_token=' + req.user.profiles.google.token , {
+      var path = 'https://www.googleapis.com/youtube/v3/' + path + '&access_token=' + req.user.profiles.google.token;
+      
+      console.log('fullpath', path );
+      
+      return rest.get( path , {
         'Authorization': 'Bearer ' + req.user.profiles.google.token
       });
     }

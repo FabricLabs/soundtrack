@@ -222,14 +222,39 @@ module.exports = {
           return res.redirect('back');
         break;
         case 'youtube':
-          req.youtube.get('playlistItems?playlistId='+playlist.id+'&part=contentDetails&maxResults=50').on('complete', function(data) {
+          
+          var PER_PAGE = 50;
+          
+          var pullers = [];
+          function getSet( pageNum , pageToken , setComplete ) {
+            if (typeof(pageToken) == 'function') var setComplete = pageToken;
+ 
+            var path = 'playlistItems?playlistId='+playlist.id+'&part=contentDetails&maxResults=' + PER_PAGE;
+
+            if (typeof(pageToken) == 'string') path += '&pageToken=' + pageToken;
             
-            var pullers = data.items.map(function( track ) {
-              return function( trackComplete ) {
-                req.soundtrack.trackFromSource('youtube', track.contentDetails.videoId , trackComplete );
+            console.log( path );
+            
+            req.youtube.get( path ).on('complete', function(data) {
+              console.log(data);
+              
+              data.items.map(function( track ) {
+                return function( trackComplete ) {
+                  req.soundtrack.trackFromSource('youtube', track.contentDetails.videoId , trackComplete );
+                }
+              }).forEach(function(puller) {
+                pullers.push( puller );
+              });
+              
+              if (data.pageInfo.totalResults > pageNum * PER_PAGE) {
+                return getSet( ++pageNum , data.nextPageToken , setComplete );
+              } else {
+                return setComplete();
               }
             });
-
+          }
+          
+          getSet( 1 , function() {
             async.series( pullers , function(err, results) {
               var createdPlaylist = new Playlist({
                 name: playlist.name,
