@@ -196,95 +196,135 @@ module.exports = {
     }
 
   },
-  syncSetup: function(req, res, next) {
+  import: function() {
     
-    if (!req.user) return res.redirect('/login');
-    if (!req.user.profiles || !req.user.profiles.spotify) return res.redirect('/auth/spotify');
-    if (!req.user.profiles.spotify.token) return res.redirect('/auth/spotify');
-    //if (req.user.profiles.spotify.expires < Date.now()) return res.redirect('/auth/spotify');
-    
-    // stub for spotify API auth
-    var spotify = {
-      get: function( path ) {
-        return rest.get('https://api.spotify.com/v1/' + path , {
-          headers: {
-            'Authorization': 'Bearer ' + req.user.profiles.spotify.token
-          }
-        });
-      }
-    }
+  },
+  syncAndImport: function(req, res, next) {
     
     var playlist = req.param('playlist');
-  
     if (playlist) {
       try {
         playlist = JSON.parse( playlist );
       } catch (e) {
         return res.render('500');
       }
-
-      var url = 'users/' + playlist.user + '/playlists/' + playlist.id + '?limit=250';
-      spotify.get( url ).on('complete', function(spotifyPlaylist , response ) {
-        if (!spotifyPlaylist || response.statusCode !== 200) {
-          req.flash('error', 'Could not retrieve list from Spotify. ' + response.statusCode );
+      
+      switch (playlist.source) {
+        default:
+          req.flash('error', 'Unknown playlist source "'+playlist.source+'"');
           return res.redirect('back');
-        }
-        
-        console.log('spotifyPlaylist', spotifyPlaylist);
-        console.log('will be public: ', spotifyPlaylist.public);
-
-        var tracks = spotifyPlaylist.tracks.items.map(function(x) {
-          return {
-            title: x.track.name,
-            artist: x.track.artists[0].name,
-            credits: x.track.artists.map(function(y) {
-              return y.name
-            }),
-            duration: x.track.duration_ms / 1000
-          }
-        });
-
-        var pushers = [];
-        tracks.forEach(function(track) {
-          pushers.push(function(done) {
-            req.soundtrack.trackFromSource('object', track , done );
-          });
-        });
-        
-        async.series( pushers , function(err, tracks) {
-          
-          tracks.forEach(function(track) {
-            /* req.app.agency.publish('track:crawl', {
-              id: track._id
-            }, function(err) {
-              console.log('track crawled, doing stuff in initiator');
-            }); */
-          });
-          
-          var playlist = new Playlist({
-            name: spotifyPlaylist.name,
-            description: spotifyPlaylist.description,
-            public: spotifyPlaylist.public,
-            _creator: req.user._id,
-            _owner: req.user._id,
-            _tracks: tracks.map(function(x) { return x._id }),
-            remotes: {
-              spotify: {
-                id: spotifyPlaylist.id
+        break;
+        case 'youtube':
+          req.youtube.get('playlistItems?playlistId='+playlist.id+'&part=contentDetails').on('complete', function(data) {
+            
+            var pullers = data.items.map(function( track ) {
+              return function( trackComplete ) {
+                req.soundtrack.trackFromSource('youtube', track.contentDetails.videoId , trackComplete );
               }
+            });
+
+            async.series( pullers , function(err, results) {
+              var createdPlaylist = new Playlist({
+                name: playlist.name,
+                _creator: req.user._id,
+                _owner: req.user._id,
+                _tracks: results.map(function(x) { return x._id; })
+              });
+              createdPlaylist.save(function(err) {
+                if (err) console.log(err);
+                return res.redirect('/' + req.user.slug + '/' + createdPlaylist.slug );
+              });
+            });
+          });
+        break;
+        case 'spotify':
+          var url = 'users/' + playlist.user + '/playlists/' + playlist.id + '?limit=250';
+          req.spotify.get( url ).on('complete', function(spotifyPlaylist , response ) {
+            if (!spotifyPlaylist || response.statusCode !== 200) {
+              req.flash('error', 'Could not retrieve list from Spotify. ' + response.statusCode );
+              return res.redirect('back');
             }
+
+            var tracks = spotifyPlaylist.tracks.items.map(function(x) {
+              return {
+                title: x.track.name,
+                artist: x.track.artists[0].name,
+                credits: x.track.artists.map(function(y) {
+                  return y.name
+                }),
+                duration: x.track.duration_ms / 1000
+              }
+            });
+
+            var pushers = [];
+            tracks.forEach(function(track) {
+              pushers.push(function(done) {
+                req.soundtrack.trackFromSource('object', track , done );
+              });
+            });
+            
+            async.series( pushers , function(err, tracks) {
+              
+              tracks.forEach(function(track) {
+                /* req.app.agency.publish('track:crawl', {
+                  id: track._id
+                }, function(err) {
+                  console.log('track crawled, doing stuff in initiator');
+                }); */
+              });
+              
+              var playlist = new Playlist({
+                name: spotifyPlaylist.name,
+                description: spotifyPlaylist.description,
+                public: spotifyPlaylist.public,
+                _creator: req.user._id,
+                _owner: req.user._id,
+                _tracks: tracks.map(function(x) { return x._id }),
+                remotes: {
+                  spotify: {
+                    id: spotifyPlaylist.id
+                  }
+                }
+              });
+              playlist.save(function(err) {
+                res.redirect('/' + req.user.slug + '/' + playlist.slug );
+              });
+            });
           });
-          playlist.save(function(err) {
-            res.redirect('/' + req.user.slug + '/' + playlist.slug );
-          });
-        });
+        break;
+      }
+      return;
+    }
+    
+    async.parallel({
+      youtube: syncYoutube,
+      spotify: syncSpotify
+    }, function(err, results) {
+      if (!results.youtube) return res.redirect('/auth/google?next=/sets/import');
+      if (!results.spotify) return res.redirect('/auth/spotify?next=/sets/import');
+
+      res.render('sets-import', {
+        youtube: results.youtube,
+        spotify: results.spotify,
       });
       
-    } else {
-      spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results, response) {
-        if (response.statusCode == 401) return res.redirect('/auth/spotify');
-        res.render('sets-import', {
-          playlists: results.items
+    });
+    
+    function syncYoutube( done ) {
+      req.youtube.get('playlists?part=snippet&mine=true&maxResults=50').on('complete', function(data) {
+        req.user.profiles.google.playlists = data.items;
+        req.user.save(function(err) {
+          done( err , data.items );
+        });
+      });
+    }
+    
+    function syncSpotify( done ) {
+      req.spotify.get('users/' + req.user.profiles.spotify.id + '/playlists').on('complete', function(results, response) {
+        if (!results || response.statusCode == 401) return done('expired');
+        req.user.profiles.spotify.playlists = results.items;
+        req.user.save(function(err) {
+          done( err , results.items );
         });
       });
     }

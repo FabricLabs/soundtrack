@@ -27,6 +27,13 @@ var PersonSchema = new Schema({
         token: String,
         updated: Date,
         expires: Number
+      },
+      google: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date,
+        playlists: []
       }
     }
   , preferences: {

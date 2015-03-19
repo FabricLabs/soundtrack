@@ -426,6 +426,80 @@ var soundtracker = function(req, res, next) {
   next();
 };
 
+var externalizer = function(req, res, next) {
+  if (!req.user) return res.redirect('/login');
+
+  req.youtube = {
+    get: function( path ) {
+      if (!req.user.profiles || !req.user.profiles.google || !req.user.profiles.google.token) return done('no creds');
+      return rest.get('https://www.googleapis.com/youtube/v3/' + path + '&access_token=' + req.user.profiles.google.token , {
+        'Authorization': 'Bearer ' + req.user.profiles.google.token
+      });
+    }
+  }
+  
+  // stub for spotify API auth
+  req.spotify = {
+    get: function( path ) {
+      if (!req.user.profiles || !req.user.profiles.spotify || !req.user.profiles.spotify.token) return done('no creds');
+      return rest.get('https://api.spotify.com/v1/' + path , {
+        headers: {
+          'Authorization': 'Bearer ' + req.user.profiles.spotify.token
+        }
+      });
+    }
+  }
+  
+  return next();
+}
+
+if (config.google && config.google.id && config.google.secret) {
+  var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+  passport.use(new GoogleStrategy({
+    clientID: config.google.id,
+    clientSecret: config.google.secret,
+    //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/google/callback',
+    callbackURL: 'https://soundtrack.io/auth/google/callback',
+    scope: 'profile email https://www.googleapis.com/auth/youtube',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+    console.log('accessToken:', accessToken );
+    console.log('profile:', profile );
+    
+    console.log('req.user', req.user)
+    
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.google.id': profile.id }
+    ]}).exec(function(err, person) {
+      console.log('search result: ', err , person );
+      
+      if (!person) var person = new Person({ username: profile.username });
+      
+      person.profiles.google = {
+        id: profile.id,
+        token: accessToken,
+        updated: new Date(),
+        expires: null
+      }
+      
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+      
+    });
+    
+  }));
+  
+  app.get('/auth/google', passport.authenticate('google') );
+  app.get('/auth/google/callback', passport.authenticate('google') , function(req, res) {
+    res.redirect('/');
+  });
+  
+  app.get('/sets/import', soundtracker , externalizer , playlists.syncAndImport );
+
+}
 
 if (config.spotify && config.spotify.id && config.spotify.secret) {
   passport.use(new SpotifyStrategy({
@@ -461,7 +535,7 @@ if (config.spotify && config.spotify.id && config.spotify.secret) {
     res.redirect('/');
   });
   
-  app.get('/sets/sync/spotify', soundtracker , playlists.syncSetup );
+  app.get('/sets/sync/spotify', soundtracker , externalizer , playlists.syncAndImport );
   
 }
 

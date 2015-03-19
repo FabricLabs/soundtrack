@@ -27,6 +27,7 @@
     "mongoose-agency": "0.0.0",
     "mongoose-slug": "~1.3.0",
     "passport": "~0.1.17",
+    "passport-google-oauth": "^0.2.0",
     "passport-local": "~0.1.6",
     "passport-local-mongoose": "~0.2.4",
     "passport-spotify": "^0.1.0",
