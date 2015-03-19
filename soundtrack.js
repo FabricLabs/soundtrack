@@ -459,6 +459,17 @@ var redirectSetup = function(req, res, next) {
     return next();
   }
 }
+var redirectNext = function(req, res, next) {
+  if (req.session.next) {
+    var path = req.session.next;
+    delete req.session.next;
+    req.session.save(function() {
+      res.redirect( path );
+    });
+  } else {
+    res.redirect('/');
+  }
+}
 
 if (config.google && config.google.id && config.google.secret) {
   var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
@@ -496,11 +507,8 @@ if (config.google && config.google.id && config.google.secret) {
   }));
   
   app.get('/auth/google', redirectSetup , passport.authenticate('google') );
-  app.get('/auth/google/callback', passport.authenticate('google') , function(req, res) {
-    if (req.session.next) return res.redirect( req.session.next );
-    res.redirect('/');
-  });
-  
+  app.get('/auth/google/callback', passport.authenticate('google') , redirectNext );
+
   app.get('/sets/import', soundtracker , externalizer , playlists.syncAndImport );
 
 }
@@ -535,10 +543,7 @@ if (config.spotify && config.spotify.id && config.spotify.secret) {
   }));
   
   app.get('/auth/spotify', redirectSetup , passport.authenticate('spotify') );
-  app.get('/auth/spotify/callback', passport.authenticate('spotify') , function(req, res) {
-    if (req.session.next) return res.redirect( req.session.next );
-    res.redirect('/');
-  });
+  app.get('/auth/spotify/callback', passport.authenticate('spotify') , redirectNext );
   
   app.get('/sets/sync/spotify', soundtracker , externalizer , playlists.syncAndImport );
   
