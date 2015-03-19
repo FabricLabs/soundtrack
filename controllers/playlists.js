@@ -205,8 +205,8 @@ module.exports = {
     var querySources = ['youtube', 'spotify'];
     if (req.param('sourceName')) querySources = [ req.param('sourceName') ];
 
-    if (~querySources.indexOf('youtube') && (!req.user.profiles.google || !req.user.profiles.google.token)) return done('no creds');
-    if (~querySources.indexOf('spotify') && (!req.user.profiles.spotify || !req.user.profiles.spotify.token)) return done('no creds');
+    if (~querySources.indexOf('youtube') && (!req.user.profiles.google || !req.user.profiles.google.token)) return res.redirect('/auth/google?next=/sets/import');
+    if (~querySources.indexOf('spotify') && (!req.user.profiles.spotify || !req.user.profiles.spotify.token)) return res.redirect('/auth/spotify?next=/sets/import');
 
     var playlist = req.param('playlist');
     if (playlist) {
@@ -338,7 +338,7 @@ module.exports = {
       youtube: syncYoutube,
       spotify: syncSpotify
     }, function(err, results) {
-      //if (~querySources.indexOf('youtube') && !results.youtube) return res.redirect('/auth/google?next=/sets/import');
+      if (~querySources.indexOf('youtube') && !results.youtube) return res.redirect('/auth/google?next=/sets/import');
       if (~querySources.indexOf('spotify') && !results.spotify) return res.redirect('/auth/spotify?next=/sets/import');
 
       res.render('sets-import', {
