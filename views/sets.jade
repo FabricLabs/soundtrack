@@ -6,8 +6,16 @@ block content
     h1
       .btn-group.pull-right
         if (user)
-          a.btn(href="/sets/sync/spotify") Import from Spotify &raquo;
-          a.btn(href="/#{user.slug}/playlists/new") Create a Set &raquo;
+          a.btn.btn-large(href="/#{user.slug}/playlists/new") Create New &raquo;
+          a.btn.btn-large(href="/sets/import") Import
+          a.btn.btn-large.dropdown-toggle(data-toggle="dropdown", href="#")
+            span.caret
+          ul.dropdown-menu
+            li
+              a(href="/sets/import?sourceName=youtube") From YouTube &raquo;
+            li
+              a(href="/sets/import?sourceName=spotify") From Spotify &raquo;
+
       | Public Sets
 
     table.table.tablesorter
