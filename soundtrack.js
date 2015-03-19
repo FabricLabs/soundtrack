@@ -431,7 +431,6 @@ var externalizer = function(req, res, next) {
 
   req.youtube = {
     get: function( path ) {
-      if (!req.user.profiles || !req.user.profiles.google || !req.user.profiles.google.token) return done('no creds');
       return rest.get('https://www.googleapis.com/youtube/v3/' + path + '&access_token=' + req.user.profiles.google.token , {
         'Authorization': 'Bearer ' + req.user.profiles.google.token
       });
@@ -441,7 +440,6 @@ var externalizer = function(req, res, next) {
   // stub for spotify API auth
   req.spotify = {
     get: function( path ) {
-      if (!req.user.profiles || !req.user.profiles.spotify || !req.user.profiles.spotify.token) return done('no creds');
       return rest.get('https://api.spotify.com/v1/' + path , {
         headers: {
           'Authorization': 'Bearer ' + req.user.profiles.spotify.token

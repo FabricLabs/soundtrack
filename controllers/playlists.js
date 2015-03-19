@@ -200,7 +200,14 @@ module.exports = {
     
   },
   syncAndImport: function(req, res, next) {
-    
+    if (!req.user.profiles) req.user.profiles = {};
+  
+    var querySources = ['youtube', 'spotify'];
+    if (req.param('sourceName')) querySources = [ req.param('sourceName') ];
+
+    if (~querySources.indexOf('youtube') && (!req.user.profiles.google || !req.user.profiles.google.token)) return done('no creds');
+    if (~querySources.indexOf('spotify') && (!req.user.profiles.spotify || !req.user.profiles.spotify.token)) return done('no creds');
+
     var playlist = req.param('playlist');
     if (playlist) {
       try {
@@ -226,6 +233,7 @@ module.exports = {
             async.series( pullers , function(err, results) {
               var createdPlaylist = new Playlist({
                 name: playlist.name,
+                public: true,
                 _creator: req.user._id,
                 _owner: req.user._id,
                 _tracks: results.map(function(x) { return x._id; })
@@ -296,16 +304,18 @@ module.exports = {
       return;
     }
     
+    var stack = {};
+
     async.parallel({
       youtube: syncYoutube,
       spotify: syncSpotify
     }, function(err, results) {
-      if (!results.youtube) return res.redirect('/auth/google?next=/sets/import');
-      if (!results.spotify) return res.redirect('/auth/spotify?next=/sets/import');
+      if (~querySources.indexOf('youtube') && !results.youtube) return res.redirect('/auth/google?next=/sets/import');
+      if (~querySources.indexOf('spotify') && !results.spotify) return res.redirect('/auth/spotify?next=/sets/import');
 
       res.render('sets-import', {
-        youtube: results.youtube,
-        spotify: results.spotify,
+        youtube: results.youtube || [],
+        spotify: results.spotify || [],
       });
       
     });
