@@ -53,7 +53,7 @@ block content
                     a(href="/#{room._owner.slug}") #{room._owner.username}
               p !{marked(room.description || '')}
             td
-              if (room.track)
+              if (room.track && room.track._artist)
                 h5
                   a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
                   |  by 
