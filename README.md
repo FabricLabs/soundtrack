@@ -10,11 +10,13 @@ soundtrack.io is a collaborative online jukebox.  It is an experimental Internet
 Before you begin you will need to have nodejs, redis, and mongodb installed.
 Homebrew is recommended for OS X users.
 
-    brew install nodejs mongodb redis
-    redis-server &
-    mongod &
+```
+brew install nodejs mongodb redis
+```
 
-Once you have them installed, go ahead and clone the repository.
+In the logged output, you'll find some instructions for starting both mongodb and redis – you can follow those instructions, or execute once with `redis-server & mongod &`
+
+Once you have them installed (and running!), go ahead and clone the repository.
 
     git clone git@github.com:martindale/soundtrack.io.git
     cd soundtrack.io
@@ -23,6 +25,16 @@ You will need to fetch the dependencies and then you can start up the server.
 
     npm install
     node soundtrack.js
+    
+### Testing Rooms
+Now that soundtrack has multiple rooms, you'll need to configure your local hostname lookups to point at the appropriate locations.  In `/etc/hosts` (or equivalent for your OS):
+
+```
+127.0.0.1 localhost.localdomain
+127.0.0.1 test.localhost.localdomain
+```
+
+You'll need to add an entry for each subdomain you want to test.  Also, the `.localdomain` component is important for sessions, as some browsers expect a top level domain for cookies to work correctly!
 
 ## API
 
