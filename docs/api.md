@@ -52,15 +52,11 @@ Artists which have been recognized by the soundtrack server.
 `/artists/:artistSlug`
 `GET` to retrieve a specific artist, `PATCH` to update specific fields, `PUT` to create an artist.
 
+## Chat
+Chat messages for a specific room.
 
-## Track
-Tracks which have been recognized by the soundtrack server.
-
-`/tracks`
-`GET` to retrieve a list of tracks, `POST` to create a track.
-
-`/tracks/:trackID`
-`GET` to retrive a specific track by its `_id`, `PATCH` to update specific components of that track (e.g., editing the title)
+`:roomSlug\.yourdomain\.tld/chat`
+`GET` retrives a list of the most recent messages, `POST` to create a message.
 
 ## Source
 Audio sources and their appropriate metadata.  Not yet functional.
@@ -73,3 +69,15 @@ Bundles of `Track` resources that are meant to be played together (also, `Playli
 
 `/:usernameSlug/:setSlug`
 `GET` to retrieve a specific set, `PATCH` to update it.
+
+
+
+
+## Track
+Tracks which have been recognized by the soundtrack server.
+
+`/tracks`
+`GET` to retrieve a list of tracks, `POST` to create a track.
+
+`/tracks/:trackID`
+`GET` to retrive a specific track by its `_id`, `PATCH` to update specific components of that track (e.g., editing the title)
