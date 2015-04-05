@@ -4,7 +4,7 @@ var config = require('./config')
   , client = redis.createClient();
 
 var hosts = config.database.hosts || [];
-var string = 'mongodb://' + hosts.join(',') + '/' + config.database.name ;
+var string = 'mongodb://' + hosts.join(',') + '/' + config.database.name;
 var source = mongoose.connect( string );
 
 module.exports = {
