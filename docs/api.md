@@ -58,6 +58,15 @@ Chat messages for a specific room.
 `:roomSlug\.yourdomain\.tld/chat`
 `GET` retrives a list of the most recent messages, `POST` to create a message.
 
+## Play
+Moments when a track has been "played" in a Room; there are special rules for when it's considered a play, following last.fm's scrobbling rules.  Only if more than 30s of a track has been listened to, and counting as a play when 2 minutes or half the track has been played, whichever happens first.
+
+`:roomSlug\.yourdomain\.tld/plays`
+`GET` retrieves a list of all plays for a room.
+
+`/:usernameSlug/plays`
+`GET` to retrieve a list of all plays by a specific user.
+
 ## Source
 Audio sources and their appropriate metadata.  Not yet functional.
 
