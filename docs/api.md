@@ -70,8 +70,8 @@ Bundles of `Track` resources that are meant to be played together (also, `Playli
 `/:usernameSlug/:setSlug`
 `GET` to retrieve a specific set, `PATCH` to update it.
 
-
-
+`/sets`
+`GET` to retrieve a list of all public sets.
 
 ## Track
 Tracks which have been recognized by the soundtrack server.
