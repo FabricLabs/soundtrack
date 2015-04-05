@@ -11,31 +11,6 @@ While soundtrack does not yet utilize [the maki framework](http://maki.ericmarti
 
 # Resources
 
-## Queue
-`:roomSlug\.yourdomain\.tld/playlist.json`
-Deprecated, still functional.  Retrieves room's queue.
-
-`:roomSlug\.yourdomain\.tld/queue`
-Retrieves the specified room's queue.  Not yet working.
-
-## Person
-Registered users of the soundtrack application.
-
-`/register`
-`POST` to create a user (deprecated!!!)
-
-`/login`
-`POST` to initiate a session (deprecated!!!)
-
-`/people`
-`POST` to create a user, `GET` to retrieve a list of users.
-
-`/people/:usernameSlug`
-`GET` to retrieve a specific user, `PATCH` to update specific fields, `PUT` to create a user.
-
-`/:usernameSlug`
-Retrieves a specific user, if it exists.  Falls back wherever possible or 404s.
-
 ### Auths
 These will add an external profile to the currently established session's user, or **create a new user if not**.
 
@@ -58,6 +33,24 @@ Chat messages for a specific room.
 `:roomSlug\.yourdomain\.tld/chat`
 `GET` retrives a list of the most recent messages, `POST` to create a message.
 
+## Person
+Registered users of the soundtrack application.
+
+`/register`
+`POST` to create a user (deprecated!!!)
+
+`/login`
+`POST` to initiate a session (deprecated!!!)
+
+`/people`
+`POST` to create a user, `GET` to retrieve a list of users.
+
+`/people/:usernameSlug`
+`GET` to retrieve a specific user, `PATCH` to update specific fields, `PUT` to create a user.
+
+`/:usernameSlug`
+Retrieves a specific user, if it exists.  Falls back wherever possible or 404s.
+
 ## Play
 Moments when a track has been "played" in a Room; there are special rules for when it's considered a play, following last.fm's scrobbling rules.  Only if more than 30s of a track has been listened to, and counting as a play when 2 minutes or half the track has been played, whichever happens first.
 
@@ -66,6 +59,13 @@ Moments when a track has been "played" in a Room; there are special rules for wh
 
 `/:usernameSlug/plays`
 `GET` to retrieve a list of all plays by a specific user.
+
+## Queue
+`:roomSlug\.yourdomain\.tld/playlist.json`
+Deprecated, still functional.  Retrieves room's queue.
+
+`:roomSlug\.yourdomain\.tld/queue`
+Retrieves the specified room's queue.  Not yet working.
 
 ## Source
 Audio sources and their appropriate metadata.  Not yet functional.
