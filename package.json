@@ -20,7 +20,7 @@
     "flashify": "~0.1.2",
     "heapdump": "^0.3.5",
     "jade": "~0.32.0",
-    "lastfmapi": "0.0.4",
+    "lastfmapi": "git://github.com/martindale/node-lastfmapi#https-redirect-fix",
     "marked": "~0.2.9",
     "moment": "~2.0.0",
     "mongoose": "~3.6.14",
