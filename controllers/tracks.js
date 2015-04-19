@@ -4,8 +4,7 @@ var async = require('async')
 
 module.exports = {
   list: function(req, res, next) {
-    var LIMIT = req.param('limit') || 10;
-    
+    var LIMIT = parseInt(req.query.limit) || 10;
     var roomID = undefined;
     if (req.roomObj) roomID = req.roomObj._id;
     
