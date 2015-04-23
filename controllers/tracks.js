@@ -16,12 +16,13 @@ module.exports = {
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output.slice(0, LIMIT) );
+            done( err , output );
           });
         } );
       } );
@@ -36,6 +37,7 @@ module.exports = {
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
@@ -56,6 +58,7 @@ module.exports = {
           { $group: { _id: '$_track', count: { $sum: 1 } } },
           { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
