@@ -14,15 +14,14 @@ module.exports = {
         Play.aggregate([
           { $match: { _curator: { $exists: true }, _room: roomID } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output );
+            done( err , output.slice(0, LIMIT) );
           });
         } );
       } );
@@ -35,15 +34,14 @@ module.exports = {
             timestamp: { $gte: new Date((new Date()) - 30 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output );
+            done( err , output.slice(0, LIMIT) );
           });
         } );
       } );
@@ -56,15 +54,14 @@ module.exports = {
             timestamp: { $gte: new Date((new Date()) - 7 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output );
+            done( err , output.slice(0, LIMIT) );
           });
         } );
       } );
