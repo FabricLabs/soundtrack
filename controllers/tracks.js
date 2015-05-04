@@ -275,7 +275,6 @@ module.exports = {
             }
           }
 
-          console.log('parsing: ' + stringToParse);
           util.parseTitleString( stringToParse , function(parts) {
 
             Artist.findOne({ name: parts.artist }).exec(function(err, artist) {
