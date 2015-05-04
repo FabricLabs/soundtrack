@@ -755,7 +755,7 @@ app.post('/:usernameSlug/sets', requireLogin, playlists.create );
 app.post('/:usernameSlug/sets/:playlistID', requireLogin, playlists.addTrack );
 app.post('/:usernameSlug/sets/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
-app.get('/register', function(req, res) {
+app.get('/register', redirectToMainSite , function(req, res) {
   res.render('register');
 });
 
