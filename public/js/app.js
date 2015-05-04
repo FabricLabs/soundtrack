@@ -108,6 +108,22 @@ Soundtrack.prototype.editTrackID = function( trackID ) {
   });
 };
 
+var YouTube = function(key) {
+  this.key = key;
+  this.base = 'https://www.googleapis.com/youtube/v3/';
+}
+YouTube.prototype.get = function(url, params, cb) {
+  var self = this;
+  
+  params.key = self.key;
+  
+  var qs = Object.keys( params ).map(function(k) {
+    return k + '=' + params[k];
+  });
+  
+  $.getJSON( self.base + url + '?' + qs.join('&') , cb );
+};
+
 function volumeChangeHandler(e) {
   var vol = Number( e.value );
 
@@ -314,6 +330,7 @@ $(window).load(function() {
 
   // must be after DOM loads so we have access to the user-model
   soundtrack = new Soundtrack();
+  youtube = new YouTube('AIzaSyBnCN68b8W5oGgBKKkM2cSQhSygnLPApEs');
   if ($('#main-player').length) {
     soundtrack.player = videojs('#main-player', {
       techOrder: ['html5', 'youtube', 'flash']
@@ -1110,11 +1127,37 @@ $(window).load(function() {
     $input[0].selectionStart = $input[0].selectionEnd = $input.val().length;
 
     // TODO: execute search queries in parallel
-    $.getJSON('https://gdata.youtube.com/feeds/api/videos?max-results=50&v=2&alt=jsonc&q=' + query, function(data) {
-      data.data.items.forEach(function(item) {
-        if (item.duration <= maxLength) {
-          $('<li data-source="youtube" data-title="' + item.title + '" data-id="' + item.id + '"><span class="pull-right badge">youtube</span><span class="pull-right badge">' + item.duration.toHHMMSS() + '</span><img src="' + item.thumbnail.sqDefault + '" class="thumbnail-medium" />' + item.title + '<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
-        }
+    youtube.get('search', {
+      q: query,
+      part: 'snippet',
+      maxResults: 50
+    }, function(data) {
+
+      var videoMap = {}
+      data.items.forEach(function(v) {
+        if (!v.id || !v.id.videoId) return;
+        videoMap[ v.id.videoId ] = v;
+      });
+
+      youtube.get('videos', {
+        id: Object.keys( videoMap ).join(),
+        part: 'contentDetails'
+      }, function(result) {
+        
+        result.items.forEach(function(v) {
+          var video = videoMap[ v.id ];
+  
+          video.id = v.id;
+          video.title = video.snippet.title;
+          video.duration = moment.duration(v.contentDetails.duration).as('seconds');
+          video.images = video.snippet.thumbnails;
+
+          if (video.duration <= maxLength) {
+            $('<li data-source="youtube" data-title="' + video.title + '" data-id="' + video.id + '"><span class="pull-right badge">youtube</span><span class="pull-right badge">' + video.duration.toHHMMSS() + '</span><img src="' + video.images.default.url + '" class="thumbnail-medium" />' + video.title + '<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+          }
+          
+        });
+        
       });
     });
 
