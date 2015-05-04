@@ -209,8 +209,12 @@ module.exports = {
     });
   },
   edit: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-      if (!person) { return next(); }
+    if (!req.user) return next();
+    Person.findOne({
+      _id: req.user._id,
+      slug: req.param('usernameSlug')
+    }).exec(function(err, person) {
+      if (!person) return next();
 
       person.bio    = (req.param('bio'))   ? req.param('bio')   : person.bio;
       person.email  = (req.param('email')) ? req.param('email') : person.email;

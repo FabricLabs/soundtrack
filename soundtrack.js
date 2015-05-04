@@ -623,7 +623,7 @@ app.get('/listening', requireLogin , function(req, res) {
 //But first we record the token's authData, user and time.
 //We use the recorded time to make sure we issued the token recently
 app.post('/socket-auth', requireLogin, auth.configureToken);
-
+app.post('/:usernameSlug', people.edit);
 app.post('/chat', requireLogin, function(req, res) {
   var room = app.rooms[ req.room ];
   if (!room) return next();
@@ -863,7 +863,6 @@ app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug/mentions', people.mentions);
 app.get('/:usernameSlug', redirectToMainSite , people.profile);
-app.post('/:usernameSlug', people.edit);
 
 // catch-all route (404)
 app.get('*', function(req, res) {
