@@ -29,14 +29,17 @@ html(lang="en-US", ng-app="soundtrack-io")
     meta(property="og:site_name", content="soundtrack.io")
     meta(property="og:title", content="#{(page && page.title) ? page.title : 'soundtrack.io | music for all.'}")
     meta(property="og:description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
-    meta(property="og:url", content="ARTICLE_FULL_URL")
-    meta(property="og:image", content="ARTICLE_IMAGE_URL")
+    //-meta(property="og:url", content="ARTICLE_FULL_URL")
+    meta(property="og:image", content="https://soundtrack.io/img/soundtrack.png")
 
     if (page && page.type)
       meta(property="og:type", content="#{page.type}")
 
     meta(name="twitter:card", content="summary")
     meta(name="twitter:site", content="@soundtrackio")
+    meta(name="twitter:title", content="#{(page && page.title) ? page.title : 'soundtrack.io | music for all.'}")
+    meta(name="twitter:description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
+    meta(name="twitter:image", content="https://soundtrack.io/img/soundtrack.png")
 
     link(rel="shortcut icon", href="/favicon.ico")
 

@@ -40,7 +40,8 @@ module.exports = {
         , playlists: playlists || []
         , room: req.app.rooms[ req.room ]
         , page: {
-            title: req.roomObj.name
+            title: req.roomObj.name,
+            description: req.roomObj.description
           }
       });
       
