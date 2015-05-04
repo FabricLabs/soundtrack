@@ -755,7 +755,7 @@ app.post('/:usernameSlug/sets', requireLogin, playlists.create );
 app.post('/:usernameSlug/sets/:playlistID', requireLogin, playlists.addTrack );
 app.post('/:usernameSlug/sets/:playlistID/edit', requireLogin, playlists.edit ); // TODO: fix URL
 
-app.get('/register', redirectToMainSite , function(req, res) {
+app.get('/register', function(req, res) {
   res.render('register');
 });
 
@@ -782,12 +782,11 @@ app.post('/register', function(req, res) {
 
     Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
       if (err) {
-        console.log(err);
         req.flash('error', 'Something went wrong: ' + err);
         return res.render('register', { user : user });
       } else {
         req.logIn(user, function(err) {
-          req.flash('info', lang.en.intro );
+          req.flash('info', lang.en.intro.replace('{{username}}', user.slug ) );
           res.redirect('/');
         });
       }
