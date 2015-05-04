@@ -19,18 +19,18 @@
 !!! 5
 html(lang="en-US", ng-app="soundtrack-io")
   head
-    title #{(page && page.title) ? page.title + ' | ' : ''} soundtrack.io | music for all.
+    title(itemprop="name") #{(page && page.title) ? page.title + ' |' : ''} soundtrack.io | music for all.
     
     meta(name="google-site-verification", content="YRNN2O5wVHlb-amk2huI5wAk_J3_kDNKUinkzWCRBN0")
     meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
 
-    meta(name="description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
+    meta(name="description", itemprop="description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
 
     meta(property="og:site_name", content="soundtrack.io")
     meta(property="og:title", content="#{(page && page.title) ? page.title : 'soundtrack.io | music for all.'}")
     meta(property="og:description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
     //-meta(property="og:url", content="ARTICLE_FULL_URL")
-    meta(property="og:image", content="https://soundtrack.io/img/soundtrack.png")
+    meta(property="og:image", itemprop="image", content="https://soundtrack.io/img/soundtrack.png")
 
     if (page && page.type)
       meta(property="og:type", content="#{page.type}")
