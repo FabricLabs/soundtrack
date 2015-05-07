@@ -114,13 +114,13 @@ var YouTube = function(key) {
 }
 YouTube.prototype.get = function(url, params, cb) {
   var self = this;
-  
+
   params.key = self.key;
-  
+
   var qs = Object.keys( params ).map(function(k) {
     return k + '=' + params[k];
   });
-  
+
   $.getJSON( self.base + url + '?' + qs.join('&') , cb );
 };
 
@@ -316,7 +316,7 @@ promise.done(function() {
 
     $('.timestamp').each(function(i , el) {
       var $el = $(el);
-      $el.html( moment( $el.attr('title') ).fromNow() );
+      $el.html( moment( $el.attr('datetime') ).fromNow() );
     });
 
   }, 1000);
@@ -472,7 +472,7 @@ $(window).load(function() {
                 if (soundtrack.debug) console.log('rollTrack()', sources );
                 if (soundtrack.debug) console.log('current source:', soundtrack.player.src() );
                 if (!sources[0]) return;
-                
+
                 // this is an egregious and terrifying hack
                 // TODO: not use this hack
                 soundtrack.player.dispose();
@@ -494,7 +494,7 @@ $(window).load(function() {
                   clearInterval( ensureTrackPlaying );
                   jumpIfNecessary();
                 });
-                
+
                 // TODO: find a better event to listen for!  this is terrible.
                 soundtrack.player.one('durationchange', function() {
                   if (soundtrack.debug) console.log('durationchange event');
@@ -504,7 +504,7 @@ $(window).load(function() {
                   soundtrack.player.play();
                 });
               }
-              
+
               function verifyTrackPlaying() {
                 if (!sources.length) {
                   if (soundtrack.debug) console.log('sources length is zero.  sad day.  failing out.');
@@ -520,7 +520,7 @@ $(window).load(function() {
                   rollTrack();
                 }
               }
-              
+
               function jumpIfNecessary() {
                 if (soundtrack.debug) console.log( 'now calling jumpIfNecessary()' );
 
@@ -539,7 +539,7 @@ $(window).load(function() {
 
               var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
               var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
-              
+
 
             }
 
@@ -1048,7 +1048,7 @@ $(window).load(function() {
   }, 200, true);
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack);
-  
+
   $(document).on('click', '*[data-action=queue-set]', selectSet );
 
   $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
@@ -1064,27 +1064,27 @@ $(window).load(function() {
     $('#create-playlist-modal').modal('show');
     $('#create-playlist-form').children('input[name=trackID]').val( $self.data('track') );
     $('#create-playlist-form').children('input[name=current-track-id]').val( $self.data('track') );
-    
+
     // TODO: replace with local data cache / Maki datastore
     $.getJSON('/tracks/'+$self.data('track'), function(track) {
       var $track = $('*[data-for=track-name]');
       $track.children('.track-artist').html( track._artist.name );
       $track.children('.track-title').html( track.title );
-      
+
       $track.children('*[data-for=track-preview]').html( soundtrack._templates.preview( track ) );
-      
+
     });
 
     return false;
   });
-  
+
   soundtrack._templates = {
     preview: function( track ) {
       if (track.sources && track.sources.youtube && track.sources.youtube.length) {
         var video = track.sources.youtube[0];
         return '<iframe id="ytplayer" type="text/html" width="300" height="170" src="//www.youtube.com/embed/'+ video.id +'" frameborder="0"/>';
       }
-      
+
       return 'no preview available :(';
     }
   };
@@ -1143,10 +1143,10 @@ $(window).load(function() {
         id: Object.keys( videoMap ).join(),
         part: 'contentDetails'
       }, function(result) {
-        
+
         result.items.forEach(function(v) {
           var video = videoMap[ v.id ];
-  
+
           video.id = v.id;
           video.title = video.snippet.title;
           video.duration = moment.duration(v.contentDetails.duration).as('seconds');
@@ -1155,9 +1155,9 @@ $(window).load(function() {
           if (video.duration <= maxLength) {
             $('<li data-source="youtube" data-title="' + video.title + '" data-id="' + video.id + '"><span class="pull-right badge">youtube</span><span class="pull-right badge">' + video.duration.toHHMMSS() + '</span><img src="' + video.images.default.url + '" class="thumbnail-medium" />' + video.title + '<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
           }
-          
+
         });
-        
+
       });
     });
 
