@@ -22,7 +22,7 @@
     "jade": "~0.32.0",
     "lastfmapi": "git://github.com/martindale/node-lastfmapi#https-redirect-fix",
     "marked": "~0.2.9",
-    "moment": "~2.0.0",
+    "moment": "^2.10.2",
     "mongoose": "~3.6.14",
     "mongoose-agency": "0.0.0",
     "mongoose-slug": "~1.3.0",
