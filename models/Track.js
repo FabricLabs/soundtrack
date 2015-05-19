@@ -48,6 +48,10 @@ var TrackSchema = new Schema({
       vimeo: [ new Schema({
           id: { type: String, required: true }
         , data: {}
+      })],
+      direct: [ new Schema({
+          id: { type: String, required: true }
+        , data: {}
       })]
     }
   , _remixes: [ new Schema({
@@ -67,12 +71,12 @@ TrackSchema.pre('save', function(next) {
   var tempTrack = self.toObject();
   for (var source in tempTrack.sources) {
     var sourceMap = {};
-    
+
     var sourcesForProvider = tempTrack.sources[ source ] || [];
     sourcesForProvider.forEach(function( s ) {
       sourceMap[ s.id ] = s;
     });
-    
+
     self.sources[ source ] = Object.keys( sourceMap ).map(function( k ) {
       return sourceMap[ k ];
     });
@@ -103,7 +107,7 @@ TrackSchema.pre('save', function(next) {
 
   // de-dupe credits
   self._credits = _.uniq( self._credits );
-  
+
   next();
 });
 
