@@ -147,7 +147,7 @@ html(lang="en-US", ng-app="soundtrack-io")
                   i.fa.fa-bitcoin
                   | itcoin &raquo;
                 | &nbsp;
-                img(id="qrcode", width="30", height="30", src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&amp;data=bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw&amp;ecc=Q", onmouseover="javascript:$('#qrcode').attr('width',100).attr('height',100)", onmouseout="javascript:$('#qrcode').attr('width',30).attr('height',30)">
+                img#qrcode(width="30", height="30", src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw&amp;ecc=Q", onmouseover="javascript:$('#qrcode').attr('width',100).attr('height',100)", onmouseout="javascript:$('#qrcode').attr('width',30).attr('height',30)")
                 if (user)
                   |  
                   a(class="btn btn-default", href="//#{config.app.host}/#{user.slug}/sets") Manage Sets &raquo;
