@@ -18,6 +18,7 @@ function parseTitleString(string, partsCallback) {
     '[glitch hop]', '[video]', '[official video]', '(official video)',
     '(official music video)', '(lyrics)',
     '[ official video ]', '[official music video]', '[free download]',
+    '[official]', '[electronica]', '[electronica | plasmapool]',
     '[free dl]', '( 1080p )', '(with lyrics)', '(high res / official video)',
     '(music video)', '[music video]', '[hd]', '(hd)', '[hq]', '(hq)',
     '(original mix)', '[original mix]', '[lyrics]', '[free]', '[trap]',
