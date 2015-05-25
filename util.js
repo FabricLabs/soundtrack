@@ -79,6 +79,7 @@ function parseTitleString(string, partsCallback) {
   credits.push(  title.replace(/(.*) \(ft (.*)\)/i,         '$2').trim() );
   credits.push(  title.replace(/(.*) \(feat\.? (.*)\)/i,    '$2').trim() );
   credits.push(  title.replace(/(.*) \(featuring (.*)\)/i,  '$2').trim() );
+  credits.push(  title.replace(/(.*) \(produced by (.*)\)/i,'$2').trim() );
   credits.push( artist.replace(/(.*) ft\.? (.*)/i,          '$1').trim() );
   credits.push( artist.replace(/(.*) ft\.? (.*)/i,          '$2').trim() );
   credits.push( artist.replace(/(.*) feat\.? (.*)/i,        '$1').trim() );
@@ -94,6 +95,7 @@ function parseTitleString(string, partsCallback) {
   credits.push( artist.replace(/(.*) vs\.? (.*)/i,          '$2').trim() );
   credits.push( artist.replace(/(.*) x (.*)/i,              '$1').trim() );
   credits.push( artist.replace(/(.*) x (.*)/i,              '$2').trim() );
+  
 
   var creditMap = {};
   credits.forEach(function(credit) {
