@@ -1,10 +1,12 @@
-var Queue = require('maki-queue');
-var queue = new Queue('soundtrack');
-
 var config = require('./config');
 var database = require('./db');
 
 console.log('config, database loaded');
+
+var Agency = require('mongoose-agency');
+var agency = new Agency( database.source , {
+  // timeout: 0.01
+});
 
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack({
@@ -21,7 +23,7 @@ Source = require('./models/Source').Source;
 var rest  = require('restler');
 var async = require('async');
 
-var TOP_TRACK_COUNT = 100;
+var TOP_TRACK_COUNT = 10;
 
 var processors = {
   'test': function( data , jobIsDone ) {
@@ -92,22 +94,6 @@ var processors = {
   }
 }
 
-var worker = new queue.Worker();
-worker.register( processors );
-
-worker.on('dequeued', function (data) {
-  console.log('worker dequeued job %s', data._id );
-});
-worker.on('failed', function (data) {
-  console.log('job %s failed', data._id , data.data );
-});
-worker.on('complete', function (data) {
-  console.log('job %s complete', data._id );
-});
-worker.on('error', function (err) {
-  console.log('worker error', err );
-});
-
-worker.start(function(err) { 
-  console.log('started!');
+Object.keys( processors ).forEach(function(jobType) {
+  agency.subscribe( jobType , processors[ jobType ] );
 });

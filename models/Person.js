@@ -20,6 +20,21 @@ var PersonSchema = new Schema({
         , username: String
         , key: String
         , updated: Date
+      },
+      spotify: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date,
+        expires: Number,
+        playlists: []
+      },
+      google: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date,
+        playlists: []
       }
     }
   , preferences: {

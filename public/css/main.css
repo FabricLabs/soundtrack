@@ -107,6 +107,9 @@ footer {
   border-bottom-left-radius: 3px;
   margin: -5px;
 }
+.navbar .brand {
+  padding: 10px 0px 10px;
+}
 .navbar a.brand {
   padding-left: 12px;
   margin-left: 0;
@@ -114,7 +117,7 @@ footer {
 }
 .navbar a.brand img {
   max-height: 1em;
-  padding-right: 0.5em;
+  /* padding-right: 0.5em; */
   margin-bottom: -0.2em;
   vertical-align: top;
 }
@@ -412,7 +415,7 @@ footer {
 
 /* videoJS stuff */
 .vjs-fade-in,.vjs-fade-out {
-visibility: visible !important;
-opacity: 1 !important;
-transition-duration: 0s!important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transition-duration: 0s!important;
 }

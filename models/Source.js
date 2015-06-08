@@ -7,7 +7,7 @@ var config = require('../config');
 // this defines the fields associated with the model,
 // and moreover, their type.
 var SourceSchema = new Schema({
-    id:   { type: String, required: true, unique: true }
+    id:   { type: String, required: true, unique: true, id: 1 }
   , type:  { type: String, enum: ['audio/mp3', 'video/youtube', 'video/mp4'] }
   , start: { type: Number, default: 0 }
   , end:   { type: Number }

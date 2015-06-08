@@ -2,8 +2,12 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var ObjectId = mongoose.SchemaTypes.ObjectId;
 var slug = require('mongoose-slug');
+
 var _ = require('underscore');
+var async = require('async');
 var util = require('../util');
+
+var config = require('../config');
 
 // this defines the fields associated with the model,
 // and moreover, their type.
@@ -21,6 +25,11 @@ RoomSchema.plugin( slug('name'), {
 } );
 RoomSchema.index({ slug: 1 });
 
+RoomSchema.virtual('index').get(function() {
+  var protocol = (config.app.safe) ? 'https' : 'http';
+  return protocol + '://' + this.slug + '.' + config.app.host;
+});
+
 RoomSchema.methods.bind = function( soundtrack ) {
   this.soundtrack = soundtrack;
 };
@@ -35,8 +44,10 @@ RoomSchema.methods.broadcast = function( msg , GLOBAL ) {
   }) );
 
   var json = JSON.stringify(msg);
-  for (var id in app.clients ) {
-    if (~myClients.indexOf( id )) app.clients[id].write(json);
+  for (var id in app.clients) {
+    if (app.clients[id].room === room._id.toString()) {
+      app.clients[id].write(json);
+    }
   }
 };
 RoomSchema.methods.queueTrack = function( track , curator , callback ) {
@@ -56,7 +67,7 @@ RoomSchema.methods.queueTrack = function( track , curator , callback ) {
     var playableSources = 0;
     for (var source in playlistItem.sources) {
       for (var i = 0; i < playlistItem.sources[ source ].length; i++) {
-        if (['soundcloud', 'youtube'].indexOf( source ) >= 0) playableSources += 1;
+        if (['soundcloud', 'youtube', 'bandcamp'].indexOf( source ) >= 0) playableSources += 1;
         delete playlistItem.sources[ source ][ i ].data;
       }
     }
@@ -118,17 +129,21 @@ RoomSchema.methods.savePlaylist = function( saved ) {
 
 RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   var room = this;
+  var MAXIMUM_PLAY_AGE = 180;
 
   if (typeof(gain) === 'function') {
     var cb = gain;
     var gain = 0;
-    var failpoint = 21;
+    var failpoint = MAXIMUM_PLAY_AGE;
   }
   
   if (typeof(failpoint) === 'function') {
     var cb = failpoint;
-    var failpoint = 21;
+    var failpoint = MAXIMUM_PLAY_AGE;
   }
+
+  if (!gain) var gain = 0;
+  if (!failpoint) var failpoint = MAXIMUM_PLAY_AGE;
 
   var query = {};
   
@@ -139,31 +154,57 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   // must have been queued within the past 7 days
   query = _.extend( query , {
     $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7 + gain ),
-    timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
+    //timestamp: { $lt: (new Date()) - 3600 * 3 * 1000 }
   });
+
   // but not if it's been played recently!
   // TODO: one level of callbacks to collect this!
-
-  // heaven forbid we have nothing.
-  // TODO: sane cases.
-  if (gain > failpoint) query = {};
-  
-  Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
-    if (err) console.log(err);
-    if (!plays || !plays.length || plays.length < 10) {
-      console.log('nothing found. womp.', query );
-      // try again, but with 7 more days included...
-      return room.generatePool( gain + 7 , failpoint , cb );
+  Play.count({ _room: room._id }).exec(function(err, totalPlays) {
+    if (!totalPlays) {
+      // no tracks have ever been played.  full query.
+      query = {};
+    } else if (gain > failpoint) {
+      // just query the whole damned room.
+      query = { _room: room._id };
     }
-    
-    return cb( err , plays , query );
-    
+
+    Play.find( query ).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+      Play.find({
+        _room: room._id,
+        timestamp: { $gte: (new Date()) - 3600 * 3 * 1000 }
+      }).exec(function(err, exclusions) {
+        query.exclusionIDs = exclusions.map(function(x) { return x._track.toString(); });
+        
+        plays = plays.filter(function(x) {
+          //console.log('filtering ', x );
+          //console.log('exclusions checker,', x._track.toString() , 'in' , query.exclusionIDs , '?');
+          //console.log(!~query.exclusionIDs.indexOf( x._track.toString() ));
+          return !~query.exclusionIDs.indexOf( x._track.toString() );
+        });
+
+        if (err) console.error( err );
+        if ((!plays || plays.length < 10) && (gain <= failpoint)) return room.generatePool( gain + 7 , failpoint , cb );
+        if ((!plays) && (gain > failpoint)) return cb('init');
+
+        return cb( err , plays , query );
+        
+      });
+      
+    });
   });
+
 };
 RoomSchema.methods.selectTrack = function( cb ) {
   var room = this;
 
   room.generatePool(function(err, plays) {
+    if (err || !plays || plays.length === 0) {
+      console.log('room ' + room.slug + ' has no pool (POOL\'S CLOSED!)');
+      return room.soundtrack.trackFromSource('youtube', 'wZThMWK9GxA', function(err, track) {
+        Artist.populate( track , '_artist' , cb );
+      });
+    }
+
     var randomSelection = plays[ _.random(0, plays.length - 1 ) ];
     Track.findOne({ _id: randomSelection._track }).populate('_artist').exec( cb );
   });
@@ -194,21 +235,15 @@ RoomSchema.methods.nextSong = function( done ) {
 
   room.ensureQueue(function() {
     room.savePlaylist(function() {
-      var play = new Play({
-        _track: room.track._id,
-        _curator: (room.track.curator) ? room.track.curator._id : undefined,
-        _room: room._id
-      });
-      play.save(function(err) {
-        //console.log('saved, ', err );
-        room.startMusic(function() {
-          console.log('nextSong() started music');
-          done();
-        });
+      //console.log('saved, ', err );
+      room.startMusic(function() {
+        console.log('nextSong() started music');
+        done();
       });
     });
   });
 };
+
 RoomSchema.methods.startMusic = function( cb ) {
   var room = this;
   if (!room.playlist[0]) {
@@ -228,7 +263,8 @@ RoomSchema.methods.startMusic = function( cb ) {
   room.track = room.playlist[0];
   if (!room.track.startTime) room.track.startTime = Date.now();
 
-  var seekTo = (Date.now() - room.playlist[0].startTime) / 1000;
+  var now = Date.now();
+  var seekTo = (now - room.playlist[0].startTime) / 1000;
   
   Track.findOne({ _id: room.track._id }).populate('_artist _artists').lean().exec(function(err, track) {
     if (err || !track) return cb('no such track (severe error)');
@@ -252,27 +288,45 @@ RoomSchema.methods.startMusic = function( cb ) {
       });
       
       clearTimeout( room.trackTimer );
-      clearTimeout( room.scrobbleTimer );
-      
-      console.log('scheduling nextTrack in', room.track.duration - seekTo )
+      clearTimeout( room.permaTimer );
+
       room.trackTimer = setTimeout(function() {
         room.nextSong();
       }, (room.track.duration - seekTo) * 1000 );
       
-      room.setListeningActive( room.track , function() {
-        console.log('updated nowPlaying for active listeners...');
-      });
-      
+      if (room.soundtrack.app.lastfm) {
+        room.setListeningActive( room.track , new Function() );
+      }
+
       if (room.track.duration > 30) {
         var FOUR_MINUTES = 4 * 60;
         var scrobbleTime = (room.track.duration > FOUR_MINUTES) ? FOUR_MINUTES : room.track.duration / 2;
-        
-        room.scrobbleTimer = setTimeout(function() {
-          if (room.soundtrack.app.lastfm) {
-            room.scrobbleActive( room.track , function() {
-              console.log('scrobbling complete!');
+
+        room.permaTimer = setTimeout(function() {
+          
+          async.parallel([
+            insertIntoPlayHistory,
+            scrobbleIfEnabled
+          ], function(err, results) {
+            if (err) console.log(err);
+            console.log('play history updated and lastfm scrobbled!');
+          });
+          
+          function insertIntoPlayHistory( done ) {
+            var play = new Play({
+              _track: room.track._id,
+              _curator: (room.track.curator) ? room.track.curator._id : undefined,
+              _room: room._id,
+              timestamp: now
             });
+            play.save( done );
           }
+          
+          function scrobbleIfEnabled( done ) {
+            if (!room.soundtrack.app.lastfm) return done();
+            room.scrobbleActive( room.track , done );
+          }
+
         }, scrobbleTime * 1000 );
       }
 
@@ -326,7 +380,7 @@ RoomSchema.methods.setListeningActive = function(requestedTrack, cb) {
   var room = this;
   var app = room.soundtrack.app;
 
-  console.log('scrobbling to active listeners...');
+  console.log('setting "listening to" for active listeners...');
 
   Track.findOne({ _id: requestedTrack._id }).populate('_artist').exec(function(err, track) {
     if (!track || track._artist.name && track._artist.name.toLowerCase() == 'gobbly') { return false; }

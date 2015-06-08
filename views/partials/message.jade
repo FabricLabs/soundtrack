@@ -1,8 +1,8 @@
 .message(data-message-id="#{message._id}")
   if (message._track && message._track._id)
-    abbr.timestamp.pull-right(title="#{moment(message.created).format()}\n\"#{message._track.title}\" by #{message._track._artist.name} was playing.") #{moment(message.created).format('HH:mm:ss')}
+    abbr.timestamp.pull-right(title="#{moment(message.created).format()}\n\"#{message._track.title}\" by #{message._track._artist.name} was playing.", datetime="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
   else
-    abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
+    abbr.timestamp.pull-right(title="#{moment(message.created).format()}", datetime="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
   img.user-avatar-small(src="#{message._author.avatar.url}")
   - if (message.message.substring(0, 4) == '/me ')
     strong(data-role="author", data-user-username="#{message._author.username}") #{message._author.username} 

@@ -1,4 +1,4 @@
-var slugify = require('mongoose-slug');
+var slugify = require('speakingurl');
 
 module.exports = {
   list: function(req, res, next) {

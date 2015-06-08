@@ -4,17 +4,19 @@ var async = require('async')
 
 module.exports = {
   list: function(req, res, next) {
-    var LIMIT = 10;
+    var LIMIT = parseInt(req.query.limit) || 10;
+    var roomID = undefined;
+    if (req.roomObj) roomID = req.roomObj._id;
     
     var functions = [];
     if (!req.param('q')) {
-      functions.push( function( done ) {
+      functions.push( function collectAllTime( done ) {
         Play.aggregate([
-          { $match: { _curator: { $exists: true } } },
+          { $match: { _curator: { $exists: true }, _room: roomID } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
@@ -25,42 +27,44 @@ module.exports = {
         } );
       } );
 
-      functions.push( function( done ) {
+      functions.push( function collectThirtyDays( done ) {
         Play.aggregate([
           { $match: {
             _curator: { $exists: true },
+            _room: roomID,
             timestamp: { $gte: new Date((new Date()) - 30 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output );
+            done( err , output.slice(0, LIMIT) );
           });
         } );
       } );
       
-      functions.push( function( done ) {
+      functions.push( function collectSevenDays( done ) {
         Play.aggregate([
           { $match: {
             _curator: { $exists: true },
+            _room: roomID,
             timestamp: { $gte: new Date((new Date()) - 7 * 24 * 3600 * 1000) }
           } },
           { $group: { _id: '$_track', count: { $sum: 1 } } },
-          { $sort: { 'count': -1 } },
-          { $limit: LIMIT }
+          { $sort: { 'count': -1 } }
         ], function(err, collected) {
+          var collected = collected.slice(0, LIMIT);
           Track.find({ _id: { $in: collected.map(function(x) { return x._id; }) } }).populate('_artist').exec(function(err, input) {
             var output = [];
             for (var i = 0; i < collected.length; i++) {
               output.push( _.extend( collected[i] , input[i] ) );
             }
-            done( err , output );
+            done( err , output.slice(0, LIMIT) );
           });
         } );
       } );
@@ -110,6 +114,7 @@ module.exports = {
   },
   pool: function(req, res, next) {
     req.roomObj.generatePool(function(err, plays, query) {
+      if (!plays || !plays.length) var plays = [];
       Track.find({ _id: { $in: plays.map(function(x) { return x._track; }) } }).populate('_artist _credits').exec(function(err, tracks) {
         res.format({
           json: function() {
@@ -180,13 +185,13 @@ module.exports = {
 
         // find the edited track...
         Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
-          if (err || !track) { return next(); }
+          if (err || !track) return next();
 
           // get the artist parsed from the new artist name...
           Artist.findOne({ name: parts.artist }).exec(function(err, artist) {
-            if (err) { console.log(err); }
+            if (err) console.log(err);
 
-            if (!artist ) { var artist = new Artist({ name: req.param('artistName') }); }
+            if (!artist ) var artist = new Artist({ name: req.param('artistName') });
 
             // go ahead and issue a save for it (so it exists when we save the track)
             artist.save(function(err) {
@@ -212,7 +217,6 @@ module.exports = {
                       }
                   }
                 ).exec(function(err, numAffected) {
-                  console.log(err || numAffected);
 
                   res.send({
                       status: 'success'
@@ -222,6 +226,7 @@ module.exports = {
                   // prepare for over-the-wire broadcast...
                   track = track.toObject();
                   track._artist = artist;
+                  track.title = parts.title || track.title;
 
                   req.soundtrack.broadcast({
                       type: 'edit'
@@ -307,19 +312,18 @@ module.exports = {
           , { slug: req.param('trackSlug') }
         ] }).populate('_artist _credits').exec(function(err, track) {
 
-          req.soundtrack._jobs.enqueue('track:crawl', {
-              id: track._id
-            , timeout: 3 * 60 * 1000
+          /* req.app.agency.publish('track:crawl', {
+            id: track._id
           }, function(err) {
-            console.log('track crawling queued');
-          });
+            console.log('track crawling completed');
+          }); */
 
           res.format({
             json: function() {
               res.send( track );
             },
             html: function() {
-              Play.find({ _track: track._id }).sort('-timestamp').populate('_curator').exec(function(err, history) {
+              Play.find({ _track: track._id }).sort('-timestamp').populate('_curator _room').exec(function(err, history) {
                 if (err) { console.log(err); }
 
                 var queries = [];
@@ -357,14 +361,31 @@ module.exports = {
                       Playlist.find({
                         _creator: (req.user) ? req.user._id : undefined
                       }).exec(function(err, playlists) {
-                        res.render('track', {
-                          track: track
-                          , history: history
-                          , playsPerDay: playsPerDay
-                          , chats: chats
-                          , dupes: dupes
-                          , playlists: playlists
+                        
+                        Play.aggregate([
+                          { $match: { _track: track._id , _curator: { $exists: true } } },
+                          { $group: { _id: '$_room', count: { $sum: 1 } } },
+                          { $sort: { 'count': -1 } },
+                          //{ $limit: LIMIT }
+                        ], function(err, topRooms) {
+                          
+                          Room.populate( topRooms , {
+                            path: '_id'
+                          }, function(err, populatedTopRooms) {
+                            res.render('track', {
+                              track: track
+                              , history: history
+                              , playsPerDay: playsPerDay
+                              , chats: chats
+                              , dupes: dupes
+                              , playlists: playlists
+                              , topRooms: topRooms
+                            });
+                          });
+                          
+
                         });
+
                       });
                     });
                   }

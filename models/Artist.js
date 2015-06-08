@@ -27,8 +27,12 @@ ArtistSchema.pre('save', function(next) {
   if (!self.bio || !self.image.url) {
     rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist='+encodeURIComponent(self.name)+'&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(data) {
       if (data.artist) {
-        self.bio = strip_tags(data.artist.bio.summary).replace(/Read more about (.*) on Last.fm./, '');
-        self.image.url = data.artist.image[3]['#text'];
+        if (data.artist.bio) {
+          self.bio = strip_tags(data.artist.bio.summary).replace(/Read more about (.*) on Last.fm./, '');
+        }
+        if (data.artist.image[3]) {
+          self.image.url = data.artist.image[3]['#text'];
+        }
       }
 
       next();

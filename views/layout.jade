@@ -19,24 +19,27 @@
 !!! 5
 html(lang="en-US", ng-app="soundtrack-io")
   head
-    title #{(page && page.title) ? page.title + ' | ' : ''} soundtrack.io | music for all.
+    title(itemprop="name") #{(page && page.title) ? page.title + ' |' : ''} soundtrack.io | music for all.
     
     meta(name="google-site-verification", content="YRNN2O5wVHlb-amk2huI5wAk_J3_kDNKUinkzWCRBN0")
     meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
 
-    meta(name="description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
+    meta(name="description", itemprop="description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
 
     meta(property="og:site_name", content="soundtrack.io")
     meta(property="og:title", content="#{(page && page.title) ? page.title : 'soundtrack.io | music for all.'}")
     meta(property="og:description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
-    meta(property="og:url", content="ARTICLE_FULL_URL")
-    meta(property="og:image", content="ARTICLE_IMAGE_URL")
+    //-meta(property="og:url", content="ARTICLE_FULL_URL")
+    meta(property="og:image", itemprop="image", content="https://soundtrack.io/img/soundtrack.png")
 
     if (page && page.type)
       meta(property="og:type", content="#{page.type}")
 
     meta(name="twitter:card", content="summary")
     meta(name="twitter:site", content="@soundtrackio")
+    meta(name="twitter:title", content="#{(page && page.title) ? page.title : 'soundtrack.io | music for all.'}")
+    meta(name="twitter:description", content="#{(page && page.description) ? page.description : 'A new way to listen to music with your friends.'}")
+    meta(name="twitter:image", content="https://soundtrack.io/img/soundtrack.png")
 
     link(rel="shortcut icon", href="/favicon.ico")
 
@@ -78,9 +81,16 @@ html(lang="en-US", ng-app="soundtrack-io")
             i.icon-bar
             i.icon-bar
             i.icon-bar
-          a.brand(href="/")
-            img(src="/favicon.ico")
-            | #{(room) ? room.name : 'soundtrack.io'}
+          if (room)
+            a.brand.tooltipped(href="//#{config.app.host}", title="browse all rooms")
+              img(src="//#{config.app.host}/favicon.ico")
+            a.brand(href="//#{ room.slug + '.' + config.app.host }")
+              | #{room.name}
+          else
+            a.brand(href="//#{config.app.host}", title="music for all.")
+              img(src="/favicon.ico")
+              | soundtrack.io
+              
           .nav-collapse.collapse
             ul.nav
               li
@@ -107,8 +117,8 @@ html(lang="en-US", ng-app="soundtrack-io")
                   a(href="/logout") Logout
               else
                 form.navbar-form(action="/login", method="post")
-                  input.span2(type="text", placeholder="Username", name="username")
-                  input.span2(type="password", placeholder="Password", name="password")
+                  input.span2(type="text", placeholder="Username", name="username", style="width: 100px;")
+                  input.span2(type="password", placeholder="Password", name="password", style="width: 100px;")
                   button.btn.btn-primary(type="submit") Sign In &raquo;
                   a.btn(href="/register") Register &raquo;
 
@@ -136,6 +146,8 @@ html(lang="en-US", ng-app="soundtrack-io")
                 a(class="btn btn-default", href="bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw", alt="B") Donate 
                   i.fa.fa-bitcoin
                   | itcoin &raquo;
+                | &nbsp;
+                img#qrcode(width="30", height="30", src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkAQMAAABKLAcXAAAABlBMVEX///8AAABVwtN+AAABLElEQVQ4T5XSIY6FMAAE0CEVde0Ffn6vgSDhSsWt+q3DsVdqguAaJVyguArSWbH52XyxBcY9N5kM8BFHNgERMGSsykLqmVz8A01dA8eGPgKPfr8pPXtyuiJ0zmScykKqTpPTu+dFOVJ1dl2m9xL/CgBgzTL9jXpJjiMPxzxsizrRgSZosxSTdaxKQe5zegJiSbijxxfpi0yGqq4hSj1/R1lESHXpzavONkEf/R5vCHAJeEovmFCV2zw6ywBD3JE143445hfAWJVjboKOfTL5RFaMnJPJEARuKaP3TwC9jnVBFuHXrJkLqgKgOreGF/rff16UI3WAWaZHm1CVhWyCLbKgxR0NHPXhCjSZzhWwBqA9lxIsrRW53JGFVMIXuW9Z1eVIJRLaIfbpjj7yA/lJP9Nk+R7YAAAAAElFTkSuQmCC", onmouseover="javascript:$('#qrcode').attr('width',100).attr('height',100)", onmouseout="javascript:$('#qrcode').attr('width',30).attr('height',30)")
                 if (user)
                   |  
                   a(class="btn btn-default", href="//#{config.app.host}/#{user.slug}/sets") Manage Sets &raquo;
@@ -316,3 +328,14 @@ html(lang="en-US", ng-app="soundtrack-io")
           .modal-footer
             button.btn.btn(data-dismiss="modal") Cancel
             button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
+            
+    script.
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-61803390-1']);
+      _gaq.push(['_setDomainName', 'soundtrack.io']);
+      _gaq.push(['_trackPageview']);

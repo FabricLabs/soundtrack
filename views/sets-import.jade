@@ -1,0 +1,30 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Import Set
+    
+    
+    h2 From Spotify...
+    if (spotify.length)
+      table.table.tablesorter
+        for playlist in spotify
+          tr
+            td #{playlist.name}
+            td #{playlist.tracks.total} tracks
+            td
+              a.btn(href="/sets/import?playlist=#{JSON.stringify({ source: 'spotify', id: playlist.id, user: playlist.owner.id })}") import &raquo;
+    else
+      p You don't have any playlists on Spotify. :(
+    
+    h2 From YouTube...
+    if (youtube.length)
+      table.table.tablesorter
+        for playlist in youtube
+          tr
+            td #{playlist.snippet.title}
+            //-td #{playlist.tracks.total} tracks
+            td
+              a.btn(href="/sets/import?playlist=#{JSON.stringify({ source: 'youtube', id: playlist.id, name: playlist.snippet.title })}") import &raquo;
+    else
+      p You don't have any playlists on YouTube. :(

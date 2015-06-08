@@ -16,8 +16,14 @@ module.exports = {
         return b.listenerCount - a.listenerCount;
       });
       
-      return res.render('rooms', {
-        rooms: sortedRooms
+      return async.map( sortedRooms , function( room , done ) {
+        Person.populate( room , {
+          path: '_owner'
+        }, done );
+      } , function(err, finalRooms) {
+        return res.render('rooms', {
+          rooms: finalRooms
+        });
       });
     }
     
@@ -32,9 +38,10 @@ module.exports = {
           messages: messages
         , backup: []
         , playlists: playlists || []
-        , room: req.app.room
+        , room: req.app.rooms[ req.room ]
         , page: {
-            title: req.roomObj.name
+            title: req.roomObj.name,
+            description: req.roomObj.description
           }
       });
       
@@ -56,10 +63,13 @@ module.exports = {
   about: function(req, res, next) {
     res.render('about', { });
   },
+  help: function(req, res, next) {
+    res.render('help', { });
+  },
   history: function(req, res) {
     Play.find({
       _room: req.roomObj._id
-    }).populate('_track _curator').sort('-timestamp').limit(100).exec(function(err, plays) {
+    }).populate('_track _curator _room').sort('-timestamp').limit(100).exec(function(err, plays) {
       Artist.populate(plays, {
         path: '_track._artist'
       }, function(err, plays) {

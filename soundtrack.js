@@ -1,48 +1,67 @@
-var config = require('./config')
-  , database = require('./db')
-  , util = require('./util')
-  , express = require('express')
-  , app = express()
-  , sys = require('sys')
-  , http = require('http')
-  , rest = require('restler')
-  , slug = require('speakingurl')
-  , async = require('async')
-  , redis = require('redis')
-  , sockjs = require('sockjs')
-  , LastFM = require('lastfmapi')
-  , _ = require('underscore')
-  , mongoose = require('mongoose')
-  , flashify = require('flashify')
-  , passport = require('passport')
-  , pkgcloud = require('pkgcloud')
-  , LocalStrategy = require('passport-local').Strategy
-  , mongooseRedisCache = require('mongoose-redis-cache')
-  , RedisStore = require('connect-redis')(express)
-  , sessionStore = new RedisStore()
-  , cachify = require('connect-cachify')
-  , crypto = require('crypto')
-  , marked = require('marked')
-  , validator = require('validator');
+// config, general requirements
+var config = require('./config');
+var database = require('./db');
+var lang = require('./lang');
+var util = require('./util');
+var express = require('express');
+
+// application setup
+var app = express();
+var http = require('http');
+var rest = require('restler');
+var async = require('async');
+var redis = require('redis');
+var sockjs = require('sockjs');
+
+// some convenience helpers
+var _ = require('underscore');
+var slug = require('speakingurl');
+
+// Auth and external services
+var mongoose = require('mongoose');
+var flashify = require('flashify');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var SpotifyStrategy = require('passport-spotify').Strategy;
+var LastFM = require('lastfmapi');
+
+// session management
+var session = require('express-session');
+var RedisStore = require('connect-redis')( session );
+var sessionStore = new RedisStore();
+var bodyParser = require('body-parser');
+
+// markdown-related things
+var marked = require('marked');
+var validator = require('validator');
+
+// job queuing mechanism
+if (config.jobs && config.jobs.enabled) {
+  var Agency = require('mongoose-agency');
+  app.agency = new Agency( database.source , {
+    // timeout: 0.01
+  });
+}
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.set('strict routing', true);
-app.use(cachify.setup( require('./assets') , {
-  root: __dirname + '/public',
-  production: true
-}));
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.methodOverride());
-app.use(express.cookieParser(config.sessions.key));
-app.use(express.bodyParser());
-app.use(express.errorHandler());
-app.use(express.session({
-    key: 'sid'
-  , secret: config.sessions.key
-  , store: sessionStore
-  , cookie: { maxAge : 604800000 , domain: '.' + config.app.host }
+app.use( bodyParser.json() );
+app.use( bodyParser.urlencoded({
+  extended: true
+}) );
+//app.use(express.errorHandler());
+app.use( session({
+  name: 'soundtrack.id',
+  secret: config.sessions.key,
+  store: sessionStore,
+  cookie: {
+    maxAge : 30 * 24 * 60 * 60 * 1000 ,
+    domain: '.' + config.app.host
+  },
+  rolling: true
 }));
 
 app.use(passport.initialize());
@@ -86,6 +105,8 @@ app.use(function(req, res, next) {
   res.locals.config = config;
   res.locals.user = req.user;
   res.charset = 'utf-8';
+  
+  res.locals.lang = lang['en'];
   
   var parts = req.headers.host.split('.');
   req.room = parts[0];
@@ -133,7 +154,12 @@ function requireRoom(req, res, next) {
   return next();
 }
 function redirectToMainSite(req, res, next) {
-  if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
+  if (process.env.NODE_ENV === 'dev') {
+    if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + ':' + config.app.port + req.path );
+  } else {
+    if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
+  }
+  
   return next();
 }
 
@@ -196,6 +222,22 @@ function authorize(role) {
         }
       };
     break;
+    case 'host':
+      return function( req, res, next ) {
+        if (~req.user.roles.indexOf('admin')) return next();
+        
+        if (!app.rooms[ req.room ]) return res.status(404).end();
+        if (!app.rooms[ req.room ]._owner) return res.status(404).end();
+        if (app.rooms[ req.room ]._owner.toString() !== req.user._id.toString()) {
+          return res.status(401).send({
+              status: 'error'
+            , message: 'Not authorized.'
+          });
+        } else {
+          return next();
+        }
+      }
+    break;
   }
 }
 
@@ -209,53 +251,6 @@ app.socketAuthTokens = [];
 
 app.config = config;
 
-if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
-  var lastfm = new LastFM({
-      api_key: config.lastfm.key
-    , secret:  config.lastfm.secret
-  });
-  app.LastFM = LastFM;
-  app.lastfm = lastfm;
-  app.get('/auth/lastfm', function(req, res) {
-    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
-    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
-    res.redirect(authUrl);
-  });
-  app.get('/auth/lastfm/callback', function(req, res) {
-    lastfm.authenticate( req.param('token') , function(err, session) {
-      if (err) {
-        console.log(err);
-        req.flash('error', 'Something went wrong with authentication.');
-        return res.redirect('/');
-      }
-
-      Person.findOne({ $or: [
-          { _id: (req.user) ? req.user._id : undefined }
-        , { 'profiles.lastfm.username': session.username }
-      ]}).exec(function(err, person) {
-
-        if (!person) {
-          var person = new Person({ username: 'reset this later ' });
-        }
-
-        person.profiles.lastfm = {
-            username: session.username
-          , key: session.key
-          , updated: new Date()
-        };
-
-        person.save(function(err) {
-          if (err) { console.log(err); }
-          req.session.passport.user = person._id;
-          res.redirect('/');
-        });
-
-      });
-
-    });
-  });
-}
-
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
 soundtrack.start();
@@ -264,17 +259,18 @@ app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   var room = app.rooms[ req.room ];
   
+  /* When first starting server, track is undefined, prevent this from erroring */
+  var title;
+  if (room.track) {
+    title = room.track.title;
+  } else {
+    title = "Unknown";
+  }
+
   room.nextSong(function() {
     console.log('skip.nextSong() called');
     res.send({ status: 'success' });
   
-    /* When first starting server, track is undefined, prevent this from erroring */
-    var title;
-    if (room.track) {
-      title = room.track.title;
-    } else {
-      title = "Unknown";
-    }
   
     //Announce who skipped this song
     res.render('partials/announcement', {
@@ -297,42 +293,18 @@ app.post('/skip', requireLogin, function(req, res) {
   
 });
 
-/* temporary: generate top 10 playlist (from coding soundtrack's top 10) */
-/* this will be in MongoDB soon...*/
-/*/ async.parallel([
-  function(done) {
-    var fallbackVideos = ['meBNMk7xKL4', 'KrVC5dm5fFc', '3vC5TsSyNjU', 'vZyenjZseXA', 'QK8mJJJvaes', 'wsUQKw4ByVg', 'PVzljDmoPVs', 'YJVmu6yttiw', '7-tNUur2YoU', '7n3aHR1qgKM', 'lG5aSZBAuPs'];
-    async.series(fallbackVideos.map(function(videoID) {
-      return function(callback) {
-        util.getYoutubeVideo(videoID, function(track) {
-          if (track) { backupTracks.push( track.toObject() ); }
-          callback();
-        });
-      };
-    }), done);
-  },
-  function(done) {
-    Track.find({}).limit(100).exec(function(err, fallbackVideos) {
-      fallbackVideos.forEach(function(track) {
-        if (track) { backupTracks.push( track.toObject() ); }
-      });
-      done();
-    });
-  }
-], function(err, trackLists) {
-  //app.nextSong();
-}); /**/
+sock.on('connection', function socketConnectionHandler(conn) {
 
-sock.on('connection', function(conn) {
-  
-  app.clients[ conn.id ] = conn;
   var room = conn.headers.host.split('.')[0];
   if (!app.rooms[ room ]) return;
+
+  app.clients[ conn.id ] = conn;
   var connRoom = app.rooms[ room ];
 
+  conn.room = connRoom._id.toString();
   conn.pongTime = (new Date()).getTime();
 
-  conn.on('data', function(message) {
+  conn.on('data', function socketDataHandler(message) {
     var data = JSON.parse(message);
     switch (data.type) {
       //respond to pings
@@ -454,6 +426,177 @@ var soundtracker = function(req, res, next) {
   next();
 };
 
+var externalizer = function(req, res, next) {
+  if (!req.user) return res.redirect('/login');
+
+  req.youtube = {
+    get: function( path ) {
+      var path = 'https://www.googleapis.com/youtube/v3/' + path + '&access_token=' + req.user.profiles.google.token;
+      return rest.get( path , {
+        'Authorization': 'Bearer ' + req.user.profiles.google.token
+      });
+    }
+  }
+  
+  // stub for spotify API auth
+  req.spotify = {
+    get: function( path ) {
+      return rest.get('https://api.spotify.com/v1/' + path , {
+        headers: {
+          'Authorization': 'Bearer ' + req.user.profiles.spotify.token
+        }
+      });
+    }
+  }
+  
+  return next();
+}
+
+var redirectSetup = function(req, res, next) {
+  if (req.param('next')) {
+    req.session.next = req.param('next');
+    req.session.save( next );
+  } else {
+    return next();
+  }
+}
+var redirectNext = function(req, res, next) {
+  if (req.session.next) {
+    var path = req.session.next;
+    delete req.session.next;
+    req.session.save(function() {
+      res.redirect( path );
+    });
+  } else {
+    res.redirect('/');
+  }
+}
+
+if (config.google && config.google.id && config.google.secret) {
+  var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+  passport.use(new GoogleStrategy({
+    clientID: config.google.id,
+    clientSecret: config.google.secret,
+    //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/google/callback',
+    callbackURL: 'https://soundtrack.io/auth/google/callback',
+    scope: 'profile email https://www.googleapis.com/auth/youtube',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.google.id': profile.id }
+    ]}).exec(function(err, person) {
+      console.log('search result: ', err , person );
+      
+      if (!person) var person = new Person({ username: profile.username });
+      
+      person.profiles.google = {
+        id: profile.id,
+        token: accessToken,
+        updated: new Date(),
+        expires: null
+      }
+      
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+      
+    });
+    
+  }));
+  
+  app.get('/auth/google', redirectSetup , passport.authenticate('google') );
+  app.get('/auth/google/callback', passport.authenticate('google') , redirectNext );
+
+  app.get('/sets/import', soundtracker , externalizer , playlists.syncAndImport );
+
+}
+
+if (config.spotify && config.spotify.id && config.spotify.secret) {
+  passport.use(new SpotifyStrategy({
+    clientID: config.spotify.id,
+    clientSecret: config.spotify.secret,
+    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/spotify/callback',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.spotify.id': profile.id }
+    ]}).exec(function(err, person) {
+      if (!person) var person = new Person({ username: profile.username });
+      
+      person.profiles.spotify = {
+        id: profile.id,
+        token: accessToken,
+        updated: new Date(),
+        expires: null
+      }
+      
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+      
+    });
+  }));
+  
+  app.get('/auth/spotify', redirectSetup , passport.authenticate('spotify') );
+  app.get('/auth/spotify/callback', passport.authenticate('spotify') , redirectNext );
+  
+  app.get('/sets/sync/spotify', soundtracker , externalizer , playlists.syncAndImport );
+  
+}
+
+if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
+  var lastfm = new LastFM({
+      api_key: config.lastfm.key
+    , secret:  config.lastfm.secret
+  });
+  app.LastFM = LastFM;
+  app.lastfm = lastfm;
+  app.get('/auth/lastfm', function(req, res) {
+    var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
+    res.redirect(authUrl);
+  });
+  app.get('/auth/lastfm/callback', function(req, res) {
+    lastfm.authenticate( req.param('token') , function(err, session) {
+      if (err) {
+        console.log(err);
+        req.flash('error', 'Something went wrong with authentication.');
+        return res.redirect('/');
+      }
+
+      Person.findOne({ $or: [
+          { _id: (req.user) ? req.user._id : undefined }
+        , { 'profiles.lastfm.username': session.username }
+      ]}).exec(function(err, person) {
+
+        if (!person) {
+          var person = new Person({ username: 'reset this later ' });
+        }
+
+        person.profiles.lastfm = {
+            username: session.username
+          , key: session.key
+          , updated: new Date()
+        };
+
+        person.save(function(err) {
+          if (err) { console.log(err); }
+          req.session.passport.user = person._id;
+          res.redirect('/');
+        });
+
+      });
+
+    });
+  });
+}
+
 app.get('/', function(req, res, next) {
   if (req.roomObj) return next();
   if (req.headers.host.split(':')[0] === config.app.host) return next();
@@ -461,6 +604,7 @@ app.get('/', function(req, res, next) {
   return res.render('404-room');
 }, pages.index );
 app.get('/about', redirectToMainSite , pages.about );
+app.get('/help', redirectToMainSite , pages.help );
 
 app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
@@ -479,7 +623,7 @@ app.get('/listening', requireLogin , function(req, res) {
 //But first we record the token's authData, user and time.
 //We use the recorded time to make sure we issued the token recently
 app.post('/socket-auth', requireLogin, auth.configureToken);
-
+app.post('/:usernameSlug', people.edit);
 app.post('/chat', requireLogin, function(req, res) {
   var room = app.rooms[ req.room ];
   if (!room) return next();
@@ -519,7 +663,7 @@ app.post('/chat', requireLogin, function(req, res) {
   });
 });
 
-app.del('/playlist/:trackID', requireLogin, authorize('admin'), function(req, res, next) {
+app.del('/playlist/:trackID', requireLogin, requireRoom , authorize('host'), function(req, res, next) {
   if (!req.param('index') || req.param('index') == 0) { return next(); }
 
   var room = app.rooms[ req.room ];
@@ -553,8 +697,8 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
     return score + vote;
   }, 0);
 
-  console.log('track score: ' + room.playlist[ index ].score);
-  console.log('track votes: ' + JSON.stringify(room.playlist[ index ].votes));
+  //console.log('track score: ' + room.playlist[ index ].score);
+  //console.log('track votes: ' + JSON.stringify(room.playlist[ index ].votes));
 
   room.sortPlaylist();
   room.savePlaylist(function() {
@@ -570,21 +714,35 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
 
 app.post('/playlist', requireLogin , function(req, res) {
   console.log('playlist endpoint hit with POST...');
-  
+
   if (!req.roomObj && res.locals.user.rooms.length) {
     req.room = res.locals.user.rooms[ 0 ];
   }
 
+  if (!req.room) return res.send({ status: 'error', message: 'No room to queue to.' });
+  if (!app.rooms[ req.room ]) return res.send({ status: 'error', message: 'No room to queue to.' });
+
   soundtrack.trackFromSource( req.param('source') , req.param('id') , function(err, track) {
-    console.log('trackFromSource() callback executing...')
+    console.log('trackFromSource() callback executing...', err || track._id );
     if (err || !track) {
       console.log(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
     
+    var queueWasEmpty = false;
+    if (!app.rooms[ req.room ].playlist.length) queueWasEmpty = true;
     app.rooms[ req.room ].queueTrack(track, req.user, function() {
       console.log( 'queueTrack() callback executing... ');
       res.send({ status: 'success', message: 'Track added successfully!' });
+      
+      if (queueWasEmpty) {
+        app.rooms[ req.room ].broadcast({
+          type: 'track',
+          data: track,
+          //sources: sources,
+          seekTo: 0.0
+        });
+      }
     });
   });
 });
@@ -624,12 +782,11 @@ app.post('/register', function(req, res) {
 
     Person.register(new Person({ username : req.body.username }), req.body.password, function(err, user) {
       if (err) {
-        console.log(err);
         req.flash('error', 'Something went wrong: ' + err);
         return res.render('register', { user : user });
       } else {
         req.logIn(user, function(err) {
-          req.flash('info', 'Welcome to soundtrack.io!');
+          req.flash('info', lang.en.intro.replace('{{username}}', user.slug ) );
           res.redirect('/');
         });
       }
@@ -680,6 +837,10 @@ app.get('/tracks', tracks.list);
 app.get('/pool', requireRoom , tracks.pool);
 app.get('/chat', requireRoom , chat.view);
 app.get('/chat/since.json', requireRoom , chat.since);
+app.get('/rooms', rooms.list );
+app.post('/rooms', requireLogin , soundtracker , rooms.create );
+app.get('/sets', redirectToMainSite , playlists.list );
+app.get('/stats', pages.stats );
 
 app.get('/:artistSlug/:trackSlug/:trackID',  redirectToMainSite ,  soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
@@ -691,11 +852,6 @@ app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
-app.get('/rooms', rooms.list );
-app.post('/rooms', requireLogin , soundtracker , rooms.create );
-app.get('/sets', redirectToMainSite , playlists.list );
-app.get('/stats', pages.stats );
-
 app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
 app.del('/playlists/:playlistID', playlists.delete);
 app.get('/:usernameSlug/sets/new',  redirectToMainSite , playlists.createForm);
@@ -706,7 +862,6 @@ app.get('/:usernameSlug/:playlistSlug', playlists.view);
 app.get('/:usernameSlug/plays', people.listPlays);
 app.get('/:usernameSlug/mentions', people.mentions);
 app.get('/:usernameSlug', redirectToMainSite , people.profile);
-app.post('/:usernameSlug', people.edit);
 
 // catch-all route (404)
 app.get('*', function(req, res) {
@@ -796,8 +951,9 @@ Room.find().exec(function(err, rooms) {
               return done();
             }
             
-            app.rooms[ room.slug ].startMusic( errorHandler );
-    
+            //app.rooms[ room.slug ].startMusic( errorHandler );
+            app.rooms[ room.slug ].startMusic( done );
+
           });
         };
       });

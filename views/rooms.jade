@@ -10,7 +10,14 @@ block content
     
     p.span6(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a>.
     
+    if (!user)
+      p.span6
+        a.btn.btn-large.pull-right(href="/register") Get Started &raquo;
+        //-a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
+      
     .clearfix
+    
+    hr
     
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h2 Rooms
@@ -32,18 +39,24 @@ block content
       thead
         tr
           td Room
-          td Host
           td Currently
           td Listeners
       tbody
         for room in rooms
           tr
             td
-              h3
+              h3(style="line-height: 16px;")
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                if (room._owner)
+                  br
+                  small hosted by 
+                    a(href="/#{room._owner.slug}") #{room._owner.username}
               p !{marked(room.description || '')}
-            td #{(room._owner) ? room._owner.username : ''}
             td
-              h5 #{room.track.title} by #{room.track._artist.name}
+              if (room.track && room.track._artist)
+                h5
+                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                  |  by 
+                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>

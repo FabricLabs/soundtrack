@@ -1,7 +1,13 @@
 extends layout
 
 block content
-  h1 All #{plays.length} Plays By <a href="/#{person.slug}">#{person.username}</a>
+  h1 #{count} Plays By <a href="/#{person.slug}">#{person.username}</a>
+    if (room)
+      |  in <a href="#{room.index}">#{room.name}</a>
+  
+  if (limit < count)
+    h2 Showing #{ plays.length } most recent
+    p add <code>?limit=n</code> parameter to list more.
 
   table.table.tablesorter
     thead
@@ -10,6 +16,7 @@ block content
         th When
         th Artist
         th Title
+        th Room
         th Controls
     tbody
       for play in plays

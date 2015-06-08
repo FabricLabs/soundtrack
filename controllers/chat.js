@@ -4,7 +4,9 @@ module.exports = {
   view: function(req, res, next) {
     var limit = (req.param('limit')) ? req.param('limit') : 100;
     
-    Chat.find({}).sort('-_id').populate('_author _track _play').limit( limit ).exec(function(err, chats) {
+    Chat.find({
+      _room: req.roomObj._id
+    }).sort('-_id').populate('_author _track _play').limit( limit ).exec(function(err, chats) {
       Artist.populate( chats , {
         path: '_track._artist'
       }, function(err, chats) {

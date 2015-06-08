@@ -12,7 +12,8 @@ module.exports = {
         collectUserPlaylists,
         collectUserPlays,
         collectPlayStats,
-        collectArtistData
+        collectArtistData,
+        collectRooms
       ], function(err, results) {
 
         var playlists = results[0];
@@ -25,7 +26,7 @@ module.exports = {
           return playlist;
         });
 
-        res.render('person', {
+        return res.render('person', {
             person: person
           , playlists: playlists
           , plays: results[1]
@@ -39,11 +40,47 @@ module.exports = {
             }
           , artist: (results[3]) ? results[3].artist : null
           , tracks: (results[3]) ? results[3].tracks : null
+          , trackCount: (results[3]) ? results[3].trackCount : null
+          , topRoomsByQueues: results[4]
         });
+
+        if (req.app.config.jobs && req.app.config.jobs.enabled) {
+          req.app.agency.publish('artist:update', {
+              id: (results[3]) ? results[3].artist._id : null
+            , timeout: 3 * 60 * 1000
+          }, function(err, job) {
+            console.log('update artist completed');
+          });
+        }
+
       });
+      
+      function collectRooms(done) {
+        Play.aggregate([
+          { $match: {
+            _curator: person._id
+          } },
+          { $group: { _id: '$_room', count: { $sum: 1 } } },
+          { $sort: { 'count': -1 } },
+          { $limit: LIMIT }
+        ], function(err, collected) {
+          Room.populate( collected , {
+            path: '_id'
+          }, function(err, topRooms) {
+            topRooms = topRooms.map(function(x) {
+              return {
+                _room: x._id,
+                count: x.count
+              };
+            });
+            
+            done( null , topRooms );
+          });
+        });
+      }
 
       function collectUserPlays(done) {
-        Play.find({ _curator: person._id }).sort('-timestamp').limit(20).populate('_track _curator').exec(function(err, plays) {
+        Play.find({ _curator: person._id }).sort('-timestamp').limit(20).populate('_track _curator _room').exec(function(err, plays) {
           Artist.populate( plays , {
             path: '_track._artist _track._credits'
           }, done );
@@ -113,7 +150,8 @@ module.exports = {
           
           // handle artist renames
           if (req.param('usernameSlug') !== artist.slug) {
-            return res.redirect('/' + artist.slug);
+            res.redirect('/' + artist.slug);
+            return artistComplete('redirected');
           }
 
           Track.find({ $or: [
@@ -126,18 +164,23 @@ module.exports = {
               { $group: { _id: '$_track', count: { $sum: 1 } } },
               { $sort: { 'count': -1 } }
             ], function(err, trackScores) {
+
+              tracks = tracks.map(function(track) {
+                var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
+                track.plays = (plays) ? plays.count : 0;
+                return track;
+              }).sort(function(a, b) {
+                return b.plays - a.plays;
+              });
+
+              var trackCount = tracks.length;
               
-              console.log( 'ARTIST CALLBACK', artist );
-              
-              artistComplete( null , {
+              tracks = tracks.slice( 0 , LIMIT - 1 );
+
+              return artistComplete( null , {
                   artist: artist
-                , tracks: tracks.map(function(track) {
-                    var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
-                    track.plays = (plays) ? plays.count : 0;
-                    return track;
-                  }).sort(function(a, b) {
-                    return b.plays - a.plays;
-                  })
+                , tracks: tracks
+                , trackCount: trackCount
               });
             });
 
@@ -166,14 +209,18 @@ module.exports = {
     });
   },
   edit: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-      if (!person) { return next(); }
+    if (!req.user) return next();
+    Person.findOne({
+      _id: req.user._id,
+      slug: req.param('usernameSlug')
+    }).exec(function(err, person) {
+      if (!person) return next();
 
       person.bio    = (req.param('bio'))   ? req.param('bio')   : person.bio;
       person.email  = (req.param('email')) ? req.param('email') : person.email;
 
       if (typeof(person.email) == 'string') {
-        var hash = require('crypto').createHash('md5').update( person.email ).digest('hex');
+        var hash = require('crypto').createHash('md5').update( person.email.toLowerCase() ).digest('hex');
         person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=https://soundtrack.io/img/user-avatar.png';
       }
 
@@ -192,21 +239,29 @@ module.exports = {
     });
   },
   listPlays: function(req, res, next) {
-    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 1000000;
+    var query = {};
+    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+
+    if (req.roomObj) query['_room'] = req.roomObj._id;
 
     Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
-      if (!person) { return next(); }
+      if (!person) return next();
+      
+      query['_curator'] = person._id;
 
       async.parallel([
         function(done) {
           Playlist.find({ _creator: person._id, public: true }).exec( done );
         },
         function(done) {
-          Play.find({ _curator: person._id }).sort('-timestamp').populate('_track _curator').limit( limit ).exec(function(err, plays) {
+          Play.find( query ).sort('-timestamp').populate('_track _curator _room').limit( limit ).exec(function(err, plays) {
             Artist.populate( plays , {
               path: '_track._artist _track._credits'
             }, done );
           });
+        },
+        function(done) {
+          Play.count( query ).exec( done );
         }
       ], function(err, results) {
         res.format({
@@ -215,9 +270,11 @@ module.exports = {
           },
           html: function() {
             res.render('person-plays', {
-                person: person
-              , playlists: results[0]
-              , plays: results[1]
+              person: person,
+              playlists: results[0],
+              plays: results[1],
+              count: results[2],
+              limit: limit
             });
           }
         });

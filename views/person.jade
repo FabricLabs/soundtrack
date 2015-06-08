@@ -15,6 +15,8 @@ block content
             |  edit user
           if (!person.profiles || !person.profiles.lastfm || !person.profiles.lastfm.username)
             a.btn(href="/auth/lastfm") add last.fm &raquo;
+          if (!person.profiles || !person.profiles.spotify || !person.profiles.spotify.id)
+            a.btn(href="/auth/spotify") add spotify &raquo;
 
     if (artist)
       img.avatar-large.pull-left(src="#{artist.image.url}")
@@ -22,9 +24,14 @@ block content
       img.avatar-large.pull-left(src="#{person.avatar.url}")
 
     h1 #{person.username} 
-      if (person.profiles && person.profiles.lastfm && person.profiles.lastfm.username)
-        a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
-          img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+      if (person.profiles)
+        if (person.profiles.lastfm && person.profiles.lastfm.username)
+          a(href="http://last.fm/user/#{person.profiles.lastfm.username}")
+            img(src="/img/last.fm.ico", title="#{person.profiles.lastfm.username}")
+        if (person.profiles.spotify && person.profiles.spotify.id)
+          a(href="https://play.spotify.com/user/#{person.profiles.spotify.id}")
+            img(src="/img/spotify.png", title="#{person.profiles.spotify.username}")
+  
       if (artist)
         span.badge artist
 
@@ -60,6 +67,8 @@ block content
           if (artist)
             | /Albums
       li
+        a(href="#rooms", data-toggle="tab") Rooms
+      li
         a(href="#plays", data-toggle="tab") Plays
 
     .tab-content
@@ -68,7 +77,7 @@ block content
           small.pull-right
             strong Last Updated: 
             abbr(title="#{artist.tracking.tracks.updated}") #{artist.tracking.tracks.updated}
-          h3 #{tracks.length} known tracks
+          h3 #{trackCount} known tracks
           table.table.tablesorter
             thead
               tr
@@ -155,7 +164,15 @@ block content
                         i.icon-remove
                     a.btn.btn-mini(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
                     
-                        
+      .tab-pane#rooms
+        h3 Rooms
+        
+        .row-fluid
+          .span6
+            h4 Most Queues
+            each room in topRoomsByQueues
+              li queued <strong>#{room.count}</strong> tracks in 
+                a(href="#{room._room.index}") #{room._room.name}
 
       .tab-pane#plays
         h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)
@@ -166,6 +183,7 @@ block content
               th When
               th Artist
               th Title
+              th Room
               th Controls
           tbody
             for play in plays

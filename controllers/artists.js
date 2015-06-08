@@ -125,6 +125,8 @@ module.exports = {
   view: function(req, res, next) {
     Person.count({ slug: req.param('artistSlug') }).exec(function(err, num) {
       if (num) return next();
+      
+      var limit = (req.param('limit')) ? req.param('limit') : 100;
 
       Artist.findOne({ $or: [
           { slug: req.param('artistSlug') }
@@ -148,6 +150,18 @@ module.exports = {
             { $sort: { 'count': -1 } }
           ], function(err, trackScores) {
             
+            tracks = tracks.map(function(track) {
+              var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
+              track.plays = (plays) ? plays.count : 0;
+              return track;
+            }).sort(function(a, b) {
+              return b.plays - a.plays;
+            });
+            
+            var trackCount = tracks.length;
+            
+            tracks = tracks.slice( 0 , limit - 1 );
+            
             res.format({
               json: function() {
                 res.send( artist );
@@ -155,24 +169,21 @@ module.exports = {
               html: function() {
                 res.render('artist', {
                     artist: artist
-                  , tracks: tracks.map(function(track) {
-                      var plays = _.find( trackScores , function(x) { return x._id.toString() == track._id.toString() } );
-                      track.plays = (plays) ? plays.count : 0;
-                      return track;
-                    }).sort(function(a, b) {
-                      return b.plays - a.plays;
-                    })
+                  , tracks: tracks
+                  , trackCount: trackCount
                 });
               }
             });
           });
 
-          req.soundtrack._jobs.enqueue('artist:update', {
-              id: artist._id
-            , timeout: 3 * 60 * 1000
-          }, function(err, job) {
-            console.log('update artist queued');
-          });
+          if (req.app.config.jobs && req.app.config.jobs.enabled) {
+            req.app.agency.publish('artist:update', {
+                id: artist._id
+              , timeout: 3 * 60 * 1000
+            }, function(err, job) {
+              console.log('update artist completed');
+            });
+          }
 
         });
       });
