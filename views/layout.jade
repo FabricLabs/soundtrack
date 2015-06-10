@@ -3,11 +3,11 @@
 -   var hours   = Math.floor(sec_num / 3600);
 -   var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
 -   var seconds = sec_num - (hours * 3600) - (minutes * 60);
-- 
+-
 -   if (hours   < 10) {hours   = "0"+hours;}
 -   if (minutes < 10) {minutes = "0"+minutes;}
 -   if (seconds < 10) {seconds = "0"+seconds;}
-- 
+-
 -   if (hours != '00') {
 -     var time    = hours+':'+minutes+':'+seconds;
 -   } else {
@@ -20,7 +20,7 @@
 html(lang="en-US", ng-app="soundtrack-io")
   head
     title(itemprop="name") #{(page && page.title) ? page.title + ' |' : ''} soundtrack.io | music for all.
-    
+
     meta(name="google-site-verification", content="YRNN2O5wVHlb-amk2huI5wAk_J3_kDNKUinkzWCRBN0")
     meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
 
@@ -90,11 +90,13 @@ html(lang="en-US", ng-app="soundtrack-io")
             a.brand(href="//#{config.app.host}", title="music for all.")
               img(src="/favicon.ico")
               | soundtrack.io
-              
+
           .nav-collapse.collapse
             ul.nav
               li
                 a(href="/about", ng-class="{active: slug == 'about'}") About
+              li
+                a(href="//#{config.app.host}", title="browse all rooms") Rooms
               li
                 a(href="/artists", ng-class="{active: slug == 'artists'}") Artists
               li
@@ -137,26 +139,26 @@ html(lang="en-US", ng-app="soundtrack-io")
       footer
         .container
           p &#9835; soundtrack.io is a <a href="https://www.gittip.com/for/soundtrack-io/">collaborative</a> online jukebox.  It's a way to listen to music with your friends.  It's also <a href="http://github.com/martindale/soundtrack.io">open-source</a>, as is our <a href="https://play.google.com/store/apps/details?id=io.soundtrack">Android Client</a> (<a href="http://github.com/martindale/soundtrack.io-android">source</a>).
-          
+
           .row
             .span6
               p
                 a.btn.btn-default(href="https://chrome.google.com/webstore/detail/soundtrackio/plpfboikjdjiigdfknoohjopodfkenbn") Chrome Extension &raquo;
-                |  
-                a(class="btn btn-default", href="bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw", alt="B") Donate 
+                |
+                a(class="btn btn-default", href="bitcoin:1Ae7wguPTP8Zm3146opVhay4hUS7NiaxYw", alt="B") Donate
                   i.fa.fa-bitcoin
                   | itcoin &raquo;
                 | &nbsp;
                 img#qrcode(width="30", height="30", src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkAQMAAABKLAcXAAAABlBMVEX///8AAABVwtN+AAABLElEQVQ4T5XSIY6FMAAE0CEVde0Ffn6vgSDhSsWt+q3DsVdqguAaJVyguArSWbH52XyxBcY9N5kM8BFHNgERMGSsykLqmVz8A01dA8eGPgKPfr8pPXtyuiJ0zmScykKqTpPTu+dFOVJ1dl2m9xL/CgBgzTL9jXpJjiMPxzxsizrRgSZosxSTdaxKQe5zegJiSbijxxfpi0yGqq4hSj1/R1lESHXpzavONkEf/R5vCHAJeEovmFCV2zw6ywBD3JE143445hfAWJVjboKOfTL5RFaMnJPJEARuKaP3TwC9jnVBFuHXrJkLqgKgOreGF/rff16UI3WAWaZHm1CVhWyCLbKgxR0NHPXhCjSZzhWwBqA9lxIsrRW53JGFVMIXuW9Z1eVIJRLaIfbpjj7yA/lJP9Nk+R7YAAAAAElFTkSuQmCC", onmouseover="javascript:$('#qrcode').attr('width',100).attr('height',100)", onmouseout="javascript:$('#qrcode').attr('width',30).attr('height',30)")
                 if (user)
-                  |  
+                  |
                   a(class="btn btn-default", href="//#{config.app.host}/#{user.slug}/sets") Manage Sets &raquo;
-                
+
             .span6
               a(href="/pool") Machine Pool
-              |  &bull; 
+              |  &bull;
               a(href="/chat") Chat Logs
-              |  &bull; 
+              |  &bull;
               a(href="/history") Play History
 
     #settings-modal.modal.hide.fade
@@ -186,7 +188,7 @@ html(lang="en-US", ng-app="soundtrack-io")
           input(type="checkbox", data-action="toggle-video-avoid")
           |  Avoid Videos [where possible]
         label(title="Maximum amount of time to wait for a track's audio source to load.")
-          |  Advance to next source after 
+          |  Advance to next source after
           input(type="number", data-for="max-source-load-time", value="1000", min="0", style="width: 4em;")
           | ms
 
@@ -219,7 +221,7 @@ html(lang="en-US", ng-app="soundtrack-io")
             a.btn(data-for="track-search-select-source", data-data="youtube") YouTube
             a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
             a.btn(data-for="track-search-select-source", data-data="playlists") Playlists
-          
+
           .input-append
             input(type="text", data-for="track-search-query")
             .add-on.btn(data-for="track-search-reset")
@@ -295,11 +297,11 @@ html(lang="en-US", ng-app="soundtrack-io")
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel
           button.btn.btn-primary.btn-large(data-dismiss="modal") Done
-    
+
       form#create-playlist-form(action="/#{user.slug}/playlists", method="post")
         input(type="hidden", name="trackID")
         input(type="hidden", name="current-track-id")
-        
+
         #create-playlist-modal.modal.hide.fade
           .modal-header
             button.close(data-dismiss="modal") &times;
@@ -313,22 +315,22 @@ html(lang="en-US", ng-app="soundtrack-io")
 
             label
               input(type="checkbox", name="status", value="public", checked)
-              |  
+              |
               i.icon-globe
               |  Public
 
             h4 You'll be adding the following track:
             h5(data-for="track-name")
               span.track-artist foo
-              |  &mdash; 
+              |  &mdash;
               span.track-title bar
-              
+
               div(data-for="track-preview")
 
           .modal-footer
             button.btn.btn(data-dismiss="modal") Cancel
             button.btn.btn-primary.btn-large(type="submit") Create Playlist &raquo;
-            
+
     script.
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
