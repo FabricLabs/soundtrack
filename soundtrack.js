@@ -278,9 +278,6 @@ app.post('/tips', requireLogin , function(req, res, next) {
     }, function(err, results) {
       var result = err || results;
 
-      console.log('result:', result);
-
-
       if (result.errors) return res.send(result);
 
       res.render('partials/announcement', {
@@ -602,8 +599,8 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
     clientID: config.changetip.id,
     clientSecret: config.changetip.secret,
     //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
-    callbackURL: 'https://soundtrack.io/auth/changetip/callback',
-    //callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
+    //callbackURL: 'https://soundtrack.io/auth/changetip/callback',
+    callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
 
@@ -634,8 +631,14 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
 
   app.get('/auth/changetip', redirectSetup , passport.authenticate('changetip') );
   app.get('/auth/changetip/callback', passport.authenticate('changetip') , function(req, res) {
-    req.flash('info', 'Congrats!  You can now send tips to anyone who has configured their ChangeTip account.');
-    res.redirect('/');
+    console.log( req.user._id );
+    req.changetip.post('verify-channel-user', {
+      channel_uid: req.user._id.toString()
+    }, function(err, results) {
+      console.log('verify:', err , results );
+      req.flash('info', 'Congrats!  You can now send tips to anyone who has configured their ChangeTip account.');
+      res.redirect('/');
+    });
   });
 
 }
