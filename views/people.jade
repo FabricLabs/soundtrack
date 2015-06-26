@@ -22,3 +22,8 @@ block content
             | 
             a(href="https://play.spotify.com/user/#{person.profiles.spotify.id}")
               img(src="/img/spotify.png", title="#{person.profiles.spotify.id}")
+          if (person.profiles && person.profiles.changetip && person.profiles.changetip.id)
+            | 
+            a(href="https://www.changetip.com/tipme/#{person.profiles.changetip.username}")
+              img(style="max-height: 32px;", src="/img/changetip.png", title="#{person.profiles.changetip.username}")
+    

@@ -17,6 +17,8 @@ block content
             a.btn(href="/auth/lastfm") add last.fm &raquo;
           if (!person.profiles || !person.profiles.spotify || !person.profiles.spotify.id)
             a.btn(href="/auth/spotify") add spotify &raquo;
+          if (!person.profiles || !person.profiles.changetip || !person.profiles.changetip.id)
+            a.btn(href="/auth/changetip") add changetip &raquo;
 
     if (artist)
       img.avatar-large.pull-left(src="#{artist.image.url}")
@@ -31,6 +33,9 @@ block content
         if (person.profiles.spotify && person.profiles.spotify.id)
           a(href="https://play.spotify.com/user/#{person.profiles.spotify.id}")
             img(src="/img/spotify.png", title="#{person.profiles.spotify.username}")
+        if (person.profiles.changetip && person.profiles.changetip.id)
+          a(href="https://www.changetip.com/tipme/#{person.profiles.changetip.username}")
+            img(style="max-height: 32px;", src="/img/changetip.png", title="#{person.profiles.changetip.username}")
   
       if (artist)
         span.badge artist
