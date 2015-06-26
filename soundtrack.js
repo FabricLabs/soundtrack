@@ -599,8 +599,8 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
     clientID: config.changetip.id,
     clientSecret: config.changetip.secret,
     //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
-    //callbackURL: 'https://soundtrack.io/auth/changetip/callback',
-    callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
+    callbackURL: 'https://soundtrack.io/auth/changetip/callback',
+    //callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
 
