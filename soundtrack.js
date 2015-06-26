@@ -264,6 +264,8 @@ soundtrack.start();
 app.post('/tips', requireLogin , function(req, res, next) {
   var room = app.rooms[ req.room ];
 
+  if (!room.track.curator) return res.send({ errors: 'You can\'t tip the machine!' });
+
   if (req.changetip && room.track.curator && room.track.curator.changetip) {
     req.changetip.post( 'tip' , {
       receiver: room.track.curator.changetip,
@@ -273,9 +275,10 @@ app.post('/tips', requireLogin , function(req, res, next) {
     }, function(err, results) {
       var result = err || results;
 
-      res.send(result);
+      console.log('result:', result);
 
-      if (result.errors) return;
+
+      if (result.errors) return res.send(result);
 
       res.render('partials/announcement', {
         message: {
