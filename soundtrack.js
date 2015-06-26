@@ -607,7 +607,10 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
   }));
 
   app.get('/auth/changetip', redirectSetup , passport.authenticate('changetip') );
-  app.get('/auth/changetip/callback', passport.authenticate('changetip') , redirectNext );
+  app.get('/auth/changetip/callback', passport.authenticate('changetip') , function(req, res) {
+    req.flash('info', 'Congrats!  You can now send tips to anyone who has configured their ChangeTip account.');
+    res.redirect('/');
+  });
 
 }
 
