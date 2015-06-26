@@ -264,10 +264,7 @@ soundtrack.start();
 app.post('/tips', requireLogin , function(req, res, next) {
   var room = app.rooms[ req.room ];
 
-
   if (req.changetip && room.track.curator && room.track.curator.changetip) {
-    console.log('curator:', room.track.curator);
-
     req.changetip.post( 'tip' , {
       receiver: room.track.curator.changetip,
       message: '1 bit',
@@ -579,8 +576,8 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
     clientID: config.changetip.id,
     clientSecret: config.changetip.secret,
     //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
-    //callbackURL: 'https://soundtrack.io/auth/changetip/callback',
-    callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
+    callbackURL: 'https://soundtrack.io/auth/changetip/callback',
+    //callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
 
