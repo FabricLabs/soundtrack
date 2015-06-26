@@ -264,6 +264,9 @@ soundtrack.start();
 app.post('/tips', requireLogin , function(req, res, next) {
   var room = app.rooms[ req.room ];
 
+  //- TODO: should tips be allowed to the machine?  Machine can spend money?
+  // alternatively, should tips go to the devs?  The host?
+  // Fabric.
   if (!room.track.curator) return res.send({ errors: 'You can\'t tip the machine!' });
 
   if (req.changetip && room.track.curator && room.track.curator.changetip) {
