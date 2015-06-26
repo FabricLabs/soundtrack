@@ -274,7 +274,7 @@ app.post('/tips', requireLogin , function(req, res, next) {
       return res.send(err || results);
     });
   } else {
-    return next();
+    return res.send({ errors: room.track.curator.username + ' hasn\'t linked their ChangeTip account. :(' });
   }
 });
 
