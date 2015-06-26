@@ -270,7 +270,7 @@ app.post('/tips', requireLogin , function(req, res, next) {
   if (!room.track.curator) return res.send({ errors: 'You can\'t tip the machine!' });
 
   if (req.changetip && room.track.curator && room.track.curator.changetip) {
-    req.changetip.post( 'tip' , {
+    req.changetip.post('tip' , {
       receiver: room.track.curator.changetip,
       message: '1 bit',
       context_uid: Math.random(),
@@ -632,7 +632,7 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
   app.get('/auth/changetip', redirectSetup , passport.authenticate('changetip') );
   app.get('/auth/changetip/callback', passport.authenticate('changetip') , function(req, res) {
     console.log( req.user._id );
-    req.changetip.post('verify-channel-user', {
+    req.changetip.postJSON('verify-channel-user', {
       channel_uid: req.user._id.toString()
     }, function(err, results) {
       console.log('verify:', err , results );
