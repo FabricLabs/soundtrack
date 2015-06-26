@@ -162,15 +162,15 @@ footer {
 
 @media (max-width: 979px) {
   body {padding:0;}
-  
+
   .container {
 	width: 100%;
 	margin-left:0;
 	margin-right:0;
  }
- 
+
  footer {margin:0;}
- 
+
   #chat-form .input-block-level {
     width: 275px;
   }
@@ -363,42 +363,42 @@ footer {
   margin-left:0;
   margin-right:0;
  }
- 
+
  footer {margin:0;}
 
  }
- 
+
  @media (max-width:979px) and (min-width:768px){
   #chat-form .input-block-level {
     width: 85%;
-  } 
+  }
  }
- 
+
  @media (max-width: 979px) and (min-width: 945px) {
   .row-fluid [class*="span"].padded-left {
     padding-left:0;
     width:290px;
   }
 }
-  
+
 @media (max-width: 944px) {
   .row-fluid [class*="span"].padded-left {
   width:100%;
   padding-left:12px;
   padding-right:12px;
  }
- 
+
   #playlist {
     height:auto;
     max-height:200px;
   }
-  
+
   .row-fluid [class*="span"].unpadded {
     width:100%;
     padding:0 12px;
     margin:0;
   }
-  
+
   #search-form .input-block-level {
     width: 90%;
   }
@@ -418,4 +418,9 @@ footer {
   visibility: visible !important;
   opacity: 1 !important;
   transition-duration: 0s!important;
+}
+
+/* pointer patch from @chrisinajar */
+.tooltip {
+  pointer-events: none;
 }
