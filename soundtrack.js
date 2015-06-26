@@ -25,6 +25,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var SpotifyStrategy = require('passport-spotify').Strategy;
 var ChangeTipStrategy = require('passport-changetip').Strategy;
 var LastFM = require('lastfmapi');
+var ChangeTip = require('./lib/ChangeTip');
 
 // session management
 var session = require('express-session');
@@ -143,6 +144,10 @@ app.use(function(req, res, next) {
       }
       res.locals.user.rooms = listeningIn;
 
+      if (req.user.profiles.changetip) {
+        req.changetip = new ChangeTip( req.user.profiles.changetip.token );
+      }
+
       next();
     });
   });
@@ -204,7 +209,7 @@ function requireLogin(req, res, next) {
     // require the user to log in
     res.status(401).render('login', {
       next: req.path
-    })
+    });
   }
 }
 
@@ -237,7 +242,7 @@ function authorize(role) {
         } else {
           return next();
         }
-      }
+      };
     break;
   }
 }
@@ -255,6 +260,26 @@ app.config = config;
 var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
 soundtrack.start();
+
+app.post('/tips', requireLogin , function(req, res, next) {
+  var room = app.rooms[ req.room ];
+
+
+  if (req.changetip && room.track.curator && room.track.curator.changetip) {
+    console.log('curator:', room.track.curator);
+
+    req.changetip.post( 'tip' , {
+      receiver: room.track.curator.changetip,
+      message: '1 bit',
+      context_uid: Math.random(),
+      context_url: 'https://soundtrack.io'
+    }, function(err, results) {
+      return res.send(err || results);
+    });
+  } else {
+    return next();
+  }
+});
 
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
@@ -488,8 +513,6 @@ if (config.google && config.google.id && config.google.secret) {
         { _id: (req.user) ? req.user._id : undefined }
       , { 'profiles.google.id': profile.id }
     ]}).exec(function(err, person) {
-      console.log('search result: ', err , person );
-
       if (!person) var person = new Person({ username: profile.username });
 
       person.profiles.google = {
@@ -565,13 +588,14 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
         { _id: (req.user) ? req.user._id : undefined }
       , { 'profiles.changetip.id': profile.id }
     ]}).exec(function(err, person) {
-      console.log('search result: ', err , person );
+      profile.username = profile.displayName;
 
       if (!person) var person = new Person({ username: profile.username });
 
       person.profiles.changetip = {
         id: profile.id,
         token: accessToken,
+        username: profile.username,
         updated: new Date(),
         expires: null
       }
