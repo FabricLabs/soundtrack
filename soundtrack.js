@@ -271,7 +271,27 @@ app.post('/tips', requireLogin , function(req, res, next) {
       context_uid: Math.random(),
       context_url: 'https://soundtrack.io'
     }, function(err, results) {
-      return res.send(err || results);
+      var result = err || results;
+
+      res.send(result);
+
+      if (result.errors) return;
+
+      res.render('partials/announcement', {
+        message: {
+          message: req.user.username + ' tipped ' + room.track.curator.username + ' for this track!',
+          created: new Date(),
+          track: room.track
+        }
+      }, function(err, html) {
+        room.broadcast({
+          type: 'announcement',
+          data: {
+            formatted: html,
+            created: new Date()
+          }
+        });
+      });
     });
   } else {
     return res.send({ errors: room.track.curator.username + ' hasn\'t linked their ChangeTip account. :(' });

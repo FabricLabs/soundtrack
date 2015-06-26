@@ -1,3 +1,6 @@
 .message
-  abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
+  if (message._track && message._track._id)
+    abbr.timestamp.pull-right(title="#{moment(message.created).format()}\n\"#{message._track.title}\" by #{message._track._artist.name} was playing.", datetime="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
+  else
+    abbr.timestamp.pull-right(title="#{moment(message.created).format()}") #{moment(message.created).format('HH:mm:ss')}
   strong#announcement !{message.message}
