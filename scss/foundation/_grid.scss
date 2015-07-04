@@ -1,0 +1,58 @@
+$number-of-columns: 12;
+$fixed-width: 960px;
+$gutter-width: 40px;
+$max-width: none;
+
+$number-of-rows: 10;
+$height-per-row: 40px;
+
+$gutter-width-half: $gutter-width / 2;
+$flex-widths: ();
+$fix-widths: ();
+
+@for $i from 1 through $number-of-columns {
+  $flex-widths: append($flex-widths, $i / $number-of-columns * 100%);
+  $fix-widths: append($fix-widths, $i / $number-of-columns * $fixed-width);
+}
+
+body { min-width: $fixed-width; }
+.container { max-width: $max-width; margin-right: auto; margin-left: auto; padding-left: $gutter-width-half; padding-right: $gutter-width-half; @include box-sizing(border-box); @extend %clearfix; }
+.row { margin-left: -$gutter-width-half; margin-right: -$gutter-width-half; @extend %clearfix; }
+[class*="col-"] { padding-left: $gutter-width / 2; padding-right: $gutter-width / 2; float: left; @include box-sizing(border-box); @extend %clearfix; }
+
+%clearfix {
+  & { zoom: 1; }
+  &:before, &:after { content: '.'; display: block; overflow: hidden; visibility: hidden; font-size: 0; line-height: 0; width: 0; height: 0; }
+  &:after { clear: both; }
+}
+
+@for $i from 1 through length($flex-widths) {
+  .col-#{$i} {
+    & { width: nth($flex-widths, $i); }
+    &.fixed-width { width: nth($fix-widths, $i); }
+
+    @if $number-of-columns - $i > 0 {
+      @for $ii from 1 through $number-of-columns - $i {
+        &.with-fixed-#{$ii} { @include calc(width, #{nth($flex-widths, $i + $ii)} - #{nth($fix-widths, $ii)}); }
+      }
+    }
+  }
+}
+
+.row- {
+  @for $i from 1 through $number-of-rows {
+    &#{$i} { height: ($height-per-row * $i); }
+  }
+}
+.row-full {
+  & { height: 100%; }
+
+  @for $i from 1 through $number-of-rows {
+    &.with-height-#{$i} { @include calc(height, 100% - #{($height-per-row * $i)}); }
+  }
+}
+
+.no- {
+  &left-gutter { padding-left: 0; }
+  &right-gutter { padding-right: 0; }
+}

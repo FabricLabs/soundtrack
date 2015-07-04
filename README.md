@@ -19,9 +19,15 @@ Once you have them installed, go ahead and clone the repository.
     git clone git@github.com:martindale/soundtrack.io.git
     cd soundtrack.io
 
+Ruby and ruby-dev are required as part of the scss compilation.
+
+    gem install sass
+    gem install compass
+
 You will need to fetch the dependencies and then you can start up the server.
 
     npm install
+    npm install -g grunt-cli
     node soundtrack.js
 
 ## API
