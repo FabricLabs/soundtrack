@@ -193,12 +193,12 @@ String.prototype.capitalize = function(){
   return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
 
-var auth = require('./controllers/auth')
-var pages = require('./controllers/pages')
-var people = require('./controllers/people')
-var playlists = require('./controllers/playlists')
-var artists = require('./controllers/artists')
-var tracks = require('./controllers/tracks')
+var auth = require('./controllers/auth');
+var pages = require('./controllers/pages');
+var people = require('./controllers/people');
+var playlists = require('./controllers/playlists');
+var artists = require('./controllers/artists');
+var tracks = require('./controllers/tracks');
 var chat = require('./controllers/chat');
 var rooms = require('./controllers/rooms');
 
@@ -1018,50 +1018,65 @@ Room.find().exec(function(err, rooms) {
 
       // monolithic core for now.
       app.rooms = {};
-      var jobs = rooms.map(function(room) {
-        return function(done) {
-          app.redis.get(config.database.name + ':rooms:' + room.slug + ':playlist', function(err, playlist) {
-            playlist = JSON.parse(playlist);
-            room.playlist = playlist;
-            //console.log('room playlist:', room.playlist );// process.exit();
 
-            if (!playlist || !playlist.length) playlist = [];
+      async.filter(rooms, function(room, callback) {
+        Play.count({
+          _room: room._id,
+          _curator: { $exists: true }
+        }).exec(function(err, numPlays) {
+          if (numPlays < 5) {
+            return callback(false);
+          } else {
+            return callback(true);
+          }
+        });
+      }, function(rooms) {
+        var jobs = rooms.map(function(room) {
+          return function(done) {
+            app.redis.get(config.database.name + ':rooms:' + room.slug + ':playlist', function(err, playlist) {
+              playlist = JSON.parse(playlist);
+              room.playlist = playlist;
+              //console.log('room playlist:', room.playlist );// process.exit();
 
-            app.rooms[ room.slug ] = room;
-            app.rooms[ room.slug ].playlist = playlist;
-            app.rooms[ room.slug ].listeners = {};
+              if (!playlist || !playlist.length) playlist = [];
 
-            app.rooms[ room.slug ].bind( soundtrack );
+              app.rooms[ room.slug ] = room;
+              app.rooms[ room.slug ].playlist = playlist;
+              app.rooms[ room.slug ].listeners = {};
 
-            function errorHandler(err) {
-              if (err) {
-                return app.rooms[ room.slug ].retryTimer = setTimeout(function() {
-                  app.rooms[ room.slug ].startMusic( errorHandler );
-                }, 5000 );
+              app.rooms[ room.slug ].bind( soundtrack );
+
+              function errorHandler(err) {
+                if (err) {
+                  return app.rooms[ room.slug ].retryTimer = setTimeout(function() {
+                    app.rooms[ room.slug ].startMusic( errorHandler );
+                  }, 5000 );
+                }
+
+                return done();
               }
 
-              return done();
-            }
+              //app.rooms[ room.slug ].startMusic( errorHandler );
+              app.rooms[ room.slug ].startMusic( done );
 
-            //app.rooms[ room.slug ].startMusic( errorHandler );
-            app.rooms[ room.slug ].startMusic( done );
+            });
+          };
+        });
 
+        console.log( jobs.length.toString() , 'rooms found, configuring...');
+
+        async.parallel( jobs , function(err, results) {
+
+          app.locals.rooms = app.rooms;
+
+          server.listen(config.app.port, function(err) {
+            console.log('Listening on port ' + config.app.port + ' for HTTP');
+            console.log('Must have redis listening on port 6379');
+            console.log('Must have mongodb listening on port 27017');
           });
-        };
-      });
-
-      console.log( jobs.length.toString() , 'rooms found, configuring...');
-
-      async.parallel( jobs , function(err, results) {
-
-        app.locals.rooms = app.rooms;
-
-        server.listen(config.app.port, function(err) {
-          console.log('Listening on port ' + config.app.port + ' for HTTP');
-          console.log('Must have redis listening on port 6379');
-          console.log('Must have mongodb listening on port 27017');
         });
       });
+
   }
 
 });
