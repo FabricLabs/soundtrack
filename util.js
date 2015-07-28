@@ -1,6 +1,6 @@
-var async = require('async')
-  , rest = require('restler')
-  , config = require('./config');
+var async = require('async');
+var rest = require('restler');
+var config = require('./config');
 
 var DEBUG = false;
 
@@ -24,7 +24,7 @@ function parseTitleString(string, partsCallback) {
     '(original mix)', '[original mix]', '[lyrics]', '[free]', '[trap]',
     '[monstercat release]', '[monstercat freebie]', '[monstercat]',
     '[edm.com premeire]', '[edm.com exclusive]', '[enm release]',
-    '[free download!]', '[monstercat free release]'];
+    '[free download!]', '[monstercat free release]', '[official lyric video]'];
   baddies.forEach(function(token) {
     string = string.replace(token + ' - ', '').trim();
     string = string.replace(token.toUpperCase() + ' - ', '').trim();
@@ -95,7 +95,7 @@ function parseTitleString(string, partsCallback) {
   credits.push( artist.replace(/(.*) vs\.? (.*)/i,          '$2').trim() );
   credits.push( artist.replace(/(.*) x (.*)/i,              '$1').trim() );
   credits.push( artist.replace(/(.*) x (.*)/i,              '$2').trim() );
-  
+
 
   var creditMap = {};
   credits.forEach(function(credit) {
