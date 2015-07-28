@@ -127,13 +127,13 @@ YouTube.prototype.get = function(url, params, cb) {
 function volumeChangeHandler(e) {
   var vol = Number( e.value );
 
-  soundtrack.player.volume( vol / 100 );
+  soundtrack.player.setVolume( vol / 100 );
   $.cookie('lastVolume' , vol, { expires: COOKIE_EXPIRES });
 };
 
 function mutePlayer(saveState) {
   // TODO: why doesn't this work with just 0?  Why does it only work with 0.001?
-  soundtrack.player.volume( 0.00001 );
+  soundtrack.player.setVolume( 0.00001 );
   $.cookie('lastVolume', 0);
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
 }
@@ -142,10 +142,10 @@ function unmutePlayer() {
   var lastVol = $.cookie('lastVolume', Number);
 
   if (lastVol) {
-    soundtrack.player.volume(lastVol / 100);
+    soundtrack.player.setVolume(lastVol / 100);
     $('.slider[data-for=volume]').slider('setValue', lastVol).val(lastVol);
   } else {
-    soundtrack.player.volume( 0.8 );
+    soundtrack.player.setVolume( 0.8 );
     $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val( DEFAULT_VOLUME );
     $.cookie('lastVolume', DEFAULT_VOLUME, { expires: COOKIE_EXPIRES });
   }
@@ -155,7 +155,7 @@ function ensureVolumeCorrect() {
   var lastVol = $.cookie('lastVolume', Number);
   if (soundtrack.debug) console.log('setting volume to ', lastVol / 100);
 
-  soundtrack.player.volume( lastVol / 100 );
+  soundtrack.player.setVolume( lastVol / 100 );
 
   if ($('.slider[data-for=volume]')[0]) {
     $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
@@ -300,9 +300,9 @@ promise.done(function() {
     }
   }
 
-  ensureVolumeCorrect();
+  //ensureVolumeCorrect();
 
-  setInterval(function() {
+  /* setInterval(function() {
     // TODO: use angularJS for this
     var duration = soundtrack.player.duration() || 0;
 
@@ -319,7 +319,7 @@ promise.done(function() {
       $el.html( moment( $el.attr('datetime') ).fromNow() );
     });
 
-  }, 1000);
+  }, 1000); */
 });
 
 $(window).load(function() {
@@ -332,10 +332,12 @@ $(window).load(function() {
   soundtrack = new Soundtrack();
   youtube = new YouTube('AIzaSyBnCN68b8W5oGgBKKkM2cSQhSygnLPApEs');
   if ($('#main-player').length) {
-    soundtrack.player = videojs('#main-player', {
+    plyr.setup();
+    soundtrack.player = document.querySelectorAll(".player")[0].plyr;
+    /* soundtrack.player = videojs('#main-player', {
       techOrder: ['html5', 'youtube', 'flash']
     });
-    soundtrack.player.controls( true );
+    soundtrack.player.controls( true );*/
   } //else {
   //  soundtrack.player = videojs('#secondary-player', {
   //  techOrder: ['html5', 'youtube']
@@ -348,7 +350,7 @@ $(window).load(function() {
   }
   $('*[data-for=max-source-load-time]').val( $.cookie('maxTimeToPlaySource', Number) );
 
-  soundtrack.player.ready(function() {
+  //soundtrack.player.ready(function() {
     if (soundtrack.debug) console.log('player loaded. :)');
 
     soundtrack.startSockJs = function() {
@@ -468,6 +470,10 @@ $(window).load(function() {
                 });
               }
 
+              console.log('source:', sources);
+              soundtrack.player.source( sources[0].src );
+              soundtrack.player.play();
+
               function rollTrack() {
                 if (soundtrack.debug) console.log('rollTrack()', sources );
                 if (soundtrack.debug) console.log('current source:', soundtrack.player.src() );
@@ -535,10 +541,14 @@ $(window).load(function() {
                 ensureVolumeCorrect();
               }
 
-              rollTrack();
+              //rollTrack();
+
+
+
+
 
               var maxTimeToPlayTrack = soundtrack.settings.maxTimeToPlaySource;
-              var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
+              //var ensureTrackPlaying = setInterval( verifyTrackPlaying , maxTimeToPlayTrack );
 
 
             }
@@ -612,7 +622,7 @@ $(window).load(function() {
 
     deferred.resolve();
 
-  });
+  //});
 
   $('.message .message-content').filter('.message-content:contains("' + $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
