@@ -161,6 +161,12 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   query._curator = { $exists: true };
   // must have been played in this room
   query._room = room._id;
+
+  // TEMPORARY PERFORMANCE FIX
+  return Play.find(query).limit( 4096 ).sort('timestamp').exec(function(err, plays) {
+    return cb(err, plays, query);
+  });
+
   // must have been queued within the past 7 days
   query = _.extend( query , {
     $or: util.timeSeries('timestamp', 3600*3*1000, 24*60*1000*60, 7 + gain ),
