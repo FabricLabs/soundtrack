@@ -961,6 +961,16 @@ $(window).load(function() {
     return false;
   });
 
+  $(document).on('click', '*[data-action=tip-current-curator]', function(e) {
+    e.preventDefault();
+
+    $.post('/tips', function(data) {
+      if (data.errors) alert( data.errors );
+    });
+
+    return false;
+  });
+
   $(document).on('click', '*[data-action=remove-queued-track]', function(e) {
     e.preventDefault();
     var self = this;

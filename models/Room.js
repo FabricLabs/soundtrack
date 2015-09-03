@@ -35,7 +35,7 @@ RoomSchema.methods.bind = function( soundtrack ) {
 };
 RoomSchema.methods.broadcast = function( msg , GLOBAL ) {
   if (GLOBAL) return this.soundtrack.broadcast( msg );
-  
+
   var room = this;
   var app = room.soundtrack.app;
 
@@ -52,10 +52,10 @@ RoomSchema.methods.broadcast = function( msg , GLOBAL ) {
 };
 RoomSchema.methods.queueTrack = function( track , curator , callback ) {
   var room = this;
-  
+
   Track.findOne({ _id: track._id }).populate('_artist _credits').exec(function(err, realTrack) {
     if (err || !realTrack) return callback('Could not acquire that track.');
-    
+
     var playlistItem = realTrack.toObject();
 
     playlistItem._artist = {
@@ -71,27 +71,33 @@ RoomSchema.methods.queueTrack = function( track , curator , callback ) {
         delete playlistItem.sources[ source ][ i ].data;
       }
     }
-    
+
     if (!playableSources) {
       return callback({
           status: 'error'
         , message: 'No playable sources.'
       });
     }
-    
+
+    var curatorObj = {
+        _id: curator._id
+      , username: curator.username
+      , slug: curator.slug
+    };
+
+    if (curator.profiles && curator.profiles.changetip && curator.profiles.changetip.username) {
+      curatorObj.changetip = curator.profiles.changetip.username;
+    }
+
     room.playlist.push( _.extend( playlistItem , {
         score: 0
       , votes: {} // TODO: auto-upvote?
       , timestamp: new Date()
-      , curator: {
-            _id: curator._id
-          , username: curator.username
-          , slug: curator.slug
-        }
+      , curator: curatorObj
     } ) );
-    
+
     room.sortPlaylist();
-    
+
     room.savePlaylist(function() {
       room.broadcast({
         type: 'playlist:add',
@@ -121,9 +127,9 @@ RoomSchema.methods.savePlaylist = function( saved ) {
   //console.log('as stringified', JSON.stringify( self.playlist ));
 
   app.redis.set( app.config.database.name + ':rooms:' + self.slug + ':playlist', JSON.stringify( self.playlist ) );
-  
+
   app.rooms[ self.slug ] = self;
-  
+
   saved();
 };
 
@@ -136,7 +142,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
     var gain = 0;
     var failpoint = MAXIMUM_PLAY_AGE;
   }
-  
+
   if (typeof(failpoint) === 'function') {
     var cb = failpoint;
     var failpoint = MAXIMUM_PLAY_AGE;
@@ -146,7 +152,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
   if (!failpoint) var failpoint = MAXIMUM_PLAY_AGE;
 
   var query = {};
-  
+
   // must be queued by a real person
   query._curator = { $exists: true };
   // must have been played in this room
@@ -174,7 +180,7 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
         timestamp: { $gte: (new Date()) - 3600 * 3 * 1000 }
       }).exec(function(err, exclusions) {
         query.exclusionIDs = exclusions.map(function(x) { return x._track.toString(); });
-        
+
         plays = plays.filter(function(x) {
           //console.log('filtering ', x );
           //console.log('exclusions checker,', x._track.toString() , 'in' , query.exclusionIDs , '?');
@@ -187,9 +193,9 @@ RoomSchema.methods.generatePool = function( gain , failpoint , cb ) {
         if ((!plays) && (gain > failpoint)) return cb('init');
 
         return cb( err , plays , query );
-        
+
       });
-      
+
     });
   });
 
@@ -221,7 +227,7 @@ RoomSchema.methods.ensureQueue = function(callback) {
     room.playlist.push( track );
     return callback();
   });
-  
+
 };
 RoomSchema.methods.nextSong = function( done ) {
   if (!done) var done = new Function();
@@ -265,11 +271,11 @@ RoomSchema.methods.startMusic = function( cb ) {
 
   var now = Date.now();
   var seekTo = (now - room.playlist[0].startTime) / 1000;
-  
+
   Track.findOne({ _id: room.track._id }).populate('_artist _artists').lean().exec(function(err, track) {
     if (err || !track) return cb('no such track (severe error)');
 
-    // temporary collect exact matches... 
+    // temporary collect exact matches...
     // testing for future merging of track data for advances
     var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
     Track.find( query ).lean().exec(function(err, tracks) {
@@ -286,14 +292,14 @@ RoomSchema.methods.startMusic = function( cb ) {
         sources: sources,
         seekTo: seekTo
       });
-      
+
       clearTimeout( room.trackTimer );
       clearTimeout( room.permaTimer );
 
       room.trackTimer = setTimeout(function() {
         room.nextSong();
       }, (room.track.duration - seekTo) * 1000 );
-      
+
       if (room.soundtrack.app.lastfm) {
         room.setListeningActive( room.track , new Function() );
       }
@@ -303,7 +309,7 @@ RoomSchema.methods.startMusic = function( cb ) {
         var scrobbleTime = (room.track.duration > FOUR_MINUTES) ? FOUR_MINUTES : room.track.duration / 2;
 
         room.permaTimer = setTimeout(function() {
-          
+
           async.parallel([
             insertIntoPlayHistory,
             scrobbleIfEnabled
@@ -311,7 +317,7 @@ RoomSchema.methods.startMusic = function( cb ) {
             if (err) console.log(err);
             console.log('play history updated and lastfm scrobbled!');
           });
-          
+
           function insertIntoPlayHistory( done ) {
             var play = new Play({
               _track: room.track._id,
@@ -321,7 +327,7 @@ RoomSchema.methods.startMusic = function( cb ) {
             });
             play.save( done );
           }
-          
+
           function scrobbleIfEnabled( done ) {
             if (!room.soundtrack.app.lastfm) return done();
             room.scrobbleActive( room.track , done );
@@ -331,7 +337,7 @@ RoomSchema.methods.startMusic = function( cb ) {
       }
 
       return cb();
-      
+
     });
   });
 };

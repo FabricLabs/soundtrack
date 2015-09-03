@@ -35,6 +35,12 @@ var PersonSchema = new Schema({
         token: String,
         updated: Date,
         playlists: []
+      },
+      changetip: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date
       }
     }
   , preferences: {

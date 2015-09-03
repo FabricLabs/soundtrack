@@ -23,7 +23,9 @@ var flashify = require('flashify');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var SpotifyStrategy = require('passport-spotify').Strategy;
+var ChangeTipStrategy = require('passport-changetip').Strategy;
 var LastFM = require('lastfmapi');
+var ChangeTip = require('./lib/ChangeTip');
 
 // session management
 var session = require('express-session');
@@ -100,14 +102,14 @@ app.use(function(req, res, next) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('X-Powered-By', 'beer.');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   res.locals.config = config;
   res.locals.user = req.user;
   res.charset = 'utf-8';
-  
+
   res.locals.lang = lang['en'];
-  
+
   var parts = req.headers.host.split('.');
   req.room = parts[0];
 
@@ -117,9 +119,9 @@ app.use(function(req, res, next) {
 
     req.roomObj = room;
     res.locals.room = room;
-    
+
     if (!req.user) return next();
-    
+
     Playlist.find({
       _creator: req.user._id
     }).sort('name').exec(function(err, playlists) {
@@ -127,9 +129,9 @@ app.use(function(req, res, next) {
       if (req.user && !req.user.username) {
         return res.redirect('/set-username');
       }
-      
+
       res.locals.user.playlists = playlists;
-      
+
       var listeningIn = [];
       for (var name in app.rooms) {
         listeningIn = _.union( listeningIn , _.toArray(app.rooms[ name ].listeners).map(function(x) {
@@ -141,7 +143,11 @@ app.use(function(req, res, next) {
         }) );
       }
       res.locals.user.rooms = listeningIn;
-      
+
+      if (req.user.profiles.changetip) {
+        req.changetip = new ChangeTip( req.user.profiles.changetip.token );
+      }
+
       next();
     });
   });
@@ -159,11 +165,11 @@ function redirectToMainSite(req, res, next) {
   } else {
     if (req.headers.host.split(':')[0] !== config.app.host) return res.redirect( ((config.app.safe) ? 'https://' : 'http://') + config.app.host + req.path );
   }
-  
+
   return next();
 }
 
-// 
+//
 var otherMarked = require('./lib/marked');
 otherMarked.setOptions({
     sanitize: true
@@ -203,7 +209,7 @@ function requireLogin(req, res, next) {
     // require the user to log in
     res.status(401).render('login', {
       next: req.path
-    })
+    });
   }
 }
 
@@ -225,7 +231,7 @@ function authorize(role) {
     case 'host':
       return function( req, res, next ) {
         if (~req.user.roles.indexOf('admin')) return next();
-        
+
         if (!app.rooms[ req.room ]) return res.status(404).end();
         if (!app.rooms[ req.room ]._owner) return res.status(404).end();
         if (app.rooms[ req.room ]._owner.toString() !== req.user._id.toString()) {
@@ -236,7 +242,7 @@ function authorize(role) {
         } else {
           return next();
         }
-      }
+      };
     break;
   }
 }
@@ -255,10 +261,50 @@ var Soundtrack = require('./lib/soundtrack');
 var soundtrack = new Soundtrack(app);
 soundtrack.start();
 
+app.post('/tips', requireLogin , function(req, res, next) {
+  var room = app.rooms[ req.room ];
+
+  //- TODO: should tips be allowed to the machine?  Machine can spend money?
+  // alternatively, should tips go to the devs?  The host?
+  // Fabric.
+  if (!room.track.curator) return res.send({ errors: 'You can\'t tip the machine!' });
+
+  if (req.changetip && room.track.curator && room.track.curator.changetip) {
+    req.changetip.postJSON('tip' , {
+      receiver: room.track.curator._id,
+      message: '1 bit',
+      context_uid: Math.random(),
+      context_url: 'https://soundtrack.io'
+    }, function(err, results) {
+      var result = err || results;
+
+      if (result.errors) return res.send(result);
+
+      res.render('partials/announcement', {
+        message: {
+          message: req.user.username + ' tipped ' + room.track.curator.username + ' for this track!',
+          created: new Date(),
+          track: room.track
+        }
+      }, function(err, html) {
+        room.broadcast({
+          type: 'announcement',
+          data: {
+            formatted: html,
+            created: new Date()
+          }
+        });
+      });
+    });
+  } else {
+    return res.send({ errors: room.track.curator.username + ' hasn\'t linked their ChangeTip account. :(' });
+  }
+});
+
 app.post('/skip', requireLogin, function(req, res) {
   console.log('skip received from ' +req.user.username);
   var room = app.rooms[ req.room ];
-  
+
   /* When first starting server, track is undefined, prevent this from erroring */
   var title;
   if (room.track) {
@@ -270,8 +316,8 @@ app.post('/skip', requireLogin, function(req, res) {
   room.nextSong(function() {
     console.log('skip.nextSong() called');
     res.send({ status: 'success' });
-  
-  
+
+
     //Announce who skipped this song
     res.render('partials/announcement', {
         message: {
@@ -290,7 +336,7 @@ app.post('/skip', requireLogin, function(req, res) {
     );
 
   });
-  
+
 });
 
 sock.on('connection', function socketConnectionHandler(conn) {
@@ -340,7 +386,7 @@ sock.on('connection', function socketConnectionHandler(conn) {
             , roles: matches[0].user.roles
             , avatar: matches[0].user.avatar
           };
-          
+
           connRoom.broadcast({
               type: 'join'
             , data: {
@@ -368,7 +414,7 @@ sock.on('connection', function socketConnectionHandler(conn) {
       if (err) { console.log(err); }
       if (!track) { return; }
 
-      // temporary collect exact matches... 
+      // temporary collect exact matches...
       // testing for future merging of track data for advances
       var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
       Track.find( query ).lean().exec(function(err, tracks) {
@@ -437,7 +483,7 @@ var externalizer = function(req, res, next) {
       });
     }
   }
-  
+
   // stub for spotify API auth
   req.spotify = {
     get: function( path ) {
@@ -448,7 +494,7 @@ var externalizer = function(req, res, next) {
       });
     }
   }
-  
+
   return next();
 }
 
@@ -487,26 +533,24 @@ if (config.google && config.google.id && config.google.secret) {
         { _id: (req.user) ? req.user._id : undefined }
       , { 'profiles.google.id': profile.id }
     ]}).exec(function(err, person) {
-      console.log('search result: ', err , person );
-      
       if (!person) var person = new Person({ username: profile.username });
-      
+
       person.profiles.google = {
         id: profile.id,
         token: accessToken,
         updated: new Date(),
         expires: null
       }
-      
+
       person.save(function(err) {
         if (err) console.log('serious error', err );
         done(err, person);
       });
-      
+
     });
-    
+
   }));
-  
+
   app.get('/auth/google', redirectSetup , passport.authenticate('google') );
   app.get('/auth/google/callback', passport.authenticate('google') , redirectNext );
 
@@ -527,27 +571,75 @@ if (config.spotify && config.spotify.id && config.spotify.secret) {
       , { 'profiles.spotify.id': profile.id }
     ]}).exec(function(err, person) {
       if (!person) var person = new Person({ username: profile.username });
-      
+
       person.profiles.spotify = {
         id: profile.id,
         token: accessToken,
         updated: new Date(),
         expires: null
       }
-      
+
       person.save(function(err) {
         if (err) console.log('serious error', err );
         done(err, person);
       });
-      
+
     });
   }));
-  
+
   app.get('/auth/spotify', redirectSetup , passport.authenticate('spotify') );
   app.get('/auth/spotify/callback', passport.authenticate('spotify') , redirectNext );
-  
+
   app.get('/sets/sync/spotify', soundtracker , externalizer , playlists.syncAndImport );
-  
+
+}
+
+if (config.changetip && config.changetip.id && config.changetip.secret) {
+  passport.use(new ChangeTipStrategy({
+    clientID: config.changetip.id,
+    clientSecret: config.changetip.secret,
+    //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
+    callbackURL: 'https://soundtrack.io/auth/changetip/callback',
+    //callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
+    passReqToCallback: true
+  }, function(req, accessToken, refreshToken, profile, done) {
+
+    Person.findOne({ $or: [
+        { _id: (req.user) ? req.user._id : undefined }
+      , { 'profiles.changetip.id': profile.id }
+    ]}).exec(function(err, person) {
+      profile.username = profile.displayName;
+
+      if (!person) var person = new Person({ username: profile.username });
+
+      person.profiles.changetip = {
+        id: profile.id,
+        token: accessToken,
+        username: profile.username,
+        updated: new Date(),
+        expires: null
+      };
+
+      person.save(function(err) {
+        if (err) console.log('serious error', err );
+        done(err, person);
+      });
+
+    });
+
+  }));
+
+  app.get('/auth/changetip', redirectSetup , passport.authenticate('changetip') );
+  app.get('/auth/changetip/callback', passport.authenticate('changetip') , function(req, res) {
+    req.changetip.postJSON('verify-channel-user', {
+      channel_uid: req.user._id.toString()
+    }, function(err, results) {
+      console.log('verify:', err , results );
+      req.flash('info', 'Congrats!  You can now send tips to anyone who has configured their ChangeTip account.');
+      res.redirect('/');
+    });
+  });
+
 }
 
 if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
@@ -627,7 +719,7 @@ app.post('/:usernameSlug', people.edit);
 app.post('/chat', requireLogin, function(req, res) {
   var room = app.rooms[ req.room ];
   if (!room) return next();
-  
+
   var chat = new Chat({
       _author: req.user._id
     , message: req.param('message')
@@ -683,7 +775,7 @@ app.del('/playlist/:trackID', requireLogin, requireRoom , authorize('host'), fun
 
 app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   var room = app.rooms[ req.room ];
-  
+
   var playlistMap = room.playlist.map(function(x) {
     return x._id.toString();
   });
@@ -705,7 +797,7 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
     room.broadcast({
       type: 'playlist:update'
     });
-  
+
     res.send({
       status: 'success'
     });
@@ -728,13 +820,13 @@ app.post('/playlist', requireLogin , function(req, res) {
       console.log(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
-    
+
     var queueWasEmpty = false;
     if (!app.rooms[ req.room ].playlist.length) queueWasEmpty = true;
     app.rooms[ req.room ].queueTrack(track, req.user, function() {
       console.log( 'queueTrack() callback executing... ');
       res.send({ status: 'success', message: 'Track added successfully!' });
-      
+
       if (queueWasEmpty) {
         app.rooms[ req.room ].broadcast({
           type: 'track',
@@ -791,7 +883,7 @@ app.post('/register', function(req, res) {
         });
       }
     });
-    
+
   });
 });
 
@@ -902,13 +994,13 @@ Room.find().exec(function(err, rooms) {
       name: 'Coding Soundtrack',
       slug: 'coding'
     });
-    
+
     async.series([
       function(done) { Chat.update({}, { $set: { _room: room._id } }, { multi: true }).exec( done ); },
       function(done) { Play.update({}, { $set: { _room: room._id } }, { multi: true }).exec( done ); }
     ], function(err, results) {
       if (err) throw new Error( err );
-      
+
       room.save(function(err) {
         room.bind( soundtrack );
         // port queue, if any
@@ -923,7 +1015,7 @@ Room.find().exec(function(err, rooms) {
     });
 
   } else {
-      
+
       // monolithic core for now.
       app.rooms = {};
       var jobs = rooms.map(function(room) {
@@ -932,38 +1024,38 @@ Room.find().exec(function(err, rooms) {
             playlist = JSON.parse(playlist);
             room.playlist = playlist;
             //console.log('room playlist:', room.playlist );// process.exit();
-        
+
             if (!playlist || !playlist.length) playlist = [];
-            
+
             app.rooms[ room.slug ] = room;
             app.rooms[ room.slug ].playlist = playlist;
             app.rooms[ room.slug ].listeners = {};
-            
+
             app.rooms[ room.slug ].bind( soundtrack );
-            
+
             function errorHandler(err) {
               if (err) {
                 return app.rooms[ room.slug ].retryTimer = setTimeout(function() {
                   app.rooms[ room.slug ].startMusic( errorHandler );
                 }, 5000 );
               }
-              
+
               return done();
             }
-            
+
             //app.rooms[ room.slug ].startMusic( errorHandler );
             app.rooms[ room.slug ].startMusic( done );
 
           });
         };
       });
-      
+
       console.log( jobs.length.toString() , 'rooms found, configuring...');
-    
+
       async.parallel( jobs , function(err, results) {
-        
+
         app.locals.rooms = app.rooms;
-        
+
         server.listen(config.app.port, function(err) {
           console.log('Listening on port ' + config.app.port + ' for HTTP');
           console.log('Must have redis listening on port 6379');
