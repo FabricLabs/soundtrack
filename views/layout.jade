@@ -211,7 +211,7 @@ html(lang="en-US", ng-app="soundtrack-io")
 
     block scripts
 
-    #search-modal.modal.hide.fade
+    #search-modal.modal.hide.fade(style="width: 70%; margin-left:-35%;")
       .modal-header
         button.close(data-dismiss="modal") &times;
         h3 Track Search
@@ -227,7 +227,15 @@ html(lang="en-US", ng-app="soundtrack-io")
             .add-on.btn(data-for="track-search-reset")
               i.icon-remove
 
-        ul.nav.nav-list.search-results(data-for="track-search-results")
+        table.table
+          thead
+            tr
+              td
+              td Title
+              td Source
+              td Length
+              td Actions
+          tbody.search-results(data-for="track-search-results")
 
       .modal-footer
         button.btn.btn(data-dismiss="modal") Cancel

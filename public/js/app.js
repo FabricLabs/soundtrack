@@ -1007,11 +1007,11 @@ $(window).load(function() {
     $(self).addClass('btn-primary');
 
     if ($(self).data('data') == 'all') {
-      $('*[data-for=track-search-results] li').slideDown();
+      $('*[data-for=track-search-results] tr').slideDown();
     } else {
 
-      $('*[data-for=track-search-results] li:not(*[data-source=' + $(self).data('data') + '])').slideUp();
-      $('*[data-for=track-search-results] li[data-source=' + $(self).data('data') + ']').slideDown();
+      $('*[data-for=track-search-results] tr:not(*[data-source=' + $(self).data('data') + '])').slideUp();
+      $('*[data-for=track-search-results] tr[data-source=' + $(self).data('data') + ']').slideDown();
     }
 
     return false;
@@ -1163,7 +1163,11 @@ $(window).load(function() {
           video.images = video.snippet.thumbnails;
 
           if (video.duration <= maxLength) {
-            $('<li data-source="youtube" data-title="' + video.title + '" data-id="' + video.id + '"><span class="pull-right badge">youtube</span><span class="pull-right badge">' + video.duration.toHHMMSS() + '</span><img src="' + video.images.default.url + '" class="thumbnail-medium" />' + video.title + '<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+            var button = '<button class="btn btn-mini" data-source="youtube" data-title="'+video.title+'" data-id="'+video.id+'">queue &raquo;</button>';
+            var string = '<tr><td><img src="'+video.images.default.url+'" class="thumbnail-medium" /></td><td>'+video.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+video.duration.toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+            
+            var $row = $(string).appendTo('*[data-for=track-search-results]');
+            $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));
           }
 
         });
@@ -1179,7 +1183,11 @@ $(window).load(function() {
       }
       tracks.forEach(function(track) {
         if (track.duration / 1000 <= maxLength) {
-          $('<li data-source="soundcloud" data-title="' + track.title + '" data-id="' + track.id + '"><span class="pull-right badge">soundcloud</span><span class="pull-right badge">' + (track.duration / 1000).toHHMMSS() + '</span><img src="' + track.artwork_url + '" class="thumbnail-medium" />' + track.title + '<div class="pull-right clearfix"><button class="btn btn-mini pull-right">queue this! &raquo;</button></div></li><div class="clearfix" />').on('click', selectTrack).appendTo('*[data-for=track-search-results]');
+          var button = '<button class="btn btn-mini" data-source="soundcloud" data-title="'+track.title+'" data-id="'+track.id+'">queue &raquo;</button>';
+          var string = '<tr><td><img src="'+track.artwork_url+'" class="thumbnail-medium" /></td><td>'+track.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+(track.duration / 1000).toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+          
+          var $row = $(string).appendTo('*[data-for=track-search-results]');
+          $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));
         }
       });
     });
