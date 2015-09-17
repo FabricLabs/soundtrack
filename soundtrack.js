@@ -231,6 +231,13 @@ function authorize(role) {
     case 'host':
       return function( req, res, next ) {
         if (~req.user.roles.indexOf('admin')) return next();
+        
+        // TODO: fix this upstream
+        if (!app.rooms[ req.room ]._owner._id && app.rooms[ req.room ]._owner) {
+          app.rooms[ req.room ]._owner = {
+            _id: app.rooms[ req.room ]._owner
+          };
+        }
 
         if (!app.rooms[ req.room ]) return res.status(404).end();
         if (!app.rooms[ req.room ]._owner) return res.status(404).end();
