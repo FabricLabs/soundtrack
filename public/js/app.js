@@ -1006,10 +1006,9 @@ $(window).load(function() {
     $('*[data-for=track-search-select-source]').removeClass('btn-primary');
     $(self).addClass('btn-primary');
 
-    if ($(self).data('data') == 'all') {
+    if ($(self).data('data') === 'all') {
       $('*[data-for=track-search-results] tr').slideDown();
     } else {
-
       $('*[data-for=track-search-results] tr:not(*[data-source=' + $(self).data('data') + '])').slideUp();
       $('*[data-for=track-search-results] tr[data-source=' + $(self).data('data') + ']').slideDown();
     }
@@ -1164,7 +1163,7 @@ $(window).load(function() {
 
           if (video.duration <= maxLength) {
             var button = '<button class="btn btn-mini" data-source="youtube" data-title="'+video.title+'" data-id="'+video.id+'">queue &raquo;</button>';
-            var string = '<tr><td><img src="'+video.images.default.url+'" class="thumbnail-medium" /></td><td>'+video.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+video.duration.toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+            var string = '<tr data-source="youtube"><td><img src="'+video.images.default.url+'" class="thumbnail-medium" /></td><td>'+video.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+video.duration.toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
             
             var $row = $(string).appendTo('*[data-for=track-search-results]');
             $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));
@@ -1184,7 +1183,7 @@ $(window).load(function() {
       tracks.forEach(function(track) {
         if (track.duration / 1000 <= maxLength) {
           var button = '<button class="btn btn-mini" data-source="soundcloud" data-title="'+track.title+'" data-id="'+track.id+'">queue &raquo;</button>';
-          var string = '<tr><td><img src="'+track.artwork_url+'" class="thumbnail-medium" /></td><td>'+track.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+(track.duration / 1000).toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+          var string = '<tr data-source="soundcloud"><td><img src="'+track.artwork_url+'" class="thumbnail-medium" /></td><td>'+track.title+'</td><td><span class="badge">soundcloud</span></td><td><span class="badge">'+(track.duration / 1000).toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
           
           var $row = $(string).appendTo('*[data-for=track-search-results]');
           $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));

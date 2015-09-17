@@ -218,6 +218,7 @@ html(lang="en-US", ng-app="soundtrack-io")
       .modal-body
         form(data-for="track-search")
           .btn-group.pull-right
+            a.btn.btn-primary(data-for="track-search-select-source", data-data="all") All
             a.btn(data-for="track-search-select-source", data-data="youtube") YouTube
             a.btn(data-for="track-search-select-source", data-data="soundcloud") SoundCloud
             a.btn(data-for="track-search-select-source", data-data="playlists") Playlists
@@ -227,7 +228,7 @@ html(lang="en-US", ng-app="soundtrack-io")
             .add-on.btn(data-for="track-search-reset")
               i.icon-remove
 
-        table.table
+        table.table.sortable
           thead
             tr
               td
