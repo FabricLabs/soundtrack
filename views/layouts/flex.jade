@@ -1,0 +1,45 @@
+doctype html
+html.no-js
+  head
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge")
+    
+    title #{config.service.name}
+
+    meta(name="description", content="#{ (page) ? page.title || config.service.name + ': ' + config.service.mission : config.service.name + ': ' + config.service.mission }")
+    meta(name="viewport", content="width=device-width, initial-scale=1")
+
+    script(src="/js/lodash.min.js")
+
+    script(src="/js/uuid.js")
+    script(src="/js/jsonrpc.js")
+    
+    script(src="/js/maki.js")
+
+    base(href="/")
+    
+    style.
+      .container {
+        display: flex;
+        flex-row: row;
+      }
+      
+      .main {
+        flex: 2;
+      }
+      
+      .left {
+        width: 10em;
+        flex: 1;
+      }
+
+  body
+    .container
+      nav.nav.left
+        block navbar
+          include ../partials/navbar
+          
+      section.main(data-for="viewport")
+        block content
+
+    block scripts

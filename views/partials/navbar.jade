@@ -1,0 +1,34 @@
+#navigation(style="width:100%;")
+  .ui.menu.large
+    a.item(href="/")
+      i.icon.left(class="#{ config.service.icon || 'lab' }")
+      | #{config.service.name}
+
+    //- block for prepend/append/replace-able menu items
+    block mainMenu
+      .right.menu
+        if (user)
+          a.item(href="/people/#{user.slug}") #{user.username}
+          a.item(href="/sessions/#{session.hash}?method=delete") Logout
+        else
+          a.item(href="/sessions")
+            i.user.icon
+            | Login &raquo;
+
+  .ui.menu.small.bottom(style="margin-top: -1.25em;")
+    a.item(href="/", title="#{config.service.name} Homepage", ng-class="{ active: isActive('/')}")
+      i.home.icon
+      |  Home
+    each resource in resources
+      if (!resource.internal)
+        a.item(href="#{resource.routes.query}")
+          if (resource.options.icon)
+            i.icon(class="#{resource.options.icon}")
+          | #{resource.plural}
+    .ui.right.menu(style="border:0; box-shadow:none;")
+      a.item.tooltipped(class="btn btn-default", href="bitcoin:1EBdAcEhP4Qn7sihJoCqinLC8A14zqHJ7R", title="If you have a bitcoin wallet installed and configured, this will launch it.") 
+        i.icon.bitcoin(alt="Bitcoin", title="Donate Bitcoin")
+        | Donate &raquo;
+      a.item.tooltipped(href="#{ config.service.source }", title="View the Source, Luke!  Source code for this site.")
+        i.fork.icon
+        | Code &raquo;

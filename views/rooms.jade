@@ -1,62 +1,10 @@
-extends layout
+extends layouts/default
 
 block content
-  .well.content-well
-    
-    h1 Music for everyone.
-    h2 Listen to music with your friends.
-    
-    p.span6(style="font-size: 1.2em; line-height: 1.75em;") We are an <em>experimental</em> Internet radio platform.  Vote on what plays next, like Reddit for music.  We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em>.
-    
-    p.span6(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a>.
-    
-    if (!user)
-      p.span6
-        a.btn.btn-large.pull-right(href="/register") Get Started &raquo;
-        //-a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
-      
-    .clearfix
-    
-    hr
-    
-    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
-    h2 Rooms
-    
-    form#room-creation-form(action="/rooms", method="post").span12.hide
-      label(for="slug") URL
-      input.required(type="text", name="slug", required).span2
-      | .soundtrack.io
-      
-      label(for="name") Name
-      input.required(type="text", name="name", required)
-      
-      label(for="description") Description (markdown-enabled)
-      textarea(name="description")
-      .clearfix
-      input.btn.offset1(type="submit", value="create »");
-    
-    table.table.tablesorter
-      thead
-        tr
-          td Room
-          td Currently
-          td Listeners
-      tbody
-        for room in rooms
-          tr
-            td
-              h3(style="line-height: 16px;")
-                a(href="//#{room.slug}.#{config.app.host}") #{room.name}
-                if (room._owner)
-                  br
-                  small hosted by 
-                    a(href="/#{room._owner.slug}") #{room._owner.username}
-              p !{marked(room.description || '')}
-            td
-              if (room.track && room.track._artist)
-                h5
-                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
-                  |  by 
-                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
-            td
-              h5 <abbr>#{room.listenerCount} listeners</abbr>
+  h2 List of Rooms
+
+  each room in rooms
+    a.ui.card.fluid.link(href="/rooms/#{room._id}")
+      .content
+        h3.header Room: #{room._id}
+        pre #{room}
