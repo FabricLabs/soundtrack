@@ -36,6 +36,7 @@ var bodyParser = require('body-parser');
 // markdown-related things
 var marked = require('marked');
 var validator = require('validator');
+var escape = require('escape-html');
 
 // job queuing mechanism
 if (config.jobs && config.jobs.enabled) {
@@ -328,7 +329,7 @@ app.post('/skip', requireLogin, function(req, res) {
     //Announce who skipped this song
     res.render('partials/announcement', {
         message: {
-            message: "&ldquo;" + title + "&rdquo; was skipped by " + req.user.username + "."
+            message: "&ldquo;" + title + "&rdquo; was skipped by " + escape(req.user.username) + "."
           , created: new Date()
         }
       }, function(err, html) {

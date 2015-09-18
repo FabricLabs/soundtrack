@@ -124,6 +124,13 @@ YouTube.prototype.get = function(url, params, cb) {
   $.getJSON( self.base + url + '?' + qs.join('&') , cb );
 };
 
+function HTMLescape(html) {
+  return document.createElement('div')
+    .appendChild(document.createTextNode(html))
+    .parentNode
+    .innerHTML;
+};
+
 function volumeChangeHandler(e) {
   var vol = Number( e.value );
 
@@ -136,7 +143,7 @@ function mutePlayer(saveState) {
   soundtrack.player.volume( 0.00001 );
   $.cookie('lastVolume', 0);
   $('.slider[data-for=volume]').slider('setValue', 0).val(0);
-}
+};
 
 function unmutePlayer() {
   var lastVol = $.cookie('lastVolume', Number);
@@ -149,7 +156,7 @@ function unmutePlayer() {
     $('.slider[data-for=volume]').slider('setValue', DEFAULT_VOLUME).val( DEFAULT_VOLUME );
     $.cookie('lastVolume', DEFAULT_VOLUME, { expires: COOKIE_EXPIRES });
   }
-}
+};
 
 function ensureVolumeCorrect() {
   var lastVol = $.cookie('lastVolume', Number);
@@ -160,13 +167,15 @@ function ensureVolumeCorrect() {
   if ($('.slider[data-for=volume]')[0]) {
     $('.slider[data-for=volume]').slider('setValue', lastVol ).val( lastVol );
   }
-}
+};
 
 function updateUserlist() {
   $.get('/listeners.json', function(data) {
     $('#userlist').html('');
     $('.user-count').html('<strong>' + data.length + '</strong> online');
     data.forEach(function(user) {
+      user.username = HTMLescape(user.username);
+      
       // TODO: use template (Blade?)
       if (user.role != 'listener') {
         $('<li data-user-id="' + user._id + '"><a href="/' + user.slug + '"><img src="' + user.avatar.url + '" class="user-avatar-small pull-left" />' + user.username + ' <span class="badge pull-right" title="editors can fix track titles and artist names.  ping @martindale if you want to help.">' + user.role + '</span></a></li>').appendTo('#userlist');
@@ -176,7 +185,8 @@ function updateUserlist() {
 
     });
   });
-}
+};
+
 var videoToggled = false; //TODO: Should this use Cookie?
 
 function toggleVideo() {
@@ -1162,8 +1172,8 @@ $(window).load(function() {
           video.images = video.snippet.thumbnails;
 
           if (video.duration <= maxLength) {
-            var button = '<button class="btn btn-mini" data-source="youtube" data-title="'+video.title+'" data-id="'+video.id+'">queue &raquo;</button>';
-            var string = '<tr data-source="youtube"><td><img src="'+video.images.default.url+'" class="thumbnail-medium" /></td><td>'+video.title+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+video.duration.toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+            var button = '<button class="btn btn-mini" data-source="youtube" data-title="'+HTMLescape(video.title)+'" data-id="'+video.id+'">queue &raquo;</button>';
+            var string = '<tr data-source="youtube"><td><img src="'+video.images.default.url+'" class="thumbnail-medium" /></td><td>'+HTMLescape(video.title)+'</td><td><span class="badge">youtube</span></td><td><span class="badge">'+video.duration.toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
             
             var $row = $(string).appendTo('*[data-for=track-search-results]');
             $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));
@@ -1182,8 +1192,8 @@ $(window).load(function() {
       }
       tracks.forEach(function(track) {
         if (track.duration / 1000 <= maxLength) {
-          var button = '<button class="btn btn-mini" data-source="soundcloud" data-title="'+track.title+'" data-id="'+track.id+'">queue &raquo;</button>';
-          var string = '<tr data-source="soundcloud"><td><img src="'+track.artwork_url+'" class="thumbnail-medium" /></td><td>'+track.title+'</td><td><span class="badge">soundcloud</span></td><td><span class="badge">'+(track.duration / 1000).toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
+          var button = '<button class="btn btn-mini" data-source="soundcloud" data-title="'+HTMLescape(track.title)+'" data-id="'+track.id+'">queue &raquo;</button>';
+          var string = '<tr data-source="soundcloud"><td><img src="'+track.artwork_url+'" class="thumbnail-medium" /></td><td>'+HTMLescape(track.title)+'</td><td><span class="badge">soundcloud</span></td><td><span class="badge">'+(track.duration / 1000).toHHMMSS()+'</span></td><td data-for="actions"></td></tr>';
           
           var $row = $(string).appendTo('*[data-for=track-search-results]');
           $(button).on('click', selectTrack).appendTo($row.find('*[data-for=actions]'));
