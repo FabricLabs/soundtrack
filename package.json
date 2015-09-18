@@ -15,6 +15,7 @@
     "async": "~0.2.9",
     "body-parser": "^1.11.0",
     "connect-redis": "^2.2.0",
+    "escape-html": "^1.0.3",
     "express": "^4.11.2",
     "express-session": "^1.10.2",
     "flashify": "~0.1.2",
