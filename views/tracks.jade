@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Tracks
+
+  each track in tracks
+    a.ui.card.fluid.link(href="/tracks/#{track._id}")
+      .content
+        h3.header Track: #{track._id}
+        pre #{track}

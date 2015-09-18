@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Rooms
+
+  each room in rooms
+    a.ui.card.fluid.link(href="/rooms/#{room._id}")
+      .content
+        h3.header Room: #{room._id}
+        pre #{room}

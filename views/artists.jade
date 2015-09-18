@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Artists
+
+  each artist in artists
+    a.ui.card.fluid.link(href="/artists/#{artist._id}")
+      .content
+        h3.header Artist: #{artist._id}
+        pre #{artist}

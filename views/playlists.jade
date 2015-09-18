@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Playlists
+
+  each playlist in playlists
+    a.ui.card.fluid.link(href="/playlists/#{playlist._id}")
+      .content
+        h3.header Playlist: #{playlist._id}
+        pre #{playlist}

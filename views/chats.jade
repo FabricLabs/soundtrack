@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Chats
+
+  each chat in chats
+    a.ui.card.fluid.link(href="/chats/#{chat._id}")
+      .content
+        h3.header Chat: #{chat._id}
+        pre #{chat}

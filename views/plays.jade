@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Plays
+
+  each play in plays
+    a.ui.card.fluid.link(href="/plays/#{play._id}")
+      .content
+        h3.header Play: #{play._id}
+        pre #{play}

@@ -1,0 +1,10 @@
+extends layouts/default
+
+block content
+  h2 List of Sources
+
+  each source in sources
+    a.ui.card.fluid.link(href="/sources/#{source._id}")
+      .content
+        h3.header Source: #{source._id}
+        pre #{source}
