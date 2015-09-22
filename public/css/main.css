@@ -447,6 +447,15 @@ footer {
   transition-duration: 0s!important;
 }
 
+.vjs-default-skin .vjs-progress-holder {
+  height: 100%;
+  pointer-events: none;
+}
+
+.vjs-default-skin .vjs-play-control {
+  display:none;
+}
+
 /* pointer patch from @chrisinajar */
 .tooltip {
   pointer-events: none;
