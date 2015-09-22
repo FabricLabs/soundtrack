@@ -288,6 +288,23 @@ html(lang="en-US", ng-app="soundtrack-io")
           button.btn.btn(data-dismiss="modal") Cancel
           button.btn.btn-primary.btn-large(type="submit") Save Changes &raquo;
 
+      form#edit-room-modal.modal.hide.fade(data-for="edit-room")
+        input(type="hidden", name="roomSlug")
+
+        .modal-header
+          button.close(data-dismiss="modal") &times;
+          h3 Edit Room
+        .modal-body(style="min-height: 20em;")
+          //-label(for="name") Name
+          //-input.input-block-level(type="text", name="room")
+
+          label(for="description") Description
+          textarea.input-block-level(name="description", rows="10")
+
+        .modal-footer
+          button.btn.btn(data-dismiss="modal") Cancel
+          button.btn.btn-primary.btn-large(type="submit") Save Changes &raquo;
+
       #playlist-modal.modal.hide.fade
         .modal-header
           button.close(data-dismiss="modal") &times;
