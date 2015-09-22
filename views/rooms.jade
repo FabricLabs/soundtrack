@@ -41,13 +41,16 @@ block content
           td Room
           td Currently
           td Listeners
-          td
       tbody
         for room in rooms
           tr
             td
               h3(style="line-height: 16px;")
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                  if (room._owner && room._owner._id && user && user._id)
+                    if (room._owner._id.toString() === user._id.toString())
+                      |  
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}") edit
                 if (room._owner)
                   br
                   small hosted by 
@@ -62,7 +65,3 @@ block content
                   a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>
-            td
-              if (room._owner && room._owner._id && user && user._id)
-                if (room._owner._id.toString() === user._id.toString())
-                  a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}") edit
