@@ -5,24 +5,27 @@ module.exports = {
   index: function(req, res, next) {
     if (!req.roomObj) {
       var sortedRooms = [];
-      
-      Object.keys( req.app.locals.rooms ).forEach(function( roomName ) {
-        var room = req.app.locals.rooms[ roomName ];
-        room.listenerCount = Object.keys( room.listeners ).length;
-        sortedRooms.push( room );
-      });
-      
-      sortedRooms = sortedRooms.sort(function(a, b) {
-        return b.listenerCount - a.listenerCount;
-      });
-      
-      return async.map( sortedRooms , function( room , done ) {
-        Person.populate( room , {
-          path: '_owner'
-        }, done );
-      } , function(err, finalRooms) {
-        return res.render('rooms', {
-          rooms: finalRooms
+      return Room.find().exec(function(err, rooms) {
+        rooms.forEach(function( room ) {
+          var roomName = room.slug;
+          var cachedRoom = req.app.locals.rooms[ roomName ];
+          cachedRoom.description = room.description;
+          cachedRoom.listenerCount = Object.keys(cachedRoom.listeners).length;
+          sortedRooms.push(cachedRoom);
+        });
+        
+        sortedRooms = sortedRooms.sort(function(a, b) {
+          return b.listenerCount - a.listenerCount;
+        });
+        
+        return async.map( sortedRooms , function( room , done ) {
+          Person.populate( room , {
+            path: '_owner'
+          }, done );
+        } , function(err, finalRooms) {
+          return res.render('rooms', {
+            rooms: finalRooms
+          });
         });
       });
     }

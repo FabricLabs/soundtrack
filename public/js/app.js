@@ -1236,6 +1236,38 @@ $(window).load(function() {
     return false;
   });
 
+  $(document).on('click', '*[data-action=launch-room-editor]', function(e) {
+    e.preventDefault();
+    var self = this;
+    var $self = $(this);
+    var slug = $self.data('room-slug');
+    $.getJSON('/rooms/'+slug, function(room) {
+      $('#edit-room-modal').find('textarea[name=description]').val( room.description );
+      $('#edit-room-modal').find('input[name=roomSlug]').val( room.slug );
+      $('#edit-room-modal').modal();
+    });
+    return false;
+  });
+  
+  $(document).on('submit', 'form[data-for=edit-room]', function(e) {
+    e.preventDefault();
+    var $self = $(this);
+    var slug = $self.find('input[name=roomSlug]').val();
+    $.ajax({
+      type: 'PATCH',
+      url: '/rooms/' + slug,
+      dataType: 'json',
+      data: {
+        description: $self.find('textarea[name=description]').val()
+      },
+      success: function() {
+        $self.modal('hide');
+      }
+    });
+
+    return false;
+  });
+
   $(document).on('click', '*[data-action=launch-track-editor]', function(e) {
     e.preventDefault();
     var self = this;
@@ -1257,7 +1289,6 @@ $(window).load(function() {
   });
 
   $(document).on('click', '*[data-action=track-flag-live]', function(e) {
-
     var self = this;
     var trackID = $(self).data('track-id');
 

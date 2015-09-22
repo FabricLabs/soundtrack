@@ -937,8 +937,28 @@ app.get('/tracks', tracks.list);
 app.get('/pool', requireRoom , tracks.pool);
 app.get('/chat', requireRoom , chat.view);
 app.get('/chat/since.json', requireRoom , chat.since);
+
 app.get('/rooms', rooms.list );
 app.post('/rooms', requireLogin , soundtracker , rooms.create );
+app.get('/rooms/:roomSlug', function(req, res, next) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
+    if (err || !room) return next();
+    res.send(room);
+  });
+});
+app.patch('/rooms/:roomSlug', requireLogin, function(req, res, next) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
+    if (err || !room) return next();
+    if (!room._owner) return next();
+    if (room._owner.toString() !== req.user._id.toString()) return next();
+    
+    room.description = req.param('description');
+    room.save(function(err) {
+      res.send(room);
+    });
+  });
+});
+
 app.get('/sets', redirectToMainSite , playlists.list );
 app.get('/stats', pages.stats );
 
