@@ -32,7 +32,7 @@ block content
               a.btn.btn-mini(href="#", data-action="skip-track") skip
               if (user && user.roles.indexOf('editor') >= 0)
                 a.btn.btn-mini(href="#", data-action="launch-track-editor", data-for="current-track-id") edit
-              if (user)
+              //-if (user)
                 if (user.profiles.changetip && user.profiles.changetip.token)
                   a.btn.btn-mini.tooltipped(href="#", data-action="tip-current-curator", title="Give whoever queued this track 1 bit (that's 0.000001 Bitcoin)") tip
                 else
