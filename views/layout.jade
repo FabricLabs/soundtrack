@@ -73,7 +73,6 @@ html(lang="en-US", ng-app="soundtrack-io")
     base
 
   body(ng-controller="AppController")
-
     .navbar.navbar-fixed-top
       .navbar-inner
         .container
@@ -92,8 +91,6 @@ html(lang="en-US", ng-app="soundtrack-io")
           .nav-collapse.collapse
             ul.nav
               li
-                a(href="/about", ng-class="{active: slug == 'about'}") About
-              li
                 a(href="//#{config.app.host}", title="browse all rooms") Rooms
               li
                 a(href="/artists", ng-class="{active: slug == 'artists'}") Artists
@@ -103,6 +100,9 @@ html(lang="en-US", ng-app="soundtrack-io")
                 a(href="/sets", ng-class="{active: slug == 'sets'}") Sets
               li
                 a(href="/people") People
+              li
+                a(href="/blog", ng-class="{active: slug == 'blog'}") Blog 
+                  span(style="color: red; font-weight: bold;") !
 
             ul.nav.pull-right
               if (user)
