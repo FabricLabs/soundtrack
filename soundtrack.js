@@ -880,10 +880,12 @@ app.post('/register', function(req, res) {
       return res.redirect('/register');
     }
 
-    Person.register(new Person({
-      username : req.body.username,
-      email: req.body.email
-    }), req.body.password, function(err, user) {
+    var body = req.body;
+    if (!body.email) {
+      delete body.email;
+    }
+
+    Person.register(new Person(body), req.body.password, function(err, user) {
       if (err) {
         req.flash('error', 'Something went wrong: ' + err);
         return res.render('register', { user : user });
