@@ -23,8 +23,11 @@ module.exports = {
             path: '_owner'
           }, done );
         } , function(err, finalRooms) {
-          return res.render('rooms', {
-            rooms: finalRooms
+          Person.count({}, function(err, userCount) {
+            return res.render('rooms', {
+              rooms: finalRooms,
+              userCount: userCount
+            });          
           });
         });
       });
