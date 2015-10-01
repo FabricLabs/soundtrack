@@ -62,7 +62,9 @@ block content
                 if (room._owner)
                   br
                   small hosted by 
-                    a(href="/#{room._owner.slug}") #{room._owner.username}
+                    a(href="/#{room._owner.slug}")
+                      img.user-avatar-small(src="#{room._owner.avatar.url}")
+                      | #{room._owner.username}
               //-p !{marked(room.description || '')}
               p #{room.description}
             td
