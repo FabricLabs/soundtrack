@@ -28,7 +28,10 @@ block content
     hr
     
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
-    h2 Rooms
+    h2 #{rooms.length} Rooms &nbsp;
+      small with 
+        strong #{rooms.reduce(function(prev, cur) { return prev + cur.listenerCount; }, 0)}
+        |  total listeners
     
     form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
