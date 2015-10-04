@@ -1,0 +1,29 @@
+extends layouts/media
+
+block content
+  h1 yo
+  
+  .player
+    video
+
+block scripts
+  script.
+    //var player = plyr.setup();
+    plyr.setup();
+
+    var player = document.getElementsByClassName('player')[0].plyr;
+
+    var sources = [
+      'https://decentral.fm/files/55c54caa1676ebb53538d0e3',
+      'SZO5QYP-GeQ'
+    ];
+
+    setInterval(function() {
+      var time = new Date();
+      
+      player.source({
+        sources: [{
+          src: (time % 2) ? sources[0] : sources[1]
+        }]
+      });
+    }, 5000);
