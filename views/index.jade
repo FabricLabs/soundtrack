@@ -14,16 +14,35 @@ block scripts
     var player = document.getElementsByClassName('player')[0].plyr;
 
     var sources = [
-      'https://decentral.fm/files/55c54caa1676ebb53538d0e3',
-      'SZO5QYP-GeQ'
+      {
+        src: 'http://inumedia.io/whalestep.mp3',
+        type: 'audio/mp3'
+      },
+      {
+        src: 'SZO5QYP-GeQ',
+        type: 'youtube'
+      }
     ];
 
     setInterval(function() {
       var time = new Date();
       
       player.source({
-        sources: [{
-          src: (time % 2) ? sources[0] : sources[1]
-        }]
+        sources: [(time % 2) ? sources[0] : sources[1]]
       });
+      
+      player.play();
     }, 5000);
+
+    (function(d, p){
+    var a = new XMLHttpRequest(),
+        b = d.body;
+    a.open("GET", p, true);
+    a.send();
+    a.onload = function(){
+        var c = d.createElement("div");
+        c.style.display = "none";
+        c.innerHTML = a.responseText;
+        b.insertBefore(c, b.childNodes[0]);
+    }
+    })(document, "/img/sprite.svg");
