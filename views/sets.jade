@@ -3,7 +3,7 @@ extends layout
 block content
   .well.content-well
     
-    h1
+    h2
       .btn-group.pull-right
         if (user)
           a.btn.btn-large(href="/#{user.slug}/playlists/new") Create New &raquo;
@@ -17,6 +17,9 @@ block content
               a(href="/sets/import?sourceName=spotify") From Spotify &raquo;
 
       | Public Sets
+      if (user)
+        small  or, 
+          a(href="/#{user.slug}/sets") your sets &raquo;
 
     table.table.tablesorter
       thead

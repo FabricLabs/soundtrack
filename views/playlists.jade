@@ -2,10 +2,13 @@ extends layout
 
 block content
   .well.content-well
-      h3
+      h2
         if (user && user._id.toString() === person._id.toString())
           a.pull-right.btn.btn-default(href="/#{user.slug}/playlists/new") Add New &raquo;
         | #{person.username}'s Sets
+        small  or, 
+          a(href="/sets") all sets &raquo;
+
       table.table.tablesorter
         thead
           tr
