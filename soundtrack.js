@@ -242,7 +242,7 @@ function authorize(role) {
 
         if (!app.rooms[ req.room ]) return res.status(404).end();
         if (!app.rooms[ req.room ]._owner) return res.status(404).end();
-        if (app.rooms[ req.room ]._owner.toString() !== req.user._id.toString()) {
+        if (app.rooms[ req.room ]._owner._id.toString() !== req.user._id.toString()) {
           return res.status(401).send({
               status: 'error'
             , message: 'Not authorized.'
