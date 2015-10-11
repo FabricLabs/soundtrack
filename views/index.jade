@@ -15,23 +15,22 @@ block scripts
 
     var sources = [
       {
-        src: 'http://inumedia.io/whalestep.mp3',
-        type: 'audio/mp3'
+        type: 'audio',
+        sources: [{
+          src: 'http://inumedia.io/whalestep.mp3',
+          type: 'audio/mp3'
+        }],
+        autoplay: true
       },
       {
-        src: 'SZO5QYP-GeQ',
-        type: 'youtube'
+        type: 'youtube',
+        sources: 'SZO5QYP-GeQ',
+        autoplay: true
       }
     ];
 
     setInterval(function() {
-      var time = new Date();
-      
-      player.source({
-        sources: [(time % 2) ? sources[0] : sources[1]]
-      });
-      
-      player.play();
+      player.source(sources[Math.floor(Math.random() * 2)]);
     }, 5000);
 
     (function(d, p){
