@@ -9,37 +9,111 @@ html.no-js
     meta(name="description", content="#{ (page) ? page.title || config.service.name + ': ' + config.service.mission : config.service.name + ': ' + config.service.mission }")
     meta(name="viewport", content="width=device-width, initial-scale=1")
 
+    link(rel="stylesheet", href="/css/semantic.min.css")
+    link(rel="stylesheet", href="/css/highlight/maki.css")
+    link(rel="stylesheet", href="/css/maki.css")
+    link(rel="stylesheet", href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700")
+
+    link(rel="stylesheet", href="/css/plyr.css")
+
+    script(src="/js/jquery.js")
+    script(src="/js/semantic.min.js")
     script(src="/js/lodash.min.js")
 
+    script(src="/js/highlight.pack.js")
     script(src="/js/uuid.js")
     script(src="/js/jsonrpc.js")
+    
+    script(src="/js/plyr.js")
     
     script(src="/js/maki.js")
 
     base(href="/")
     
     style.
-      .container {
+      html, body {
+        height: 100%;
+      }
+    
+      .wrapper {
+        height: 100%;
         display: flex;
-        flex-row: row;
+        flex-flow: row wrap;
+        border: 3px solid red;
+      }
+      
+      .queue {
+        flex-direction: column;
+        flex: 2 100%;
+        border: 3px solid orange;
       }
       
       .main {
-        flex: 2;
+        border: 3px solid blue;
       }
       
-      .left {
-        width: 10em;
-        flex: 1;
+      .controls {
+        display: flex;
+        align-items: flex-end;
+        border: 3px solid green;
+      }
+
+      /* We tell all items to be 100% width */
+      .header, .main, .nav, .aside, .footer {
+        flex: 1 100%;
+      }
+
+      /* We rely on source order for mobile-first approach
+       * in this case:
+       * 1. header
+       * 2. nav
+       * 3. main
+       * 4. aside
+       * 5. footer
+       */
+
+      /* Medium screens */
+      @media all and (min-width: 600px) {
+        /* We tell both sidebars to share a row */
+        .aside { flex: 1 auto; }
+        .main { flex: 4 auto; }
+      }
+
+      /* Large screens */
+      @media all and (min-width: 800px) {
+        /* We invert order of first sidebar and main
+         * And tell the main element to take twice as much width as the other two sidebars 
+         */
+        .main { flex: 4 0px; }
+        
+        .aside-1 { order: 1; }
+        .main    { order: 2; }
+        .aside-2 { order: 3; }
+        .footer  { order: 4; }
       }
 
   body
-    .container
-      nav.nav.left
-        block navbar
-          include ../partials/navbar
+    .wrapper
+      article.main
+        h2 main
+        
+        .chat
+          h3 chat
           
-      section.main(data-for="viewport")
+        .room
+          h3 userlist
+        
+      .aside.queue
+        h1 soundtrack.io
+      
+        .currently
+          h4 foo &mdash; bar
+      
+        h2 queue
+
+      .footer.controls
+        h2 controls
         block content
+        
 
     block scripts

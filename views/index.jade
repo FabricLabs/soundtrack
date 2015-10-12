@@ -1,36 +1,39 @@
-extends layouts/media
+extends layouts/flex
 
 block content
-  h1 yo
-  
   .player
     video
 
 block scripts
   script.
     //var player = plyr.setup();
-    plyr.setup();
+    var player = plyr.setup('.player')[0];
 
-    var player = document.getElementsByClassName('player')[0].plyr;
+    //var player = document.querySelector('.player');
 
     var sources = [
-      {
-        type: 'audio',
-        sources: [{
-          src: 'http://inumedia.io/whalestep.mp3',
-          type: 'audio/mp3'
-        }],
-        autoplay: true
-      },
-      {
-        type: 'youtube',
-        sources: 'SZO5QYP-GeQ',
-        autoplay: true
-      }
+      //{ src: 'http://inumedia.io/whalestep.mp3', type: 'audio/mp3' },
+      { src: 'FyodeHtVvkA', type: 'youtube' },
+      { src: 'FyodeHtVvkA', type: 'youtube' }
     ];
 
+
+    player.source({
+      type: 'youtube',
+      sources: [sources[1]]
+    });
+
     setInterval(function() {
-      player.source(sources[Math.floor(Math.random() * 2)]);
+      player.pause();
+      
+      var source = sources[Math.floor(Math.random() * 2)];
+      console.log('source:', source);
+      player.source({
+        type: 'youtube',
+        title: 'lolvid',
+        sources: [source]
+      });
+      player.play();
     }, 5000);
 
     (function(d, p){
