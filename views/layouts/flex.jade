@@ -31,89 +31,156 @@ html.no-js
     base(href="/")
     
     style.
-      html, body {
+      /* some basic styles. nothing to do with flexbox */
+      header, footer,
+      nav, article, aside {
+        border: 1px solid black;
+        padding: 0.25em;
+        margin: 0.25em;
+        border-radius: 0.25em;
+      }
+
+      /*
+        Force full width & height.
+
+        If this block is removed, the layout height/length will be determined by
+        the amount of content in the page. That might result in a page which has
+        a footer only a few inches from the top of the viewport, or one which
+        scrolls beyond the viewport.
+
+        This forces the layout to always be full screen regardless of how much,
+        or how little, content is in place. Neither is "right" or "wrong", there
+        are valid cases for each. I just want to be clear what's controlling the
+        page/viewport height.
+      */
+      html, body, .viewport {
+        width: 100%;
         height: 100%;
+        margin: 0;
       }
-    
-      .wrapper {
-        height: 100%;
-        display: flex;
-        flex-flow: row wrap;
-        border: 3px solid red;
+
+      /* encapsulate the various syntax in helper clases */
+      /* inspired by http://infrequently.org/2009/08/css-3-progress/ */
+
+      /* items flex/expand vertically */
+      .vbox {
+        /* previous syntax */
+        display: -webkit-box;
+        display:    -moz-box;
+        display:         box;
+
+        -webkit-box-orient: vertical;
+           -moz-box-orient: vertical;
+            -ms-box-orient: vertical;
+                box-orient: vertical;
+
+        /* current syntax */
+        display: -webkit-flex;
+        display:    -moz-flex;
+        display:     -ms-flex;
+        display:         flex;
+
+        -webkit-flex-direction: column;
+           -moz-flex-direction: column;
+            -ms-flex-direction: column;
+                flex-direction: column;
       }
-      
-      .queue {
-        flex-direction: column;
-        flex: 2 100%;
-        border: 3px solid orange;
+
+      /* items flex/expand horizontally */
+      .hbox {
+        /* previous syntax */
+        display: -webkit-box;
+        display:    -moz-box;
+        display:     -ms-box;
+        display:         box;
+
+        -webkit-box-orient: horizontal;
+           -moz-box-orient: horizontal;
+            -ms-box-orient: horizontal;
+                box-orient: horizontal;
+
+        /* current syntax */
+        display: -webkit-flex;
+        display:    -moz-flex;
+        display:     -ms-flex;
+        display:         flex;
+
+        -webkit-flex-direction: row;
+           -moz-flex-direction: row;
+            -ms-flex-direction: row;
+                flex-direction: row;
       }
-      
+
+      .space-between {
+        /* previous syntax */
+        -webkit-box-pack: justify;
+           -moz-box-pack: justify;
+            -ms-box-pack: justify;
+                box-pack: justify;
+
+        /* current syntax */
+        -webkit-justify-content: space-between;
+           -moz-justify-content: space-between;
+            -ms-justify-content: space-between;
+                justify-content: space-between;
+      }
+
+      /* I went with a fixed height header & footer because it's a common case.
+        This could easily be altered to flex proportionally with the page.
+      */
+      header {
+        height: 10em;
+      }
+
       .main {
-        border: 3px solid blue;
-      }
-      
-      .controls {
-        display: flex;
-        align-items: flex-end;
-        border: 3px solid green;
-      }
+        /* previous syntax */
+        -webkit-box-flex: 1;
+           -moz-box-flex: 1;
+            -ms-box-flex: 1;
+                box-flex: 1;
 
-      /* We tell all items to be 100% width */
-      .header, .main, .nav, .aside, .footer {
-        flex: 1 100%;
-      }
-
-      /* We rely on source order for mobile-first approach
-       * in this case:
-       * 1. header
-       * 2. nav
-       * 3. main
-       * 4. aside
-       * 5. footer
-       */
-
-      /* Medium screens */
-      @media all and (min-width: 600px) {
-        /* We tell both sidebars to share a row */
-        .aside { flex: 1 auto; }
-        .main { flex: 4 auto; }
+        /* current syntax */
+        -webkit-flex: 1;
+           -moz-flex: 1;
+            -ms-flex: 1;
+                flex: 1;
       }
 
-      /* Large screens */
-      @media all and (min-width: 800px) {
-        /* We invert order of first sidebar and main
-         * And tell the main element to take twice as much width as the other two sidebars 
-         */
-        .main { flex: 4 0px; }
-        
-        .aside-1 { order: 1; }
-        .main    { order: 2; }
-        .aside-2 { order: 3; }
-        .footer  { order: 4; }
+      article {
+        /* previous syntax */
+        -webkit-box-flex: 5;
+           -moz-box-flex: 5;
+            -ms-box-flex: 5;
+                box-flex: 5;
+
+        /* current syntax */
+        -webkit-flex: 5;
+           -moz-flex: 5;
+            -ms-flex: 5;
+                flex: 5;
       }
 
-  body
-    .wrapper
-      article.main
-        h2 main
-        
-        .chat
-          h3 chat
-          
-        .room
-          h3 userlist
-        
-      .aside.queue
-        h1 soundtrack.io
-      
-        .currently
-          h4 foo &mdash; bar
-      
-        h2 queue
+      aside, nav {
+        /* previous syntax */
+        -webkit-box-flex: 1;
+           -moz-box-flex: 1;
+            -ms-box-flex: 1;
+                box-flex: 1;
 
-      .footer.controls
-        h2 controls
-        block content
-        
+        /* current syntax */
+        -webkit-flex: 1;
+           -moz-flex: 1;
+            -ms-flex: 1;
+                flex: 1;
+      }
+
+  body.vbox.viewport
+    header header
+    section.main.hbox.space-between
+      nav queue
+      article content
+      aside sidebar
+    footer player
+      block content
 
     block scripts
