@@ -268,6 +268,10 @@ module.exports = {
           var stringToParse = '';
 
           for (var source in track.sources) {
+            if (!track.sources[source] || !track.sources[source].length) {
+              return;
+            }
+            
             for (var i = 0; i < track.sources[source].length; i++) {
               if (track.sources[ source ][i].data && track.sources[ source ][i].data.title) {
                 stringToParse  = track.sources[ source ][i].data.title;
