@@ -402,9 +402,9 @@ $(window).load(function() {
 
             $('#track-title').html( msg.data.title );
 
-
             $('input[name=current-track-id]').val(msg.data._id);
             $('*[data-for=current-track-id]').data('track-id', msg.data._id);
+            $('*[data-for=current-track-id]').data('_id', msg.data._id);
 
             if (msg.data.curator) {
               $('#track-curator').html('<a title="added by" href="/' + msg.data.curator.slug + '">' + msg.data.curator.username + '</a>');
