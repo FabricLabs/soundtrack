@@ -100,7 +100,7 @@ html(lang="en-US", ng-app="soundtrack-io")
                 a(href="/sets", ng-class="{active: slug == 'sets'}") Sets
               li
                 a(href="https://blog.soundtrack.io", ng-class="{active: slug == 'blog'}") Blog 
-                  span(style="color: red; font-weight: bold;") !
+                  //-span(style="color: red; font-weight: bold;") !
 
             ul.nav.pull-right
               if (user)
@@ -131,7 +131,7 @@ html(lang="en-US", ng-app="soundtrack-io")
               .alert.alert-info !{info}
               
               
-      .alert.alert-info We're really excited to have so many new members, so we've published <a style="color:white; text-decoration:underline;" href="https://blog.soundtrack.io/posts/what-is-soundtrack-io">something you might want to read.</a>
+      //-.alert.alert-info We're really excited to have so many new members, so we've published <a style="color:white; text-decoration:underline;" href="https://blog.soundtrack.io/posts/what-is-soundtrack-io">something you might want to read.</a>
 
       block content
 
