@@ -20,4 +20,20 @@ block content
       tbody
         for track in tracks
           - var disallowPlaylists = true
+          - var banControls = true
+          include partials/track-row
+
+    h2 #{room.bans._tracks.length} Banned Tracks
+    p Banned tracks will not be selected by the machine when on random mode.  However, users can still queue these tracks.  See also <a href="#">User Bans</a>.
+    table.table.tablesorter
+      thead
+        tr
+          th Artist
+          th Title
+          th Length
+          th Plays
+          th Controls
+      tbody
+        for track in room.bans._tracks
+          - var disallowPlaylists = true
           include partials/track-row

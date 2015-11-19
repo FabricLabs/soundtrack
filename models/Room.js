@@ -18,6 +18,10 @@ var RoomSchema = new Schema({
   , _owner:      { type: ObjectId, ref: 'Person' }
   , created:     { type: Date, default: Date.now }
   , _moderators: [ { type: ObjectId , ref: 'Person' } ]
+  , bans: {
+      _tracks: [ { type: ObjectId , ref: 'Track' } ],
+      _people: [ { type: ObjectId , ref: 'Person' } ],
+    }
 });
 
 RoomSchema.plugin( slug('name'), {

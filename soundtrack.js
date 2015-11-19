@@ -116,7 +116,7 @@ app.use(function(req, res, next) {
 
   if (req.param('iframe')) return res.render('iframe');
 
-  Room.findOne({ slug: req.room }).exec(function(err, room) {
+  Room.findOne({ slug: req.room }).populate('_owner bans._tracks bans._people').exec(function(err, room) {
 
     req.roomObj = room;
     res.locals.room = room;
@@ -970,7 +970,8 @@ app.get('/stats', pages.stats );
 app.get('/:artistSlug/:trackSlug/:trackID',  redirectToMainSite ,  soundtracker , tracks.view);
 app.post('/:artistSlug/:trackSlug/:trackID', authorize('editor') , soundtracker , tracks.edit);
 app.get('/tracks/:trackID', redirectToMainSite ,                   soundtracker , tracks.view );
-app.post('/tracks/:trackID',                 authorize('editor') , soundtracker , tracks.edit);
+app.post('/tracks/:trackID',                  authorize('editor') , soundtracker , tracks.edit);
+app.patch('/tracks/:trackID', requireLogin, requireRoom , authorize('host') , soundtracker , tracks.ban);
 
 app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
 app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);

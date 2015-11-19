@@ -8,11 +8,14 @@
       a.btn.btn-mini(href="#", data-action="remove-track-from-playlist", data-index="#{pindex}", data-track-id="#{track._id}", data-playlist-id="#{playlist._id}")
           i.icon-remove
           |  remove
-    a.btn.btn-mini(href="#", data-toggle="dropdown") add to 
-      span.caret
-      
-      
+
+    if (room && banControls)
+      if (user && room._owner && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
+        a.btn.btn-mini(data-action="ban-track", data-_id="#{track._id}") ban
+
     if (!disallowPlaylists)
+      a.btn.btn-mini(href="#", data-toggle="dropdown") add to 
+        span.caret
       ul.dropdown-menu.user-playlists-dropdown(data-for="user-playlists")
         if (user.playlists.length >= 10)
           li(data-action="new-playlist")
