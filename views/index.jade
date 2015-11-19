@@ -30,6 +30,9 @@ block content
           if (user)
             .btn-group
               a.btn.btn-mini(href="#", data-action="skip-track") skip
+              if (user && room._owner && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
+                a.btn.btn-mini(data-action="ban-track", data-for="current-track-id") ban
+
               if (user && user.roles.indexOf('editor') >= 0)
                 a.btn.btn-mini(href="#", data-action="launch-track-editor", data-for="current-track-id") edit
               //-if (user)
