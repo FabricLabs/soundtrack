@@ -10,15 +10,18 @@
           |  remove
     a.btn.btn-mini(href="#", data-toggle="dropdown") add to 
       span.caret
-    ul.dropdown-menu.user-playlists-dropdown(data-for="user-playlists")
-      if (user.playlists.length >= 10)
+      
+      
+    if (!disallowPlaylists)
+      ul.dropdown-menu.user-playlists-dropdown(data-for="user-playlists")
+        if (user.playlists.length >= 10)
+          li(data-action="new-playlist")
+            a(href="#create-playlist-modal", data-action="launch-playlist-creator", data-track="#{track._id}") Create New &raquo;
+    
+        for playlist in user.playlists.sort(function(a, b) { return b.created - a.created; })
+          li(data-playlist-id="#{playlist._id}")
+            a(data-playlist-id="#{playlist._id}", data-username="#{user.slug}", data-track-id="#{track._id}", data-action="add-track-to-playlist") #{playlist.name}
         li(data-action="new-playlist")
           a(href="#create-playlist-modal", data-action="launch-playlist-creator", data-track="#{track._id}") Create New &raquo;
-  
-      for playlist in user.playlists.sort(function(a, b) { return b.created - a.created; })
-        li(data-playlist-id="#{playlist._id}")
-          a(data-playlist-id="#{playlist._id}", data-username="#{user.slug}", data-track-id="#{track._id}", data-action="add-track-to-playlist") #{playlist.name}
-      li(data-action="new-playlist")
-        a(href="#create-playlist-modal", data-action="launch-playlist-creator", data-track="#{track._id}") Create New &raquo;
 
   a.btn.btn-mini(href="#", data-action="queue-track", data-source="soundtrack", data-id="#{track._id}") &#9835; queue it &raquo;
