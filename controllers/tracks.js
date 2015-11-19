@@ -130,6 +130,20 @@ module.exports = {
       });
     });
   },
+  ban: function(req, res, next) {
+    res.send({ status: 'success' });
+
+    Room.update({
+      _id: req.roomObj._id
+    }, {
+      $addToSet: {
+        'bans._tracks': req.param('trackID')
+      }
+    }).exec(function(err, num) {
+      if (err || !num) return res.send({ status: 'error' , message: err || num });
+      return res.send({ status: 'success' });
+    });
+  },
   edit: function(req, res, next) {
 
     if (!req.param('artistName') || !req.param('title')) {

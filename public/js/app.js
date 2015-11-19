@@ -971,6 +971,26 @@ $(window).load(function() {
     return false;
   });
 
+  $(document).on('click', '*[data-action=ban-track]', function(e) {
+    e.preventDefault();
+    var $track = $(this);
+    console.log('banning track ID:', $track.data('_id'));
+    
+    if (confirm("Are you sure you want to ban \""+ 'foo' +"\"?")) {
+      $.ajax({
+        type: 'PATCH',
+        url: '/tracks/' + $track.data('_id'),
+        data: {
+          state: 'banned'
+        },
+        success: function(data) {
+          console.log('banned:', data);
+        }
+      });
+    }
+    return false;
+  });
+
   $(document).on('click', '*[data-action=tip-current-curator]', function(e) {
     e.preventDefault();
 
