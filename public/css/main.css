@@ -231,6 +231,7 @@ footer {
 #current-track #track-title {
   height: 1.5em;
   font-size: 1.5em;
+  overflow: inherit;
 }
 #track-artist {
 
