@@ -9,12 +9,14 @@ block content
     h2 Query used (for debug purposes)
     pre #{JSON.stringify(query)}
 
-    ul
-      for track in tracks
-        li
-          if (track._artist)
-            a(href="/#{track._artist.slug}") #{track._artist.name}
-            |  &mdash; 
-            a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-          else
-            h5 ಠ_ಠ #{track}
+    table.table.tablesorter
+      thead
+        tr
+          th Artist
+          th Title
+          th Length
+          th Plays
+          th Controls
+      tbody
+        for track in tracks
+          include partials/track-row
