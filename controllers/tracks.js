@@ -131,8 +131,6 @@ module.exports = {
     });
   },
   ban: function(req, res, next) {
-    res.send({ status: 'success' });
-
     Room.update({
       _id: req.roomObj._id
     }, {
