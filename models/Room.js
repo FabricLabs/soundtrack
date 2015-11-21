@@ -12,16 +12,16 @@ var config = require('../config');
 // this defines the fields associated with the model,
 // and moreover, their type.
 var RoomSchema = new Schema({
-    name:        { type: String , required: true }
-  , description: { type: String }
-  , _creator:    { type: ObjectId, ref: 'Person' }
-  , _owner:      { type: ObjectId, ref: 'Person' }
-  , created:     { type: Date, default: Date.now }
-  , _moderators: [ { type: ObjectId , ref: 'Person' } ]
-  , bans: {
-      _tracks: [ { type: ObjectId , ref: 'Track' } ],
-      _people: [ { type: ObjectId , ref: 'Person' } ],
-    }
+  name:        { type: String , required: true },
+  description: { type: String },
+  _creator:    { type: ObjectId, ref: 'Person' },
+  _owner:      { type: ObjectId, ref: 'Person' },
+  created:     { type: Date, default: Date.now },
+  _moderators: [ { type: ObjectId , ref: 'Person' } ],
+  bans: {
+    _tracks: [ { type: ObjectId , ref: 'Track' } ],
+    _people: [ { type: ObjectId , ref: 'Person' } ],
+  }
 });
 
 RoomSchema.plugin( slug('name'), {
@@ -71,7 +71,7 @@ RoomSchema.methods.queueTrack = function( track , curator , callback ) {
     var playableSources = 0;
     for (var source in playlistItem.sources) {
       for (var i = 0; i < playlistItem.sources[ source ].length; i++) {
-        if (['soundcloud', 'youtube', 'bandcamp'].indexOf( source ) >= 0) playableSources += 1;
+        if (['direct', 'soundcloud', 'youtube', 'bandcamp'].indexOf( source ) >= 0) playableSources += 1;
         delete playlistItem.sources[ source ][ i ].data;
       }
     }

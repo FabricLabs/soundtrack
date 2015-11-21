@@ -26,6 +26,11 @@ var TrackSchema = new Schema({
   , updated: { type: Date, default: 0 }
   , _sources: [ { type: ObjectId, ref: 'Source' } ]
   , sources: {
+      direct: [ new Schema({
+        uri: { type: String , required: true , index: true },
+        duration: { type: Number },
+        data: {}
+      })],
       lastfm: [ new Schema({
           id: { type: String , required: true , index: true }
         , duration: { type: Number }
@@ -78,9 +83,10 @@ TrackSchema.pre('save', function(next) {
     });
   }
 
-  ['youtube', 'soundcloud'].forEach(function(source) {
+  ['direct', 'youtube', 'soundcloud'].forEach(function(source) {
 
     switch (source) {
+      case 'direct':     var type = 'video/mp4';     break;
       case 'youtube':    var type = 'video/youtube'; break;
       case 'soundcloud': var type = 'audio/mp3';     break;
     }
