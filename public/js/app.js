@@ -175,7 +175,7 @@ function updateUserlist() {
     $('.user-count').html('<strong>' + data.length + '</strong> online');
     data.forEach(function(user) {
       user.username = HTMLescape(user.username);
-      
+
       // TODO: use template (Blade?)
       if (user.role != 'listener') {
         $('<li data-user-id="' + user._id + '"><a href="/' + user.slug + '"><img src="' + user.avatar.url + '" class="user-avatar-small pull-left" />' + user.username + ' <span class="badge pull-right" title="editors can fix track titles and artist names.  ping @martindale if you want to help.">' + user.role + '</span></a></li>').appendTo('#userlist');
@@ -460,6 +460,16 @@ $(window).load(function() {
                     type: 'audio/mp3',
                     src: item.data.url,
                     poster: (item.data) ? item.data.artwork_url : undefined
+                  });
+                });
+              }
+
+              if (msg.data.sources.direct) {
+                msg.data.sources.direct.forEach(function(item) {
+                  if (!item || !item.uri) return console.log('direct url breaking. @martindale\'s fault.  details:' , item );
+                  sources.push({
+                    type: 'video/mp4',
+                    src: item.uri
                   });
                 });
               }
