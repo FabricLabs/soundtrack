@@ -4,8 +4,8 @@ var rest = require('restler')
 
 module.exports = {
   list: function(req, res, next) {
-    var limit = (req.param('limit')) ? req.param('limit') : 100;
-    var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : undefined;
+    var limit = (req.params['limit']) ? req.params['limit'] : 100;
+    var query = (req.params['q']) ? { name: new RegExp('(.*)'+req.params['q']+'(.*)', 'i') } : undefined;
 
     async.parallel([
       function(done) {
@@ -48,7 +48,7 @@ module.exports = {
     });
   },
   delete: function(req, res, next) {
-    Artist.findOne({ slug: req.param('artistSlug') }).exec(function(err, artist) {
+    Artist.findOne({ slug: req.params['artistSlug'] }).exec(function(err, artist) {
       if (!artist) { return next(); }
       
       Track.find({ $or: [
@@ -64,22 +64,22 @@ module.exports = {
   },
   edit: function(req, res, next) {
     Artist.findOne({ $or: [
-        { _id: req.param('artistID') }
-      , { slug: req.param('artistSlug') }
-      , { slugs: req.param('artistSlug') }
+        { _id: req.params['artistID'] }
+      , { slug: req.params['artistSlug'] }
+      , { slugs: req.params['artistSlug'] }
     ] }).sort('_id').exec(function(err, artist) {
       if (!artist) { return next(); }
       
-      artist.name = req.param('name') || artist.name;
-      artist.bio = req.param('bio') || artist.bio;
+      artist.name = req.params['name'] || artist.name;
+      artist.bio = req.params['bio'] || artist.bio;
       
       // reset updated field, for re-crawl
       artist.tracking.tracks.updated = undefined;
       
       Artist.find({ $or: [
-          { _id: req.param('artistID') }
-        , { slug: req.param('artistSlug') }
-        , { slugs: req.param('artistSlug') }
+          { _id: req.params['artistID'] }
+        , { slug: req.params['artistSlug'] }
+        , { slugs: req.params['artistSlug'] }
       ] }).exec(function(err, artists) {
         
         var allArtistIDs   = artists.map(function(x) { return x._id; });
@@ -123,19 +123,19 @@ module.exports = {
     });
   },
   view: function(req, res, next) {
-    Person.count({ slug: req.param('artistSlug') }).exec(function(err, num) {
+    Person.count({ slug: req.params['artistSlug'] }).exec(function(err, num) {
       if (num) return next();
       
-      var limit = (req.param('limit')) ? req.param('limit') : 100;
+      var limit = (req.params['limit']) ? req.params['limit'] : 100;
 
       Artist.findOne({ $or: [
-          { slug: req.param('artistSlug') }
-        , { slugs: req.param('artistSlug') }
+          { slug: req.params['artistSlug'] }
+        , { slugs: req.params['artistSlug'] }
       ] }).exec(function(err, artist) {
         if (!artist) { return next(); }
         
         // handle artist renames
-        if (req.param('artistSlug') !== artist.slug) {
+        if (req.params['artistSlug'] !== artist.slug) {
           return res.redirect('/' + artist.slug);
         }
 
