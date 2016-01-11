@@ -1,5 +1,3 @@
-var config = require('../../config');
-
 var DEFAULT_MAX_SOURCE_TIME = 5000;
 var DEFAULT_VOLUME          = 80;
 var COOKIE_EXPIRES          = 604800;
@@ -598,7 +596,7 @@ $(window).load(function() {
             $('.message .message-content').filter(':contains("' + $('a[data-for=user-model]').data('username') + '")').parent().addClass('highlight');
 
             if (msg.data.message.toLowerCase().indexOf('@' + soundtrack.user.username.toLowerCase()) >= 0) {
-              soundtrack.notify(((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/favicon.ico', 'New Mention in Chat', msg.data.message);
+              soundtrack.notify('https://soundtrack.io/favicon.ico', 'New Mention in Chat', msg.data.message);
             }
           break;
           case 'ping':
