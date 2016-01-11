@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // config, general requirements
 var config = require('./config');
 var database = require('./db');
@@ -65,9 +64,7 @@ app.use( session({
     maxAge : 30 * 24 * 60 * 60 * 1000 ,
     domain: '.' + config.app.host
   },
-  rolling: true,
-  resave: true,
-  saveUninitialized: true
+  rolling: true
 }));
 
 app.use(passport.initialize());
@@ -117,7 +114,7 @@ app.use(function(req, res, next) {
   var parts = req.headers.host.split('.');
   req.room = parts[0];
 
-  if (req.params['iframe']) return res.render('iframe');
+  if (req.param('iframe')) return res.render('iframe');
 
   Room.findOne({ slug: req.room }).populate('_owner bans._tracks bans._people').exec(function(err, room) {
 
@@ -285,7 +282,7 @@ app.post('/tips', requireLogin , function(req, res, next) {
       receiver: room.track.curator._id,
       message: '1 bit',
       context_uid: Math.random(),
-      context_url: ((config.app.safe) ? 'https://' : 'http://') + config.app.host
+      context_url: 'https://soundtrack.io'
     }, function(err, results) {
       var result = err || results;
 
@@ -510,8 +507,8 @@ var externalizer = function(req, res, next) {
 }
 
 var redirectSetup = function(req, res, next) {
-  if (req.params['next']) {
-    req.session.next = req.params['next'];
+  if (req.param('next')) {
+    req.session.next = req.param('next');
     req.session.save( next );
   } else {
     return next();
@@ -535,7 +532,7 @@ if (config.google && config.google.id && config.google.secret) {
     clientID: config.google.id,
     clientSecret: config.google.secret,
     //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/google/callback',
-    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/google/callback',
+    callbackURL: 'https://soundtrack.io/auth/google/callback',
     scope: 'profile email https://www.googleapis.com/auth/youtube',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
@@ -609,7 +606,9 @@ if (config.changetip && config.changetip.id && config.changetip.secret) {
   passport.use(new ChangeTipStrategy({
     clientID: config.changetip.id,
     clientSecret: config.changetip.secret,
-    callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
+    //callbackURL: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/changetip/callback',
+    callbackURL: 'https://soundtrack.io/auth/changetip/callback',
+    //callbackURL: 'http://localhost.localdomain:13000/auth/changetip/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
 
@@ -660,10 +659,11 @@ if (config.lastfm && config.lastfm.key && config.lastfm.secret) {
   app.lastfm = lastfm;
   app.get('/auth/lastfm', function(req, res) {
     var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'https://' : 'http://') + config.app.host + '/auth/lastfm/callback' });
+    //var authUrl = lastfm.getAuthenticationUrl({ cb: ((config.app.safe) ? 'http://' : 'http://') + 'soundtrack.io/auth/lastfm/callback' });
     res.redirect(authUrl);
   });
   app.get('/auth/lastfm/callback', function(req, res) {
-    lastfm.authenticate( req.params['token'] , function(err, session) {
+    lastfm.authenticate( req.param('token') , function(err, session) {
       if (err) {
         console.log(err);
         req.flash('error', 'Something went wrong with authentication.');
@@ -730,7 +730,7 @@ app.post('/chat', requireLogin, function(req, res) {
 
   var chat = new Chat({
       _author: req.user._id
-    , message: req.params['message']
+    , message: req.param('message')
     , _track: (room.playlist[0]) ? room.playlist[0]._id : undefined
     , _room: (room) ? room._id : undefined
   });
@@ -738,7 +738,7 @@ app.post('/chat', requireLogin, function(req, res) {
     res.render('partials/message', {
       message: {
           _author: req.user
-        , message: req.params['message']
+        , message: req.param('message')
         , created: chat.created
         , _track: room.playlist[0]
       }
@@ -752,7 +752,7 @@ app.post('/chat', requireLogin, function(req, res) {
                 , username: req.user.username
                 , slug: req.user.slug
               }
-            , message: req.params['message']
+            , message: req.param('message')
             , formatted: html
             , created: new Date()
             , _track: room.playlist[0]
@@ -763,12 +763,12 @@ app.post('/chat', requireLogin, function(req, res) {
   });
 });
 
-app.delete('/playlist/:trackID', requireLogin, requireRoom , authorize('host'), function(req, res, next) {
-  if (!req.params['index'] || req.params['index'] == 0) { return next(); }
+app.del('/playlist/:trackID', requireLogin, requireRoom , authorize('host'), function(req, res, next) {
+  if (!req.param('index') || req.param('index') == 0) { return next(); }
 
   var room = app.rooms[ req.room ];
 
-  room.playlist.splice( req.params['index'] , 1 );
+  room.playlist.splice( req.param('index') , 1 );
   room.sortPlaylist();
 
   soundtrack.broadcast({
@@ -787,12 +787,12 @@ app.post('/playlist/:trackID', requireLogin, function(req, res, next) {
   var playlistMap = room.playlist.map(function(x) {
     return x._id.toString();
   });
-  var index = playlistMap.indexOf( req.params['trackID'] );
+  var index = playlistMap.indexOf( req.param('trackID') );
 
   if (!index) { return next(); }
   if (!room.playlist[ index ].votes) { room.playlist[ index ].votes = {}; }
 
-  room.playlist[ index ].votes[ req.user._id ] = (req.params['v'] == 'up') ? 1 : -1;
+  room.playlist[ index ].votes[ req.user._id ] = (req.param('v') == 'up') ? 1 : -1;
   room.playlist[ index ].score = _.reduce( room.playlist[ index ].votes , function(score, vote) {
     return score + vote;
   }, 0);
@@ -822,7 +822,7 @@ app.post('/playlist', requireLogin , function(req, res) {
   if (!req.room) return res.send({ status: 'error', message: 'No room to queue to.' });
   if (!app.rooms[ req.room ]) return res.send({ status: 'error', message: 'No room to queue to.' });
 
-  soundtrack.trackFromSource( req.params['source'] , req.params['id'] , req.body, function(err, track) {
+  soundtrack.trackFromSource( req.param('source') , req.param('id') , req.body, function(err, track) {
     console.log('trackFromSource() callback executing...', err || track._id );
     if (err || !track) {
       console.log(err);
@@ -908,7 +908,7 @@ app.post('/set-username', requireLogin, people.setUsername);
 
 app.post('/settings', requireLogin, function(req, res, next) {
   Person.findOne({ _id: req.user._id }).exec(function(err, person) {
-    person.preferences.scrobble = (req.params['scrobble']) ? true: false;
+    person.preferences.scrobble = (req.param('scrobble')) ? true: false;
     person.save(function(err) {
       res.send({
           status: 'success'
@@ -920,7 +920,7 @@ app.post('/settings', requireLogin, function(req, res, next) {
 
 app.get('/login', function(req, res) {
   res.render('login', {
-    next: req.params['next']
+    next: req.param('next')
   });
 });
 
@@ -949,18 +949,18 @@ app.get('/chat/since.json', requireRoom , chat.since);
 app.get('/rooms', rooms.list );
 app.post('/rooms', requireLogin , soundtracker , rooms.create );
 app.get('/rooms/:roomSlug', function(req, res, next) {
-  Room.findOne({ slug: req.params['roomSlug'] }).exec(function(err, room) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
     if (err || !room) return next();
     res.send(room);
   });
 });
 app.patch('/rooms/:roomSlug', requireLogin, function(req, res, next) {
-  Room.findOne({ slug: req.params['roomSlug'] }).exec(function(err, room) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
     if (err || !room) return next();
     if (!room._owner) return next();
     if (room._owner.toString() !== req.user._id.toString()) return next();
-
-    room.description = req.params['description'];
+    
+    room.description = req.param('description');
     room.save(function(err) {
       res.send(room);
     });
@@ -977,12 +977,12 @@ app.post('/tracks/:trackID',                  authorize('editor') , soundtracker
 app.patch('/tracks/:trackID', requireLogin, requireRoom , authorize('host') , soundtracker , tracks.ban);
 
 app.get('/:artistSlug',  redirectToMainSite , soundtracker , artists.view);
-app.delete('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
+app.del('/:artistSlug', soundtracker , authorize('admin') , artists.delete);
 app.put('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 app.post('/:artistSlug', soundtracker , authorize('editor') , artists.edit);
 
-app.delete('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
-app.delete('/playlists/:playlistID', playlists.delete);
+app.del('/playlists/:playlistID/:index', playlists.removeTrackFromPlaylist);
+app.del('/playlists/:playlistID', playlists.delete);
 app.get('/:usernameSlug/sets/new',  redirectToMainSite , playlists.createForm);
 app.get('/:usernameSlug/sets',  redirectToMainSite , playlists.listPerson);
 app.get('/:usernameSlug/playlists/new', redirectToMainSite , playlists.createForm);

@@ -221,7 +221,7 @@ module.exports = {
 
       if (typeof(person.email) == 'string') {
         var hash = require('crypto').createHash('md5').update( person.email.toLowerCase() ).digest('hex');
-        person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=' + ((req.app.config.app.safe) ? 'https://' : 'http://') + req.app.config.app.host + '/img/user-avatar.png';
+        person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=https://soundtrack.io/img/user-avatar.png';
       }
 
       person.save(function(err) {
