@@ -9,9 +9,9 @@ module.exports = {
     });
   },
   create: function(req, res, next) {
-    var name = req.param('name');
-    var slug = req.param('slug');
-    var description = req.param('description');
+    var name = req.params['name'];
+    var slug = req.params['slug'];
+    var description = req.params['description'];
     
     if (!name || !slug) {
       res.flash('error', 'You must provide a name and a slug!');

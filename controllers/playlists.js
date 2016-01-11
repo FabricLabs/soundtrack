@@ -27,7 +27,7 @@ module.exports = {
     });
   },
   listPerson: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.params['usernameSlug'] }).exec(function(err, person) {
       if (!person) return next();
 
       var q = { _creator: person._id };
@@ -54,10 +54,10 @@ module.exports = {
     });
   },
   view: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.params['usernameSlug'] }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      var slug = req.param('playlistSlug').split('.')[0];
+      var slug = req.params['playlistSlug'].split('.')[0];
 
       var query = {
         slug: slug
@@ -110,7 +110,7 @@ module.exports = {
   },
   delete: function(req, res, next) {
     Playlist.remove({
-      _id: req.param('playlistID'),
+      _id: req.params['playlistID'],
       _creator: req.user._id
     }).exec(function(err, numberRemoved) {
       if (err || !numberRemoved) return next();
@@ -118,15 +118,15 @@ module.exports = {
     });
   },
   removeTrackFromPlaylist: function(req, res, next) {
-    if (!~(req.param('index'))) return next();
+    if (!~(req.params['index'])) return next();
 
     Playlist.findOne({
-      _id: req.param('playlistID'),
+      _id: req.params['playlistID'],
       _creator: req.user._id
     }).exec(function(err, playlist) {
       if (err || !playlist) return next();
 
-      playlist._tracks.splice( req.param('index') , 1 );
+      playlist._tracks.splice( req.params['index'] , 1 );
       playlist.save(function(err) {
         return res.send('ok');
       });
@@ -138,19 +138,19 @@ module.exports = {
     res.render('playlists-create');
   },
   create: function(req, res, next) {
-    Playlist.findOne({ _id: req.param('parentID') , public: true }).exec(function(err, parent) {
+    Playlist.findOne({ _id: req.params['parentID'] , public: true }).exec(function(err, parent) {
 
       var playlist = new Playlist({
-          name: req.param('name') || ((parent) ? parent.name : null)
-        , description: req.param('description') || ((parent) ? parent.description : null)
-        , public: (req.param('status') === 'public') ? true : false
+          name: req.params['name'] || ((parent) ? parent.name : null)
+        , description: req.params['description'] || ((parent) ? parent.description : null)
+        , public: (req.params['status'] === 'public') ? true : false
         , _creator: req.user._id
         , _owner: req.user._id
-        , _parent: (req.param('parentID') && parent) ? parent._id : null
+        , _parent: (req.params['parentID'] && parent) ? parent._id : null
         , _tracks: (parent) ? parent._tracks : []
       });
 
-      Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
+      Track.findOne({ _id: req.params['trackID'] }).exec(function(err, track) {
         if (track) playlist._tracks.push( track._id );
 
         playlist.save(function(err) {
@@ -186,7 +186,7 @@ module.exports = {
   import: function(req, res, next) {
     var playlist = new Playlist();
 
-    switch (req.param('source')) {
+    switch (req.params['source']) {
       default:
         return res.status(400).end();
       break;
@@ -203,12 +203,12 @@ module.exports = {
     if (!req.user.profiles) req.user.profiles = {};
   
     var querySources = ['youtube', 'spotify'];
-    if (req.param('sourceName')) querySources = [ req.param('sourceName') ];
+    if (req.params['sourceName']) querySources = [ req.params['sourceName'] ];
 
     if (~querySources.indexOf('youtube') && (!req.user.profiles.google || !req.user.profiles.google.token)) return res.redirect('/auth/google?next=/sets/import');
     if (~querySources.indexOf('spotify') && (!req.user.profiles.spotify || !req.user.profiles.spotify.token)) return res.redirect('/auth/spotify?next=/sets/import');
 
-    var playlist = req.param('playlist');
+    var playlist = req.params['playlist'];
     if (playlist) {
       try {
         playlist = JSON.parse( playlist );
@@ -369,13 +369,13 @@ module.exports = {
 
   },
   edit: function(req, res, next) {
-    Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
+    Playlist.findOne({ _id: req.params['playlistID'], _creator: req.user._id }).exec(function(err, playlist) {
       if (!playlist) { return next(); }
 
-      playlist.description = (req.param('description')) ? req.param('description') : playlist.description;
+      playlist.description = (req.params['description']) ? req.params['description'] : playlist.description;
 
-      if (req.param('status')) {
-        playlist.public = (req.param('status') === 'public') ? true : false;
+      if (req.params['status']) {
+        playlist.public = (req.params['status'] === 'public') ? true : false;
       }
 
       playlist.updated = new Date();
@@ -390,10 +390,10 @@ module.exports = {
     });
   },
   addTrack: function(req, res, next) {
-    Playlist.findOne({ _id: req.param('playlistID'), _creator: req.user._id }).exec(function(err, playlist) {
+    Playlist.findOne({ _id: req.params['playlistID'], _creator: req.user._id }).exec(function(err, playlist) {
       if (!playlist) { return next(); }
 
-      Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
+      Track.findOne({ _id: req.params['trackID'] }).exec(function(err, track) {
         if (!track) { return next(); }
 
         playlist._tracks.push( track._id );
