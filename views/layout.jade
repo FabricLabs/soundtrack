@@ -300,6 +300,39 @@ html(lang="en-US", ng-app="soundtrack-io")
 
           label(for="description") Description
           textarea.input-block-level(name="description", rows="10")
+          
+          label.radio(for="skip")
+            strong Who can skip?
+          
+          label.radio
+            input(type="radio", name="capabilities-skip", value="users")
+            | All Registered Users
+          
+          label.radio
+            input(type="radio", name="capabilities-skip", value="moderators")
+            | Room Moderators
+          
+          label.radio(for="skip")
+            strong Who can add tracks?
+          
+          label.radio
+            input(type="radio", name="capabilities-remove", value="users")
+            | All Registered Users
+          
+          label.radio
+            input(type="radio", name="capabilities-remove", value="moderators")
+            | Room Moderators
+          
+          label.radio(for="skip")
+            strong Who can remove tracks?
+          
+          label.radio
+            input(type="radio", name="capabilities-remove", value="users")
+            | All Registered Users
+          
+          label.radio
+            input(type="radio", name="capabilities-remove", value="moderators")
+            | Room Moderators
 
         .modal-footer
           button.btn.btn(data-dismiss="modal") Cancel
