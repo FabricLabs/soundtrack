@@ -6,6 +6,7 @@ module.exports = {
     if (!req.roomObj) {
       var sortedRooms = [];
       return Room.find().exec(function(err, rooms) {
+
         rooms.forEach(function( room ) {
           var roomName = room.slug;
           var cachedRoom = req.app.locals.rooms[ roomName ];
@@ -15,6 +16,10 @@ module.exports = {
         });
         
         sortedRooms = sortedRooms.sort(function(a, b) {
+          if (a.stats.listenerCount == b.stats.listenerCount) {
+            console.log('matched! comparing instead: ', b.stats.plays, a.stats.plays)
+            return b.stats.plays - b.stats.plays;
+          }
           return b.listenerCount - a.listenerCount;
         });
         

@@ -21,6 +21,9 @@ var RoomSchema = new Schema({
   bans: {
     _tracks: [ { type: ObjectId , ref: 'Track' } ],
     _people: [ { type: ObjectId , ref: 'Person' } ],
+  },
+  stats: {
+    plays: { type: Number , default: 0 }
   }
 });
 
@@ -337,7 +340,20 @@ RoomSchema.methods.startMusic = function( cb ) {
               _room: room._id,
               timestamp: now
             });
-            play.save( done );
+            play.save(function(err) {
+              Play.count({
+                _room: room._id,
+                _curator: { $exists: true }
+              }, function(err, playCount) {
+                if (err) console.error(err);
+                room.stats.plays = playCount;
+                Room.update({ _id: room._id }, {
+                  $set: {
+                    'stats.plays': playCount
+                  }
+                }).exec(done);
+              });
+            });
           }
 
           function scrobbleIfEnabled( done ) {
