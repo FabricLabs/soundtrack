@@ -710,8 +710,19 @@ app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
 });
 
-app.get('/listeners.json', requireRoom , function(req, res) {
-  res.send( _.toArray( soundtrack.app.rooms[ req.room ].listeners ) );
+app.get('/listeners.json', function(req, res) {
+  if (req.room && soundtrack.app.rooms[ req.room ]) {
+    res.send( _.toArray( soundtrack.app.rooms[ req.room ].listeners ) );
+  } else {
+    var listeners = {};
+    Object.keys(soundtrack.app.rooms).forEach(function(domain) {
+      var room = soundtrack.app.rooms[domain];
+      Object.keys(room.listeners).forEach(function(id) {
+        listeners[id] = room.listeners[id];
+      });
+    });
+    res.send(_.toArray(listeners));
+  }
 });
 
 app.get('/listening', requireLogin , function(req, res) {
