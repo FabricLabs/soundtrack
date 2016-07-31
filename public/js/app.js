@@ -795,7 +795,7 @@ $(window).load(function() {
   });
 
   OutgoingChatHandler.addListener('katamari', function(msg) {
-    var i, s, ss = ['/js/kh.js';
+    var i, s, ss = ['/js/kh.js'];
     for (i = 0; i != ss.length; i++) {
       s = document.createElement('script');
       s.src = ss[i];
