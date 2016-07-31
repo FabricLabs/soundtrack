@@ -160,7 +160,7 @@ footer {
     display: inline-block;
 }
 
-*[data-action=launch-track-editor] {
+#playlist-list > li *[data-action=launch-track-editor] {
     display: none;
 }
 
