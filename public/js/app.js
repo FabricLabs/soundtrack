@@ -795,7 +795,7 @@ $(window).load(function() {
   });
 
   OutgoingChatHandler.addListener('katamari', function(msg) {
-    var i, s, ss = ['http://kathack.com/js/kh.js', 'http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'];
+    var i, s, ss = ['/js/kh.js';
     for (i = 0; i != ss.length; i++) {
       s = document.createElement('script');
       s.src = ss[i];
@@ -806,7 +806,7 @@ $(window).load(function() {
 
   OutgoingChatHandler.addListener('doge', function(msg) {
     var e = document.createElement('script');
-    e.src = 'https://raw.github.com/martindale/libdoge/master/libdoge/libdoge.min.js';
+    e.src = '/js/libdoge.min.js';
     document.body.appendChild(e);
   });
 
