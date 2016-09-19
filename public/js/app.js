@@ -649,10 +649,10 @@ $(window).load(function() {
 
     if (currentVolume) {
       mutePlayer();
-      $(self).children('i').replaceWith('<i class="icon-volume-off" />');
+      $(self).children('i').replaceWith('<i class="icon-white icon-volume-off" />');
     } else {
       unmutePlayer();
-      $(self).children('i').replaceWith('<i class="icon-volume-up" />');
+      $(self).children('i').replaceWith('<i class="icon-white icon-volume-up" />');
     }
 
     return false;
@@ -978,6 +978,12 @@ $(window).load(function() {
       soundtrack.player.pause();
       $.post('/skip');
     }
+    return false;
+  });
+
+  $(document).on('click', '*[data-action=toggle-track-controls]', function(e) {
+    e.preventDefault();
+    $('.track-controls').slideToggle();
     return false;
   });
 

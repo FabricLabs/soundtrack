@@ -11,7 +11,7 @@ textarea, input[type="text"], input[type="password"], input[type="datetime"], in
   color: rgb(208,208,208);
 }
 .nav-list {
-  border: 1px solid rgb(33,33,33);
+  /*border: 1px solid rgb(33,33,33);*/
   padding: 0;
 }
 .nav-list>li {
@@ -251,7 +251,7 @@ footer {
   padding-bottom: 0.2em;
 }
 #playlist {
-  height: 338px;
+  height: 382px;
   clear: both;
 }
 #userlist {
@@ -369,9 +369,21 @@ footer {
   /*text-shadow: 1px 1px 1px #aaa;*/
 }
 
+.btn {
+  text-shadow: none;
+}
+
 .fadeout-top {
   box-shadow: inset 0 20px 20px -20px #000000;
   /* background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 1)), to(rgba(0, 0, 0, 0))); */
+}
+
+.progress {
+  margin-bottom: 10px;
+}
+
+td > p {
+  max-width: 400px;
 }
 
 /* ######################################### */

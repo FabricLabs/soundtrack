@@ -20,28 +20,32 @@ block content
               .bar(style="width: 0%;")
               span#time 00:00
 
-          .row-fluid
+          .row-fluid.track-controls(style="display: none;")
             .span2
               a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
                 i.icon-white.icon-volume-up
             .span9
               input.slider(type="text", name="volume", data-for="volume", value="80", data-slider-min="0", data-slider-max="100", data-slider-value="80")
 
-          if (user)
-            .btn-group
+          .inverted.btn-group
+            a.btn.btn-mini(href="#", data-action="toggle-volume", data-intro="<h5>Welcome to soundtrack.io!</h5>  Since you're new and we're polite, we've muted the sound.  You can turn it on here.", data-step="1", data-position="right")
+              i.icon-white.icon-volume-up  
+            if (user)
               a.btn.btn-mini(href="#", data-action="skip-track") skip
-              if (user && room._owner && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
-                a.btn.btn-mini(data-action="ban-track", data-for="current-track-id") ban
+            if (user && room._owner && room._owner._id && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
+              a.btn.btn-mini(data-action="ban-track", data-for="current-track-id") ban
 
-              if (user && user.roles.indexOf('editor') >= 0)
-                a.btn.btn-mini(href="#", data-action="launch-track-editor", data-for="current-track-id") edit
-              //-if (user)
-                if (user.profiles.changetip && user.profiles.changetip.token)
-                  a.btn.btn-mini.tooltipped(href="#", data-action="tip-current-curator", title="Give whoever queued this track 1 bit (that's 0.000001 Bitcoin)") tip
-                else
-                  a.btn.btn-mini.tooltipped(href="/auth/changetip", title="Give whoever queued this track 1 bit (that's 0.000001 Bitcoin)") tip
+            if (user && user.roles.indexOf('editor') >= 0)
+              a.btn.btn-mini(href="#", data-action="launch-track-editor", data-for="current-track-id") edit
+            //-if (user)
+              if (user.profiles.changetip && user.profiles.changetip.token)
+                a.btn.btn-mini.tooltipped(href="#", data-action="tip-current-curator", title="Give whoever queued this track 1 bit (that's 0.000001 Bitcoin)") tip
+              else
+                a.btn.btn-mini.tooltipped(href="/auth/changetip", title="Give whoever queued this track 1 bit (that's 0.000001 Bitcoin)") tip
+            //-a.btn.btn-mini(href="#", data-action="toggle-track-controls") ...
 
-            .btn-group.pull-right
+            if (user)
+              //- COMPONENT MARKER: <soundtrack-playlist-manager>
               //-a.btn(href="#playlist-modal", data-toggle="modal") your playlists
               a.btn.btn-mini.dropdown-toggle(href="#", data-toggle="dropdown") add to 
                 span.caret
@@ -57,7 +61,11 @@ block content
 
           //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
           #playlist
+            h5(style="text-transform: uppercase; margin: 0; margin-top: 5px;") Coming Up Next...
             ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
+              li(ng-show="tracks.length === 1")
+                h4 The queue is empty!
+                p Add a track using the searchbox below.
               li(ng-repeat="track in tracks", ng-class="{active: $first}", ng-style="{top: ((track.order * 40) + 'px')}", ng-model="track", data-track-id="{{track._id}}")
                 .playlist-controls
                   .score.badge {{track.score}}
@@ -72,7 +80,7 @@ block content
                   a(href="{{track.curator.slug}}") {{track.curator.username}}
                   |  wants to play 
                   - if (!room._owner._id && room._owner) room._owner = { _id: room._owner };
-                  if (user && room._owner && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
+                  if (user && room._owner && room._owner._id && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
                     |  
                     a(href="#", data-action="remove-queued-track", data-track-id="{{track._id}}", data-track-index="{{$index}}")
                       i.icon-remove.icon-white
