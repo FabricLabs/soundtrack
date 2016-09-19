@@ -26,14 +26,6 @@ block content
       .clearfix
     
     hr
-    
-    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
-    h2 #{rooms.length} Rooms &nbsp;
-      small with 
-        strong #{rooms.reduce(function(prev, cur) { return prev + cur.listenerCount; }, 0)}
-        |  total listeners out of 
-        strong #{userCount}
-        |  users
 
     form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
@@ -47,7 +39,53 @@ block content
       textarea(name="description")
       .clearfix
       input.btn.offset1(type="submit", value="create »");
+
+    - var featured = rooms.filter(function(x) { return x.slug === 'coding' })
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
+    h3 Favorite Rooms
+
+    table.table.tablesorter
+      thead
+        tr
+          td Room
+          td Currently
+          td Listeners
+      tbody
+        for room in featured
+          tr
+            td
+              h3(style="line-height: 16px;")
+                a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                  if (room._owner && room._owner._id && user && user._id)
+                    if (room._owner._id.toString() === user._id.toString())
+                      |  
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}") edit
+                if (room._owner)
+                  br
+                  small hosted by 
+                    a(href="/#{room._owner.slug}")
+                      img.user-avatar-small(src="#{room._owner.avatar.url}")
+                      | #{room._owner.username}
+              //-p !{marked(room.description || '')}
+              p #{room.description}
+            td
+              if (room.track && room.track._artist)
+                h5
+                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                  |  by 
+                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
+            td
+              h5 <abbr>#{room.listenerCount} listeners</abbr>
+
     
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
+    h3 All #{rooms.length} Rooms 
+      small with 
+        strong #{rooms.reduce(function(prev, cur) { return prev + cur.listenerCount; }, 0)}
+        |  active listeners out of 
+        strong #{userCount}
+        |  community members
+
     table.table.tablesorter
       thead
         tr
