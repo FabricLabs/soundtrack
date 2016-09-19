@@ -259,7 +259,7 @@ footer {
   padding-bottom: 0.2em;
 }
 #playlist {
-  height: 372px;
+  height: 382px;
   clear: both;
 }
 #userlist {
@@ -386,8 +386,7 @@ footer {
   /* background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 1)), to(rgba(0, 0, 0, 0))); */
 }
 
-.progress,
-.inverted.btn-group {
+.progress {
   margin-bottom: 10px;
 }
 

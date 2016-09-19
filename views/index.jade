@@ -61,10 +61,10 @@ block content
 
           //-h3#playlist-summary(ng-bind="'Playlist (' + tracks.length + ')'")
           #playlist
+            h5(style="text-transform: uppercase; margin: 0; margin-top: 5px;") Coming Up Next...
             ul#playlist-list.nav.nav-list(data-intro="If the playlist ever reaches zero, soundtrack.io will automatically choose song based on what's been played in the past.", data-step="3", data-position="right")
               li(ng-show="tracks.length === 1")
-                h5 The queue is empty!
-                p When the current track ends, soundtrack will select a track from <a href="/pool">this room's history</a>.
+                h4 The queue is empty!
                 p Add a track using the searchbox below.
               li(ng-repeat="track in tracks", ng-class="{active: $first}", ng-style="{top: ((track.order * 40) + 'px')}", ng-model="track", data-track-id="{{track._id}}")
                 .playlist-controls
