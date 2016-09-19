@@ -2,7 +2,7 @@ var async = require('async');
 
 module.exports = {
   view: function(req, res, next) {
-    var limit = (req.param('limit')) ? req.param('limit') : 100;
+    var limit = (req.params['limit']) ? req.params['limit'] : 100;
     
     Chat.find({
       _room: req.roomObj._id
@@ -17,7 +17,7 @@ module.exports = {
     });
   },
   since: function(req, res, next) {
-    Chat.find({ _id: { $gt: req.param('chatID') } }).sort('-timestamp').populate('_author').limit(20).exec(function(err, chats) {
+    Chat.find({ _id: { $gt: req.params['chatID'] } }).sort('-timestamp').populate('_author').limit(20).exec(function(err, chats) {
       if (err) { console.log(err); }
 
       async.parallel( chats.map(function(chat) {

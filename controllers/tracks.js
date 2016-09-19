@@ -9,7 +9,7 @@ module.exports = {
     if (req.roomObj) roomID = req.roomObj._id;
     
     var functions = [];
-    if (!req.param('q')) {
+    if (!req.params['q']) {
       functions.push( function collectAllTime( done ) {
         Play.aggregate([
           { $match: { _curator: { $exists: true }, _room: roomID } },
@@ -72,15 +72,15 @@ module.exports = {
     
     async.parallel( functions , function(err, statResults) {
 
-      var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
-      var query = (req.param('q')) ? { name: new RegExp('(.*)'+req.param('q')+'(.*)', 'i') } : {};
+      var limit = (req.params['limit']) ? parseInt(req.params['limit']) : 100;
+      var query = (req.params['q']) ? { name: new RegExp('(.*)'+req.params['q']+'(.*)', 'i') } : {};
       
-      if (req.param('nsfw') === '✓') {
+      if (req.params['nsfw'] === '✓') {
         query.flags = {
           nsfw: true
         }
       }
-      if (req.param('live') === '✓') {
+      if (req.params['live'] === '✓') {
         query.flags = {
           live: true
         }
@@ -101,7 +101,7 @@ module.exports = {
                   tracks: tracks
                 , count: count
                 , limit: limit
-                , query: req.param('q')
+                , query: req.params['q']
                 , topTracksAll: statResults[0]
                 , topTracks30: statResults[1]
                 , topTracks7: statResults[2]
@@ -135,7 +135,7 @@ module.exports = {
       _id: req.roomObj._id
     }, {
       $addToSet: {
-        'bans._tracks': req.param('trackID')
+        'bans._tracks': req.params['trackID']
       }
     }).exec(function(err, num) {
       if (err || !num) return res.send({ status: 'error' , message: err || num });
@@ -144,13 +144,13 @@ module.exports = {
   },
   edit: function(req, res, next) {
 
-    if (!req.param('artistName') || !req.param('title')) {
+    if (!req.params['artistName'] || !req.params['title']) {
 
-      if (['true', 'false'].indexOf( req.param('nsfw') ) >= 0 ) {
-        Track.findOne({ _id: req.param('trackID') }).populate('_artist').exec(function(err, track) {
+      if (['true', 'false'].indexOf( req.params['nsfw'] ) >= 0 ) {
+        Track.findOne({ _id: req.params['trackID'] }).populate('_artist').exec(function(err, track) {
           if (!track) { return next(); }
 
-          track.flags.nsfw = req.param('nsfw');
+          track.flags.nsfw = req.params['nsfw'];
           track.save(function(err) {
             res.send({
                 status: 'success'
@@ -164,11 +164,11 @@ module.exports = {
 
           });
         });
-      } else if (['true', 'false'].indexOf( req.param('live') ) >= 0 ) {
-        Track.findOne({ _id: req.param('trackID') }).populate('_artist').exec(function(err, track) {
+      } else if (['true', 'false'].indexOf( req.params['live'] ) >= 0 ) {
+        Track.findOne({ _id: req.params['trackID'] }).populate('_artist').exec(function(err, track) {
           if (!track) { return next(); }
 
-          track.flags.live = req.param('live');
+          track.flags.live = req.params['live'];
           track.save(function(err) {
             res.send({
                 status: 'success'
@@ -190,20 +190,20 @@ module.exports = {
       }
     } else {
       // parse the submitted values (which may or may not yet exist in the database)
-      var stringToParse = req.param('artistName') + ' - ' + req.param('title');
+      var stringToParse = req.params['artistName'] + ' - ' + req.params['title'];
       util.parseTitleString( stringToParse , function(parts) {
         console.log('edited track, parsed parts into: ')
         console.log(parts);
 
         // find the edited track...
-        Track.findOne({ _id: req.param('trackID') }).exec(function(err, track) {
+        Track.findOne({ _id: req.params['trackID'] }).exec(function(err, track) {
           if (err || !track) return next();
 
           // get the artist parsed from the new artist name...
           Artist.findOne({ name: parts.artist }).exec(function(err, artist) {
             if (err) console.log(err);
 
-            if (!artist ) var artist = new Artist({ name: req.param('artistName') });
+            if (!artist ) var artist = new Artist({ name: req.params['artistName'] });
 
             // go ahead and issue a save for it (so it exists when we save the track)
             artist.save(function(err) {
@@ -253,8 +253,8 @@ module.exports = {
     }
   },
   merge: function(req, res, next) {
-    Track.findOne({ _id: req.param('from') }).exec(function(err, from) {
-      Track.findOne({ _id: req.param('to') }).exec(function(err, to) {
+    Track.findOne({ _id: req.params['from'] }).exec(function(err, from) {
+      Track.findOne({ _id: req.params['to'] }).exec(function(err, to) {
 
       });
     });
@@ -262,8 +262,8 @@ module.exports = {
   view: function(req, res, next) {
     // TODO: use artist in the lookup
     Track.findOne({ $or: [
-        { _id: req.param('trackID') }
-      , { slug: req.param('trackSlug') }
+        { _id: req.params['trackID'] }
+      , { slug: req.params['trackSlug'] }
     ] }).populate('_artist _credits').exec(function(err, track) {
       if (!track) { return next(); }
 
@@ -324,8 +324,8 @@ module.exports = {
         var chats = results[0];
 
         Track.findOne({ $or: [
-            { _id: req.param('trackID') }
-          , { slug: req.param('trackSlug') }
+            { _id: req.params['trackID'] }
+          , { slug: req.params['trackSlug'] }
         ] }).populate('_artist _credits').exec(function(err, track) {
 
           /* req.app.agency.publish('track:crawl', {

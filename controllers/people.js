@@ -3,7 +3,7 @@ var _ = require('underscore');
 
 module.exports = {
   profile: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.params['usernameSlug'] }).exec(function(err, person) {
       if (!person) return next();
       
       var LIMIT = 50;
@@ -143,13 +143,13 @@ module.exports = {
             
       function collectArtistData( artistComplete ) {
         Artist.findOne({ $or: [
-            { slug: req.param('usernameSlug') }
-          , { slugs: req.param('usernameSlug') }
+            { slug: req.params['usernameSlug'] }
+          , { slugs: req.params['usernameSlug'] }
         ] }).exec(function(err, artist) {
           if (!artist) return artistComplete();
           
           // handle artist renames
-          if (req.param('usernameSlug') !== artist.slug) {
+          if (req.params['usernameSlug'] !== artist.slug) {
             res.redirect('/' + artist.slug);
             return artistComplete('redirected');
           }
@@ -198,7 +198,7 @@ module.exports = {
     });
   },
   mentions: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.params['usernameSlug'] }).exec(function(err, person) {
       if (!person) { return next(); }
 
       Chat.find({ message: new RegExp( person.username , 'i') }).sort('-created').limit(100).populate('_author _track _play').exec(function(err, chats) {
@@ -212,16 +212,16 @@ module.exports = {
     if (!req.user) return next();
     Person.findOne({
       _id: req.user._id,
-      slug: req.param('usernameSlug')
+      slug: req.params['usernameSlug']
     }).exec(function(err, person) {
       if (!person) return next();
 
-      person.bio    = (req.param('bio'))   ? req.param('bio')   : person.bio;
-      person.email  = (req.param('email')) ? req.param('email') : person.email;
+      person.bio    = (req.params['bio'])   ? req.params['bio']   : person.bio;
+      person.email  = (req.params['email']) ? req.params['email'] : person.email;
 
       if (typeof(person.email) == 'string') {
         var hash = require('crypto').createHash('md5').update( person.email.toLowerCase() ).digest('hex');
-        person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=https://soundtrack.io/img/user-avatar.png';
+        person.avatar.url = 'https://www.gravatar.com/avatar/' + hash + '?d=' + ((req.app.config.app.safe) ? 'https://' : 'http://') + req.app.config.app.host + '/img/user-avatar.png';
       }
 
       person.save(function(err) {
@@ -240,11 +240,11 @@ module.exports = {
   },
   listPlays: function(req, res, next) {
     var query = {};
-    var limit = (req.param('limit')) ? parseInt(req.param('limit')) : 100;
+    var limit = (req.params['limit']) ? parseInt(req.params['limit']) : 100;
 
     if (req.roomObj) query['_room'] = req.roomObj._id;
 
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.params['usernameSlug'] }).exec(function(err, person) {
       if (!person) return next();
       
       query['_curator'] = person._id;
@@ -301,7 +301,7 @@ module.exports = {
     Person.findOne({ _id: req.user._id }).exec(function(err, person) {
       if (!person) { return next(); }
 
-      person.username = req.param('username');
+      person.username = req.params['username'];
 
     });
   }

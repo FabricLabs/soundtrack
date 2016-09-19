@@ -14,7 +14,7 @@ module.exports = {
     , port: process.env.SOUNDTRACK_REDIS_PORT || 6379
   },
   sessions: {
-      key: 'put yourself a fancy little key here'
+      key: process.env.SOUNDTRACK_SESSION_KEY || 'put yourself a fancy little key here'
   },
   connection: {
       clientTimeout: 2 * 60 * 1000
