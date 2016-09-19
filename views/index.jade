@@ -80,7 +80,7 @@ block content
                   a(href="{{track.curator.slug}}") {{track.curator.username}}
                   |  wants to play 
                   - if (!room._owner._id && room._owner) room._owner = { _id: room._owner };
-                  if (user && room._owner && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
+                  if (user && room._owner && room._owner._id && (user._id.toString() === room._owner._id.toString()) || (user && user.roles && ~user.roles.indexOf('admin')))
                     |  
                     a(href="#", data-action="remove-queued-track", data-track-id="{{track._id}}", data-track-index="{{$index}}")
                       i.icon-remove.icon-white
