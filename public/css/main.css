@@ -156,6 +156,14 @@ footer {
   width: 464px;
 }
 
+#playlist-list > li:hover *[data-action=launch-track-editor] {
+    display: inline-block;
+}
+
+#playlist-list > li *[data-action=launch-track-editor] {
+    display: none;
+}
+
 @media (max-width: 1199px) {
   #chat-form .input-block-level {
     width: 382px;
