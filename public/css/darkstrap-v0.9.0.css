@@ -154,6 +154,7 @@ textarea::-webkit-input-placeholder {
 [class^="icon-"],
 [class*=" icon-"] {
   background-image: url("../img/glyphicons-halflings.png");
+  color: white;
 }
 
 /* White icons with optional class, or on hover/active states of certain elements */
@@ -174,6 +175,9 @@ textarea::-webkit-input-placeholder {
   background-image: url("../img/glyphicons-halflings-white.png");
 }
 
+.caret {
+  border-top: 4px solid #fff;
+}
 
 /* line 222, ../bootstrap/bootstrap/_buttons.scss */
 .btn-link:hover {
@@ -255,6 +259,7 @@ textarea::-webkit-input-placeholder {
   text-shadow: 0 1px 0 #444444;
 }
 
+/*.navbar .nav > li > a:active,*/
 .navbar .nav > li > a:focus,
 .navbar .nav > li > a:hover {
   color: white;
@@ -268,9 +273,17 @@ textarea::-webkit-input-placeholder {
   background-color: #151515;
 }
 
+.btn:active,
+.btn:hover,
+.btn:focus {
+  color: white;
+}
+
 /* line 271, ../bootstrap/bootstrap/_navbar.scss */
-.navbar .btn-navbar {
-  background-color: #292929;
+.navbar .btn-navbar,
+.btn {
+  color: white;
+  background-color: #292929 !important;
   background-image: -moz-linear-gradient(top, #373737, #151515);
   background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#373737), to(#151515));
   background-image: -webkit-linear-gradient(top, #373737, #151515);
