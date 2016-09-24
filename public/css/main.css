@@ -373,6 +373,16 @@ footer {
   text-shadow: none;
 }
 
+.btn-group.sound-controls {
+  margin: 0;
+}
+
+.btn-group.sound-controls .btn {
+  min-height: 0;
+  padding: 0.5em;
+  width: 25%;
+}
+
 .fadeout-top {
   box-shadow: inset 0 20px 20px -20px #000000;
   /* background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 1)), to(rgba(0, 0, 0, 0))); */
