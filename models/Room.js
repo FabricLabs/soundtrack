@@ -14,6 +14,7 @@ var config = require('../config');
 var RoomSchema = new Schema({
   name:        { type: String , required: true },
   description: { type: String },
+  status:      { type: String , enum: ['open', 'closed', 'removed'] , default: 'open' },
   _creator:    { type: ObjectId, ref: 'Person' },
   _owner:      { type: ObjectId, ref: 'Person' },
   created:     { type: Date, default: Date.now },

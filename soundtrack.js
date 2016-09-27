@@ -977,6 +977,19 @@ app.patch('/rooms/:roomSlug', requireLogin, function(req, res, next) {
     });
   });
 });
+app.delete('/rooms/:roomSlug', requireLogin, authorize('admin'), function(req, res, next) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
+    if (err || !room) return next();
+    
+    Room.update({ _id: room._id }, {
+      $set: {
+        status: 'removed'
+      }
+    }, function(err, num) {
+      res.send({ status: 'success', affected: num });
+    });
+  });
+});
 
 app.get('/sets', redirectToMainSite , playlists.list );
 app.get('/stats', pages.stats );
