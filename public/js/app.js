@@ -1017,6 +1017,29 @@ $(window).load(function() {
     return false;
   });
 
+  $(document).on('click', '*[data-action=remove-room]', function(e) {
+    e.preventDefault();
+    var self = this;
+    
+    var $self = $(self);
+    $self.slideUp();
+    
+    $('tr[data-room-id=' + $self.data('room-id') + ']').addClass('loading');
+
+    $.ajax({
+      url: '/rooms/' + $self.data('room-id'),
+      method: 'DELETE',
+      success: function(data) {
+        console.log(data);
+        if (data.status === 'success') {
+          $('tr[data-room-id=' + $self.data('room-id') + ']').slideUp();
+        }
+      }
+    });
+    
+    return false;
+  });
+    
   $(document).on('click', '*[data-action=remove-queued-track]', function(e) {
     e.preventDefault();
     var self = this;

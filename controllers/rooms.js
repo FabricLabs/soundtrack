@@ -2,7 +2,11 @@ var slugify = require('speakingurl');
 
 module.exports = {
   list: function(req, res, next) {
-    Room.find().exec(function(err, rooms) {
+    Room.find({
+      status: {
+        $nin: ['removed']
+      }
+    }).exec(function(err, rooms) {
       res.format({
         json: function() { res.send( rooms ); }
       })
