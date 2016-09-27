@@ -986,6 +986,7 @@ app.delete('/rooms/:roomSlug', requireLogin, authorize('admin'), function(req, r
         status: 'removed'
       }
     }, function(err, num) {
+      delete app.rooms[ room.slug ];
       res.send({ status: 'success', affected: num });
     });
   });
