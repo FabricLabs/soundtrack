@@ -5,7 +5,11 @@ module.exports = {
   index: function(req, res, next) {
     if (!req.roomObj) {
       var sortedRooms = [];
-      return Room.find().exec(function(err, rooms) {
+      return Room.find({
+        status: {
+          $nin: ['removed']
+        }
+      }).exec(function(err, rooms) {
         rooms.forEach(function( room ) {
           var roomName = room.slug;
           var cachedRoom = req.app.locals.rooms[ roomName ];
