@@ -121,8 +121,9 @@ html(lang="en-US", ng-app="soundtrack-io")
                   a.btn(href="/register") Register &raquo;
 
     .container.module
-      if (typeof(flash) != 'undefined')
-        .messages
+      .messages
+        .alert.alert-info Please <a href="chrome://flags/#disable-gesture-requirement-for-media-playback">disable gesture requirement for media playback</a>!  This service will not play audio in the background until you do.
+        if (typeof(flash) != 'undefined')
           if (typeof(flash.error) != 'undefined')
             for error in flash.error
               .alert.alert-error !{error}
