@@ -1124,10 +1124,27 @@ $(window).load(function() {
 
     return false;
   }, 200, true);
+  
+  var queueList = function(e) {
+    e.preventDefault();
+    var $self = $(this);
+    var target = $self.data('target');
+
+    $( target + ' tr').each(function(el) {
+      var id = $(this).data('track-id');
+      $.post('/playlist', {
+        source: 'soundtrack',
+        id: id
+      }, function(response) {
+        if (soundtrack.debug) console.log(response);
+      });
+    });
+  };
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack);
 
   $(document).on('click', '*[data-action=queue-set]', selectSet );
+  $(document).on('click', '*[data-action=queue-list]', queueList );
 
   $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
     e.preventDefault();

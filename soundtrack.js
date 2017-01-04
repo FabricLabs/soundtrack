@@ -834,11 +834,12 @@ app.post('/playlist', requireLogin , function(req, res) {
   if (!app.rooms[ req.room ]) return res.send({ status: 'error', message: 'No room to queue to.' });
 
   soundtrack.trackFromSource( req.param('source') , req.param('id') , req.body, function(err, track) {
-    console.log('trackFromSource() callback executing...', err || track._id );
     if (err || !track) {
-      console.log(err);
+      console.error(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
+    
+    console.log('trackFromSource() callback executing...', err || track._id );
 
     var queueWasEmpty = false;
     if (!app.rooms[ req.room ].playlist.length) {
