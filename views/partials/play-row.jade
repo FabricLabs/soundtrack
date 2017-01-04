@@ -1,5 +1,5 @@
 if (typeof(play._track._artist) != 'undefined' && play._track._artist)
-  tr
+  tr(data-track-id="#{play._track._id}")
     td
       if (play._curator)
         a(href="#{play._curator.slug}") #{play._curator.username}

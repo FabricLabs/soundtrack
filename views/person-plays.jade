@@ -1,6 +1,9 @@
 extends layout
 
 block content
+  .btn-group.pull-right
+    a.btn.btn-mini(href="#", data-action="queue-list", data-target="#play-list") &#9835; queue &raquo;
+
   h1 #{count} Plays By <a href="/#{person.slug}">#{person.username}</a>
     if (room)
       |  in <a href="#{room.index}">#{room.name}</a>
@@ -9,7 +12,7 @@ block content
     h2 Showing #{ plays.length } most recent
     p add <code>?limit=n</code> parameter to list more.
 
-  table.table.tablesorter
+  table.table.tablesorter#play-list
     thead
       tr
         th Who
