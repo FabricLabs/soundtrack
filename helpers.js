@@ -27,7 +27,7 @@ var linkify = (function() {
     
     default_options = {
       callback: function( text, href ) {
-        return href ? '<a href="' + href + '" title="' + href + '">' + text + '<\/a>' : text;
+        return href ? '<a href="' + href + '" title="' + href + '" target="_blank">' + text + '<\/a>' : text;
       },
       punct_regexp: /(?:[!?.,:;'"]|(?:&|&amp;)(?:lt|gt|quot|apos|raquo|laquo|rsaquo|lsaquo);)$/
     };
