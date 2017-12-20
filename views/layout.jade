@@ -121,8 +121,11 @@ html(lang="en-US", ng-app="soundtrack-io")
                   a.btn(href="/register") Register &raquo;
 
     .container.module
-      if (typeof(flash) != 'undefined')
-        .messages
+      .messages
+        if (room)
+          .alert.alert-info #{room.description}
+
+        if (typeof(flash) != 'undefined')
           if (typeof(flash.error) != 'undefined')
             for error in flash.error
               .alert.alert-error !{error}
