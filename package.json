@@ -1,6 +1,6 @@
 {
-  "name": "soundtrack.io",
-  "version": "0.0.0",
+  "name": "@fabric/soundtrack",
+  "version": "0.1.0-pre",
   "description": "soundtrack.io is a collaborative online jukebox.",
   "main": "soundtrack.js",
   "scripts": {
