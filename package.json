@@ -4,7 +4,7 @@
   "description": "soundtrack.io is a collaborative online jukebox.",
   "main": "soundtrack.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --exit",
     "coverage": "NODE_ENV=test istanbul cover _mocha -- --recursive",
     "start": "node ./soundtrack.js"
   },
@@ -43,6 +43,6 @@
   "devDependencies": {
     "coveralls": "^2.11.2",
     "istanbul": "^0.3.5",
-    "mocha": "^2.1.0"
+    "mocha": "^5.2.0"
   }
 }
