@@ -1,0 +1,22 @@
+include "layout"
+block content
+  .super-soundtrack
+    h1 Music for everyone.
+    h2 Listen to music with your friends.
+    .row
+      .span6
+        p
+          :markdown
+            <strong>soundtrack.io</strong> is an <em>experimental</em> Internet radio platform.  Vote on what plays next, like Reddit for music.  We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em>.
+        p
+          :markdown
+            We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a> and <a href="">non-commercial</a>.
+      - if (!user)
+        p.span6
+          a.btn.btn-large.pull-right(href="/people#create") Get Started &raquo;
+  .room-list
+    foreach rooms as room
+      .room
+        h3
+          a(href="//#{room.slug}.soundtrack.io/") #{room.name}
+        p #{room.description}

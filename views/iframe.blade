@@ -1,0 +1,23 @@
+extends layouts-iframe
+
+block content
+  h1 hello, iframe
+  
+  script(src="/js/jquery.min.js")
+
+  script.
+    window.onload = function() {
+      window.addEventListener('message', function(e) {
+        var message = JSON.parse(e.data);
+        console.log('cross-frame message', message );
+        
+        switch (message.method) {
+          case 'queue':
+            $.post('/playlist', message.data , function(result) {
+              console.log(result);
+            });
+          break;
+        }
+        
+      });
+    }

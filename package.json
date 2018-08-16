@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "~0.2.9",
+    "blade": "^3.3.1",
     "body-parser": "^1.18.3",
     "connect-redis": "^2.2.0",
     "escape-html": "^1.0.3",
@@ -20,7 +21,6 @@
     "express-session": "^1.15.6",
     "flashify": "~0.1.2",
     "heapdump": "^0.3.5",
-    "jade": "~0.32.0",
     "lastfmapi": "git://github.com/martindale/node-lastfmapi#https-redirect-fix",
     "marked": "^0.4.0",
     "moment": "^2.22.2",
