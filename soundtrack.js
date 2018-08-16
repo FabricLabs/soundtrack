@@ -10,6 +10,7 @@ var app = express();
 var http = require('http');
 var rest = require('restler');
 var async = require('async');
+var blade = require('blade');
 var redis = require('redis');
 var sockjs = require('sockjs');
 
@@ -46,8 +47,9 @@ if (config.jobs && config.jobs.enabled) {
   });
 }
 
+app.use(blade.middleware(__dirname + '/views'));
 app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
+app.set('view engine', 'blade');
 app.set('strict routing', true);
 app.use(express.static(__dirname + '/public'));
 
@@ -182,6 +184,7 @@ var lexers = {
 };
 lexers.chat.rules.link = /^\[((?:\[[^\]]*\]|[^\]]|\](?=[^\[]*\]))*)\]\(\s*<?([^\s]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*\)/;
 
+app.locals.includeSource = true;
 app.locals.pretty   = true;
 app.locals.moment   = require('moment');
 app.locals.marked   = otherMarked;
@@ -705,6 +708,7 @@ app.get('/', function(req, res, next) {
 }, pages.index );
 app.get('/about', redirectToMainSite , pages.about );
 app.get('/help', redirectToMainSite , pages.help );
+app.get('/forgot-password', redirectToMainSite , people.reset);
 
 app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
