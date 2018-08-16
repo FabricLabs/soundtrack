@@ -178,6 +178,12 @@ block content
             each room in topRoomsByQueues
               li queued <strong>#{room.count}</strong> tracks in 
                 a(href="#{room._room.index}") #{room._room.name}
+          .span6
+            h4 Hosted
+            ul
+              each room in roomsHosted
+                li
+                  a(href="//#{room.slug}.soundtrack.io/") #{room.name}
 
       .tab-pane#plays
         h3 Recent Plays (<a href="/#{person.slug}/plays">view all &raquo;</a>)

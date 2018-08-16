@@ -194,12 +194,12 @@ String.prototype.capitalize = function(){
   return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 };
 
-var auth = require('./controllers/auth')
-var pages = require('./controllers/pages')
-var people = require('./controllers/people')
-var playlists = require('./controllers/playlists')
-var artists = require('./controllers/artists')
-var tracks = require('./controllers/tracks')
+var auth = require('./controllers/auth');
+var pages = require('./controllers/pages');
+var people = require('./controllers/people');
+var playlists = require('./controllers/playlists');
+var artists = require('./controllers/artists');
+var tracks = require('./controllers/tracks');
 var chat = require('./controllers/chat');
 var rooms = require('./controllers/rooms');
 
@@ -834,11 +834,12 @@ app.post('/playlist', requireLogin , function(req, res) {
   if (!app.rooms[ req.room ]) return res.send({ status: 'error', message: 'No room to queue to.' });
 
   soundtrack.trackFromSource( req.param('source') , req.param('id') , req.body, function(err, track) {
-    console.log('trackFromSource() callback executing...', err || track._id );
     if (err || !track) {
-      console.log(err);
+      console.error(err);
       return res.send({ status: 'error', message: 'Could not add that track.' });
     }
+    
+    console.log('trackFromSource() callback executing...', err || track._id );
 
     var queueWasEmpty = false;
     if (!app.rooms[ req.room ].playlist.length) {
@@ -874,6 +875,8 @@ app.get('/register', redirectToMainSite , function(req, res) {
 });
 
 app.post('/register', function(req, res) {
+  if (!req.headers['x-hashcash']) return res.error('Insufficient hashcash.');
+
   async.parallel([
     function(done) {
       Person.count({ slug: slug( req.body.username ) }).exec(function(err, count) {
@@ -890,8 +893,12 @@ app.post('/register', function(req, res) {
     }
   ], function(err) {
     if (err) {
-      req.flash('error', 'That username is already taken!');
-      return res.redirect('/register');
+      return res.send({
+        status: 'error',
+        errors: [
+          'That username is already taken!'
+        ]
+      });
     }
 
     var body = req.body;
@@ -905,8 +912,11 @@ app.post('/register', function(req, res) {
         return res.render('register', { user : user });
       } else {
         req.logIn(user, function(err) {
+          res.send({
+            status: 'success'
+          });
           req.flash('info', lang.en.intro.replace('{{username}}', user.slug ) );
-          res.redirect('/');
+          //res.redirect('/');
         });
       }
     });
@@ -974,6 +984,20 @@ app.patch('/rooms/:roomSlug', requireLogin, function(req, res, next) {
     room.description = req.param('description');
     room.save(function(err) {
       res.send(room);
+    });
+  });
+});
+app.delete('/rooms/:roomSlug', requireLogin, authorize('admin'), function(req, res, next) {
+  Room.findOne({ slug: req.param('roomSlug') }).exec(function(err, room) {
+    if (err || !room) return next();
+    
+    Room.update({ _id: room._id }, {
+      $set: {
+        status: 'removed'
+      }
+    }, function(err, num) {
+      delete app.rooms[ room.slug ];
+      res.send({ status: 'success', affected: num });
     });
   });
 });
@@ -1066,6 +1090,7 @@ Room.find().exec(function(err, rooms) {
 
       // monolithic core for now.
       app.rooms = {};
+
       var jobs = rooms.map(function(room) {
         return function(done) {
           app.redis.get(config.database.name + ':rooms:' + room.slug + ':playlist', function(err, playlist) {
@@ -1110,6 +1135,7 @@ Room.find().exec(function(err, rooms) {
           console.log('Must have mongodb listening on port 27017');
         });
       });
+
   }
 
 });

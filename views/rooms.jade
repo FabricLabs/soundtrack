@@ -40,7 +40,7 @@ block content
       .clearfix
       input.btn.offset1(type="submit", value="create »");
 
-    - var featured = rooms.filter(function(x) { return x.slug === 'coding' })
+    - var featured = rooms.filter(function(x) { return ~['coding', 'chill', 'jar'].indexOf(x.slug); })
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h3 Favorite Rooms
 
@@ -52,14 +52,20 @@ block content
           td Listeners
       tbody
         for room in featured
-          tr
+          tr(data-room-id="#{room.slug}")
             td
               h3(style="line-height: 16px;")
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                .btn-group
+                  if (user && user.roles && ~user.roles.indexOf('admin'))
+                    a.btn.btn-mini(data-action="remove-room", data-room-id="#{room.slug}")
+                      i.icon-white.icon-remove
+                      |  remove
                   if (room._owner && room._owner._id && user && user._id)
                     if (room._owner._id.toString() === user._id.toString())
-                      |  
-                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}") edit
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}")
+                        i.icon-white.icon-edit
+                        |  edit
                 if (room._owner)
                   br
                   small hosted by 
@@ -77,7 +83,6 @@ block content
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>
 
-    
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h3 All #{rooms.length} Rooms 
       small with 
@@ -94,14 +99,20 @@ block content
           td Listeners
       tbody
         for room in rooms
-          tr
+          tr(data-room-id="#{room.slug}")
             td
               h3(style="line-height: 16px;")
                 a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                .btn-group
+                  if (user && user.roles && ~user.roles.indexOf('admin'))
+                    a.btn.btn-mini(data-action="remove-room", data-room-id="#{room.slug}")
+                      i.icon-white.icon-remove
+                      |  remove
                   if (room._owner && room._owner._id && user && user._id)
                     if (room._owner._id.toString() === user._id.toString())
-                      |  
-                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}") edit
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}")
+                        i.icon-white.icon-edit
+                        |  edit
                 if (room._owner)
                   br
                   small hosted by 

@@ -13,10 +13,11 @@ module.exports = {
         collectUserPlays,
         collectPlayStats,
         collectArtistData,
-        collectRooms
+        collectTopRooms,
+        collectHostRooms
       ], function(err, results) {
 
-        var playlists = results[0];
+        var playlists = results[0] || [];
         // TODO: use reduce();
         playlists = playlists.map(function(playlist) {
           playlist.length = 0;
@@ -42,6 +43,7 @@ module.exports = {
           , tracks: (results[3]) ? results[3].tracks : null
           , trackCount: (results[3]) ? results[3].trackCount : null
           , topRoomsByQueues: results[4]
+          , roomsHosted: results[5]
         });
 
         if (req.app.config.jobs && req.app.config.jobs.enabled) {
@@ -55,7 +57,13 @@ module.exports = {
 
       });
       
-      function collectRooms(done) {
+      function collectHostRooms(done) {
+        Room.find({
+          _creator: person._id
+        }, done);
+      }
+      
+      function collectTopRooms(done) {
         Play.aggregate([
           { $match: {
             _curator: person._id

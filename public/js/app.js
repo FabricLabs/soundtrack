@@ -1017,6 +1017,29 @@ $(window).load(function() {
     return false;
   });
 
+  $(document).on('click', '*[data-action=remove-room]', function(e) {
+    e.preventDefault();
+    var self = this;
+    
+    var $self = $(self);
+    $self.slideUp();
+    
+    $('tr[data-room-id=' + $self.data('room-id') + ']').addClass('loading');
+
+    $.ajax({
+      url: '/rooms/' + $self.data('room-id'),
+      method: 'DELETE',
+      success: function(data) {
+        console.log(data);
+        if (data.status === 'success') {
+          $('tr[data-room-id=' + $self.data('room-id') + ']').slideUp();
+        }
+      }
+    });
+    
+    return false;
+  });
+    
   $(document).on('click', '*[data-action=remove-queued-track]', function(e) {
     e.preventDefault();
     var self = this;
@@ -1101,10 +1124,27 @@ $(window).load(function() {
 
     return false;
   }, 200, true);
+  
+  var queueList = function(e) {
+    e.preventDefault();
+    var $self = $(this);
+    var target = $self.data('target');
+
+    $( target + ' tr').each(function(el) {
+      var id = $(this).data('track-id');
+      $.post('/playlist', {
+        source: 'soundtrack',
+        id: id
+      }, function(response) {
+        if (soundtrack.debug) console.log(response);
+      });
+    });
+  };
 
   $(document).on('click', '*[data-action=queue-track]', selectTrack);
 
   $(document).on('click', '*[data-action=queue-set]', selectSet );
+  $(document).on('click', '*[data-action=queue-list]', queueList );
 
   $(document).on('click', '*[data-action=launch-playlist-editor]', function(e) {
     e.preventDefault();
