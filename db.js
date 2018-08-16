@@ -10,5 +10,5 @@ var source = mongoose.connect( string );
 module.exports = {
     mongoose: mongoose
   , client: client
-  , source: source
+  , source: mongoose.connection
 };

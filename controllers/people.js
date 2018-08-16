@@ -30,6 +30,14 @@ module.exports = {
           return playlist;
         });
 
+        // align
+        if (!results[0]) results[0] = [];
+        if (!results[1]) results[1] = [];
+        if (!results[2]) results[2] = [];
+        if (!results[3]) results[3] = [];
+        if (!results[4]) results[4] = [];
+        if (!results[5]) results[5] = [];
+
         return res.render('person', {
             person: person
           , playlists: playlists

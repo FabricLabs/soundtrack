@@ -35,8 +35,12 @@ var bodyParser = require('body-parser');
 
 // markdown-related things
 var marked = require('marked');
-var validator = require('validator');
 var escape = require('escape-html');
+
+// blind validator
+var validator = function (input) {
+  return true;
+};
 
 // job queuing mechanism
 if (config.jobs && config.jobs.enabled) {
@@ -187,7 +191,7 @@ app.locals.moment   = require('moment');
 app.locals.marked   = otherMarked;
 app.locals.lexers   = lexers;
 app.locals.lexer    = lexers.content;
-app.locals.sanitize = validator.sanitize;
+app.locals.sanitize = validator;
 app.locals._        = _;
 app.locals.helpers  = require('./helpers').helpers;
 String.prototype.capitalize = function(){

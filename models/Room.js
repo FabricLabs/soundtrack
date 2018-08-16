@@ -295,6 +295,8 @@ RoomSchema.methods.startMusic = function( cb ) {
     // testing for future merging of track data for advances
     var query = { _artist: track._artist._id , title: track.title, _id: { $ne: track._id } };
     Track.find( query ).lean().exec(function(err, tracks) {
+      if (err) console.error('error finding exact matches:', err);
+      if (!tracks) tracks = [];
       var sources = track.sources;
       tracks.forEach(function(t) {
         for (var source in t.sources) {

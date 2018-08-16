@@ -16,6 +16,7 @@ function parseTitleString(string, partsCallback) {
   // TODO: load from datafile
   var baddies = ['[dubstep]', '[electro]', '[edm]', '[house music]',
     '[glitch hop]', '[video]', '[official video]', '(official video)',
+    '(official audio)',
     '(official music video)', '(lyrics)',
     '[ official video ]', '[official music video]', '[free download]',
     '[official]', '[electronica]', '[electronica | plasmapool]',
