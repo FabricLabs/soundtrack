@@ -705,6 +705,7 @@ app.get('/', function(req, res, next) {
 }, pages.index );
 app.get('/about', redirectToMainSite , pages.about );
 app.get('/help', redirectToMainSite , pages.help );
+app.get('/forgot-password', redirectToMainSite , people.reset);
 
 app.get('/playlist.json', requireRoom , function(req, res) {
   res.send( app.rooms[ req.room ].playlist );
