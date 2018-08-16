@@ -17,7 +17,7 @@ module.exports = {
         collectHostRooms
       ], function(err, results) {
 
-        var playlists = results[0];
+        var playlists = results[0] || [];
         // TODO: use reduce();
         playlists = playlists.map(function(playlist) {
           playlist.length = 0;

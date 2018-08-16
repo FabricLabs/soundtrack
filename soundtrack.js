@@ -875,6 +875,8 @@ app.get('/register', redirectToMainSite , function(req, res) {
 });
 
 app.post('/register', function(req, res) {
+  if (!req.headers['x-hashcash']) return res.error('Insufficient hashcash.');
+
   async.parallel([
     function(done) {
       Person.count({ slug: slug( req.body.username ) }).exec(function(err, count) {
@@ -891,8 +893,12 @@ app.post('/register', function(req, res) {
     }
   ], function(err) {
     if (err) {
-      req.flash('error', 'That username is already taken!');
-      return res.redirect('/register');
+      return res.send({
+        status: 'error',
+        errors: [
+          'That username is already taken!'
+        ]
+      });
     }
 
     var body = req.body;
@@ -906,8 +912,11 @@ app.post('/register', function(req, res) {
         return res.render('register', { user : user });
       } else {
         req.logIn(user, function(err) {
+          res.send({
+            status: 'success'
+          });
           req.flash('info', lang.en.intro.replace('{{username}}', user.slug ) );
-          res.redirect('/');
+          //res.redirect('/');
         });
       }
     });
