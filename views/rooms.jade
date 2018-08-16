@@ -6,7 +6,6 @@ block content
       margin-top: -1em;
       padding: 2em;
     }
-
   .well.content-well
     img.pull-right(src="/img/soundtrack.gif", style="max-height: 20em;")
     .super-soundtrack
@@ -17,33 +16,25 @@ block content
           p(style="font-size: 1.2em; line-height: 1.75em;") <strong>soundtrack.io</strong> is an <em>experimental</em> Internet radio platform.  Vote on what plays next, like Reddit for music.  We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em>.
           
           p(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a> and <a href="">non-commercial</a>.
-
       if (!user)
         p.span6
           a.btn.btn-large.pull-right(href="/register") Get Started &raquo;
           //-a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
-        
       .clearfix
-    
     hr
-
     form#room-creation-form(action="/rooms", method="post").span12.hide
       label(for="slug") URL
       input.required(type="text", name="slug", required).span2
       | .soundtrack.io
-      
       label(for="name") Name
       input.required(type="text", name="name", required)
-      
       label(for="description") Description (markdown-enabled)
       textarea(name="description")
       .clearfix
-      input.btn.offset1(type="submit", value="create »");
-
+      input.btn.offset1(type="submit", value="create »")
     - var featured = rooms.filter(function(x) { return ~['coding', 'chill', 'jar'].indexOf(x.slug); })
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h3 Favorite Rooms
-
     table.table.tablesorter
       thead
         tr
@@ -82,7 +73,6 @@ block content
                   a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
             td
               h5 <abbr>#{room.listenerCount} listeners</abbr>
-
     a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
     h3 All #{rooms.length} Rooms 
       small with 
