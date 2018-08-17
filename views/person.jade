@@ -9,7 +9,7 @@ block content
             a.btn(href="#", onclick="$('form#edit-artist-form').slideDown(); return false;")
               i.icon-pencil
               |  edit artist
-        if (typeof(user) != 'undefined' && user._id.toString() == person._id.toString())
+        if (typeof(user) !== 'undefined' && user._id.toString() === person._id.toString())
           a.btn(data-action="enable-profile-editor")
             i.icon-pencil
             |  edit user
@@ -94,8 +94,7 @@ block content
             tbody
               for track in tracks
                 include partials/track-row
-                
-      .tab-pane(class="#{((artist) ? '' : 'active')}")#profile
+      .tab-pane#profile(class="#{((artist) ? '' : 'active')}")
         .bio
           | !{marked(person.bio)}
           

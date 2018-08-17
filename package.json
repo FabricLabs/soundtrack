@@ -31,7 +31,7 @@
     "passport-changetip": "0.0.1",
     "passport-google-oauth": "^0.2.0",
     "passport-local": "~0.1.6",
-    "passport-local-mongoose": "~0.2.4",
+    "passport-local-mongoose": "^5.0.1",
     "passport-spotify": "^0.1.0",
     "redis": "^0.12.1",
     "restler": "git+http://github.com/danwrong/restler.git",

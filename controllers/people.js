@@ -6,7 +6,8 @@ module.exports = {
     res.render('forgot-password');
   },
   profile: function(req, res, next) {
-    Person.findOne({ slug: req.param('usernameSlug') }).exec(function(err, person) {
+    Person.findOne({ slug: req.param('usernameSlug') }).exec(function (err, person) {
+      if (err) return req.error(err);
       if (!person) return next();
       
       var LIMIT = 50;
@@ -39,7 +40,10 @@ module.exports = {
         if (!results[5]) results[5] = [];
 
         return res.render('person', {
-            person: person
+            page: {
+              title: person.username
+            }
+          , person: person
           , playlists: playlists
           , plays: results[1]
           , favoriteTracks: {
