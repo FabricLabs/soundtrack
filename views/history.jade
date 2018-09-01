@@ -4,15 +4,21 @@ block content
 
   .well.content-well
     h1 Track History
-    ul
-      for play in plays
-        if (typeof(play._track._artist) != 'undefined' && play._track._artist)
-          li
-            a(href="/#{play._track._artist.slug}") #{play._track._artist.name}
-            |  &mdash; 
-            a(href="/#{play._track._artist.slug}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
-            small  queued by 
-              if (play._curator)
-                a(href="#{play._curator.slug}") #{play._curator.username}
-              else
-                span random entropy (chosen by the machine)
+    p Tracks are only added to the play history under the following conditions:
+      ul
+        li track is longer than 30 seconds
+        li 50% or 4 minutes of the track is played, whichever is first.
+    p This helps the machine ignore tracks that were skipped or were too short!
+
+    table.table.tablesorter
+      thead
+        tr
+          th Who
+          th When
+          th Artist
+          th Title
+          th Room
+          th Controls
+      tbody
+        for play in plays
+          include partials/play-row

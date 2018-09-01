@@ -1,0 +1,52 @@
+extends layout
+
+block content
+  .well.content-well
+      h2
+        if (user && user._id.toString() === person._id.toString())
+          a.pull-right.btn.btn-default(href="/#{user.slug}/playlists/new") Add New &raquo;
+        | #{person.username}'s Sets
+        small  or, 
+          a(href="/sets") all sets &raquo;
+
+      table.table.tablesorter
+        thead
+          tr
+            if (user && user._id.toString() === person._id.toString())
+              th Public
+            th Name
+            if (user && user._id.toString() === person._id.toString())
+              th Status
+            th Tracks
+            th Length
+            th Controls
+        tbody
+          for playlist in playlists
+            tr
+              if (user && user._id.toString() === person._id.toString())
+                td
+                  input(type="checkbox", data-action="toggle-playlist-visibility", data-playlist-id="#{playlist._id}", checked=(playlist.public ? "checked" : undefined))
+              td
+                a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+              if (user && user._id.toString() === person._id.toString())
+                td
+                  span.badge.badge-default
+                    if (playlist.public)
+                      i.icon-globe(title="public")
+                      |  public
+                    else
+                      i.icon-eye-close(title="private")
+                      |  private
+              td #{playlist._tracks.length}
+              td
+                if (playlist.length)
+                  | #{playlist.length.toHHMMSS()}
+                else
+                  | 00:00
+              td
+                .btn-group
+                  if (user && user._id.toString() === person._id.toString())
+                    a.btn.btn-mini(href="#", data-action="delete-playlist", data-playlist-id="#{playlist._id}")
+                      i.icon-remove
+                  a.btn.btn-mini(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
+                  

@@ -8,7 +8,8 @@ var mongoose = require('mongoose')
 // and moreover, their type.
 var PersonSchema = new Schema({
     email: { type: String, unique: true, sparse: true }
-  , roles: [ { type: String, enum: ['editor'] } ]
+  , roles: [ { type: String, enum: ['editor', 'moderator'] } ]
+  , created: { type: Date , default: Date.now , required: true }
   , avatar: {
       url: { type: String, default: '/img/user-avatar.png' }
     }
@@ -19,11 +20,33 @@ var PersonSchema = new Schema({
         , username: String
         , key: String
         , updated: Date
+      },
+      spotify: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date,
+        expires: Number,
+        playlists: []
+      },
+      google: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date,
+        playlists: []
+      },
+      changetip: {
+        id: String,
+        username: String,
+        token: String,
+        updated: Date
       }
     }
   , preferences: {
       scrobble: { type: Boolean, default: true }
     }
+  , _playlists: [ { type: ObjectId , ref: 'Playlist' } ]
 });
 
 PersonSchema.plugin(passportLocalMongoose);

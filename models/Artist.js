@@ -8,28 +8,46 @@ var mongoose = require('mongoose')
 // this defines the fields associated with the model,
 // and moreover, their type.
 var ArtistSchema = new Schema({
-    name: { type: String, required: true, unique: true }
+    name: { type: String, required: true, unique: true } // canonical name
+  , names: [ { type: String } ] // known names
   , image: {
       url: { type: String, default: 'http://coursefork.org/img/user-avatar.png' }
     }
   , bio: String
+  , tracking: {
+      tracks: {
+        updated: { type: Date , default: 0 }
+      }
+    }
 });
 
-ArtistSchema.post('init', function() {
+ArtistSchema.pre('save', function(next) {
   var self = this;
 
   if (!self.bio || !self.image.url) {
-    rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=Cher&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(data) {
+    rest.get('http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist='+encodeURIComponent(self.name)+'&format=json&api_key=89a54d8c58f533944fee0196aa227341').on('complete', function(data) {
       if (data.artist) {
-        self.bio = strip_tags(data.artist.bio.summary).replace(/Read more about (.*) on Last.fm./, '');
-        self.image.url = data.artist.image[3]['#text'];
+        if (data.artist.bio) {
+          self.bio = strip_tags(data.artist.bio.summary).replace(/Read more about (.*) on Last.fm./, '');
+        }
+        if (data.artist.image[3]) {
+          self.image.url = data.artist.image[3]['#text'];
+        }
       }
+
+      next();
     });
+  } else {
+    next();
   }
 });
 
-ArtistSchema.plugin( slug('name') );
+ArtistSchema.plugin( slug('name', {
+    track: true
+  , lang: false
+}) );
 ArtistSchema.index({ slug: 1 });
+ArtistSchema.index({ slugs: 1 });
 
 var Artist = mongoose.model('Artist', ArtistSchema);
 

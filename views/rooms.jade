@@ -1,0 +1,131 @@
+extends layout
+
+block content
+  style.
+    .super-soundtrack {
+      margin-top: -1em;
+      padding: 2em;
+    }
+
+  .well.content-well
+    img.pull-right(src="/img/soundtrack.gif", style="max-height: 20em;")
+    .super-soundtrack
+      h1 Music for everyone.
+      h2 Listen to music with your friends.
+      .row
+        .span6
+          p(style="font-size: 1.2em; line-height: 1.75em;") <strong>soundtrack.io</strong> is an <em>experimental</em> Internet radio platform.  Vote on what plays next, like Reddit for music.  We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em>.
+          
+          p(style="font-size: 1.2em; line-height: 1.75em;") We're also <a href="http://github.com/martindale/soundtrack.io">completely open-source</a> and <a href="">non-commercial</a>.
+
+      if (!user)
+        p.span6
+          a.btn.btn-large.pull-right(href="/register") Get Started &raquo;
+          //-a.btn.btn-large.pull-right(href="/auth/spotify") Sign in with Spotify &raquo;
+        
+      .clearfix
+    
+    hr
+
+    form#room-creation-form(action="/rooms", method="post").span12.hide
+      label(for="slug") URL
+      input.required(type="text", name="slug", required).span2
+      | .soundtrack.io
+      
+      label(for="name") Name
+      input.required(type="text", name="name", required)
+      
+      label(for="description") Description (markdown-enabled)
+      textarea(name="description")
+      .clearfix
+      input.btn.offset1(type="submit", value="create »");
+
+    - var featured = rooms.filter(function(x) { return ~['coding', 'chill', 'jar'].indexOf(x.slug); })
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
+    h3 Favorite Rooms
+
+    table.table.tablesorter
+      thead
+        tr
+          td Room
+          td Currently
+          td Listeners
+      tbody
+        for room in featured
+          tr(data-room-id="#{room.slug}")
+            td
+              h3(style="line-height: 16px;")
+                a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                .btn-group
+                  if (user && user.roles && ~user.roles.indexOf('admin'))
+                    a.btn.btn-mini(data-action="remove-room", data-room-id="#{room.slug}")
+                      i.icon-white.icon-remove
+                      |  remove
+                  if (room._owner && room._owner._id && user && user._id)
+                    if (room._owner._id.toString() === user._id.toString())
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}")
+                        i.icon-white.icon-edit
+                        |  edit
+                if (room._owner)
+                  br
+                  small hosted by 
+                    a(href="/#{room._owner.slug}")
+                      img.user-avatar-small(src="#{room._owner.avatar.url}")
+                      | #{room._owner.username}
+              //-p !{marked(room.description || '')}
+              p #{room.description}
+            td
+              if (room.track && room.track._artist)
+                h5
+                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                  |  by 
+                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
+            td
+              h5 <abbr>#{room.listenerCount} listeners</abbr>
+
+    a.btn.pull-right(href="#", onclick="$('#room-creation-form').slideToggle(); return false;") create your own &raquo;
+    h3 All #{rooms.length} Rooms 
+      small with 
+        strong #{rooms.reduce(function(prev, cur) { return prev + cur.listenerCount; }, 0)}
+        |  active listeners out of 
+        strong #{userCount}
+        |  community members
+
+    table.table.tablesorter
+      thead
+        tr
+          td Room
+          td Currently
+          td Listeners
+      tbody
+        for room in rooms
+          tr(data-room-id="#{room.slug}")
+            td
+              h3(style="line-height: 16px;")
+                a(href="//#{room.slug}.#{config.app.host}") #{room.name}
+                .btn-group
+                  if (user && user.roles && ~user.roles.indexOf('admin'))
+                    a.btn.btn-mini(data-action="remove-room", data-room-id="#{room.slug}")
+                      i.icon-white.icon-remove
+                      |  remove
+                  if (room._owner && room._owner._id && user && user._id)
+                    if (room._owner._id.toString() === user._id.toString())
+                      a.btn.btn-mini(data-action="launch-room-editor", data-room-slug="#{room.slug}")
+                        i.icon-white.icon-edit
+                        |  edit
+                if (room._owner)
+                  br
+                  small hosted by 
+                    a(href="/#{room._owner.slug}")
+                      img.user-avatar-small(src="#{room._owner.avatar.url}")
+                      | #{room._owner.username}
+              //-p !{marked(room.description || '')}
+              p #{room.description}
+            td
+              if (room.track && room.track._artist)
+                h5
+                  a(href="/#{room.track._artist.slug}/#{room.track.slug}/#{room.track._id}") #{room.track.title}
+                  |  by 
+                  a(href="/#{room.track._artist.slug}") #{room.track._artist.name}
+            td
+              h5 <abbr>#{room.listenerCount} listeners</abbr>

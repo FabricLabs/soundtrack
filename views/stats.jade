@@ -1,0 +1,30 @@
+extends layout
+
+block content
+  .well.content-well
+    h1 Stats
+    
+    .row
+      .span4
+        h3 Top Tracks
+        ol
+          for track in topTracks
+            li
+              h4
+                a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+              |  by 
+              a(href="/#{track._artist.slug}") <strong>#{track._artist.name}</strong>
+              |  was played <strong>#{track.count}</strong> times.
+              
+      .span4
+        h3 Top DJs
+        ol
+          for person in topDJs
+            li
+              h4
+                a(href="/#{person.slug}")
+                  img.user-avatar-small(src="#{person.avatar.url}")
+                  | #{person.username}
+              | has queued <strong>#{person.count}</strong> tracks
+
+  

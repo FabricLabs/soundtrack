@@ -1,0 +1,19 @@
+if (typeof(play._track._artist) != 'undefined' && play._track._artist)
+  li
+    a(href="/#{play._track._artist.slug}") #{play._track._artist.name}
+    |  &mdash; 
+    a(href="/#{play._track._artist.slug}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
+    small  queued by 
+      if (play._curator)
+        a(href="#{play._curator.slug}") #{play._curator.username}
+      else
+        span random entropy (chosen by the machine)
+      |  on <abbr title="#{moment(play.timestamp).format()}">#{moment(play.timestamp).format('LLLL')}</abbr> 
+      |  with #{play.messageCount} messages
+    .btn-group
+      if (user && user.roles.indexOf('editor') >= 0)
+        |
+        a.btn.btn-mini(href="#", data-action="launch-track-editor", data-track-id="#{play._track._id}")
+          | edit
+      |  
+      a.btn.btn-mini(href="#", data-action="queue-track", data-source="soundtrack", data-id="#{play._track._id}") &#9835; queue it &raquo;

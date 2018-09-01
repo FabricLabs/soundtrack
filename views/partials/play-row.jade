@@ -1,0 +1,18 @@
+if (typeof(play._track._artist) != 'undefined' && play._track._artist)
+  tr(data-track-id="#{play._track._id}")
+    td
+      if (play._curator)
+        a(href="#{play._curator.slug}") #{play._curator.username}
+      else
+        abbr(title="entropy kills") THE MACHINE
+    td
+      abbr(title="#{moment(play.timestamp).format()}") #{moment(play.timestamp).fromNow()}
+    td
+      a(href="/#{play._track._artist.slug}") #{play._track._artist.name}
+    td
+      a(href="/#{play._track._artist.slug}/#{play._track.slug}/#{play._track._id}") #{play._track.title}
+    td
+      a(href="#{play._room.index}") #{play._room.name}
+    td
+      - var track = play._track
+      include track-controls

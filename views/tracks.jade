@@ -1,11 +1,50 @@
 extends layout
 
 block content
+  
+  style.
+    ol.top-list a {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
 
-  .well.content-well
-    h1 Tracks
 
-    ul
+  h1 #{count} #{(count == 1) ? "Track" : "Tracks"} Known
+  p Ordered by number of plays.  Display limited to #{limit} tracks.  Pass <code>limit</code> to change this.
+  
+  if (!query)
+    .row
+      .span4
+        h3 Top Tracks (all time)
+        ol.top-list
+          for track in topTracksAll
+            li
+              a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+              |  by 
+              a(href="/#{track._artist.slug}") #{track._artist.name}
+              | <br />&hellip;was played <strong>#{track.count}</strong> times.
+      .span4
+        h3 Top Tracks (past 30 days)
+        ol.top-list
+          for track in topTracks30
+            li
+              a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+              |  by 
+              a(href="/#{track._artist.slug}") #{track._artist.name}
+              | <br />&hellip;was played <strong>#{track.count}</strong> times.
+      .span4
+        h3 Top Tracks (past 7 days)
+        ol.top-list
+          for track in topTracks7
+            li
+              a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+              |  by 
+              a(href="/#{track._artist.slug}") #{track._artist.name}
+              | <br />&hellip;was played <strong>#{track.count}</strong> times.
+
+
+  else
+    ol
       for track in tracks
         li
           if (track._artist)

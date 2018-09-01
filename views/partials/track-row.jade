@@ -1,0 +1,12 @@
+tr
+  if (playlist)
+    td #{pindex + 1}
+  td
+    a(href="/#{track._artist.slug}") #{track._artist.name}
+  td
+    a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
+  td #{track.duration ? track.duration.toHHMMSS() : ''}
+  //-td played <strong>#{track.plays}</strong> times
+  td #{track.plays}
+  td
+    include track-controls

@@ -3,18 +3,42 @@ extends layout
 block content
 
   .well.content-well
+    
+    .pull-right
+      if (user)
+        form(action="/#{user.slug}/playlists", method="post")
+          input(type="hidden", name="parentID", value="#{playlist._id}")
+          .btn-group
+            button.btn.btn-default(type="submit", data-action="fork-playlist", data-playlist-id="#{playlist._id}", title="Make a copy of this set")
+              i.icon-share
+              |  Fork &raquo;
+            a.btn(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
+      else
+        a.btn(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;
+
     h1
       a(href="/#{playlist._creator.slug}/#{playlist.slug}") #{playlist.name}
       |  by 
       a(href="/#{playlist._creator.slug}") #{playlist._creator.username}
-    p #{playlist.description}
+      
+      if (playlist._parent)
+        br
+        small forked from 
+          a(href="/#{playlist._parent._owner.slug}") #{playlist._parent._owner.username}
+          | 's set, 
+          a(href="/#{playlist._parent._owner.slug}/#{playlist._parent.slug}") &ldquo;#{playlist._parent.name}&rdquo;
 
-    ul
-      for track in playlist._tracks
-        li
-          if (track._artist)
-            a(href="/#{track._artist.slug}") #{track._artist.name}
-            |  &mdash; 
-            a(href="/#{track._artist.slug}/#{track.slug}/#{track._id}") #{track.title}
-          else
-            h5 ಠ_ಠ #{track}
+    p !{marked(playlist.description || '')}
+
+    table.table.tablesorter
+      thead
+        tr
+          th
+          th Artist
+          th Title
+          th Length
+          th Plays
+          th Controls
+      tbody
+        for track, pindex in playlist._tracks
+          include partials/track-row

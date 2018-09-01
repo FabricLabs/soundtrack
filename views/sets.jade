@@ -1,0 +1,50 @@
+extends layout
+
+block content
+  .well.content-well
+    
+    h2
+      .btn-group.pull-right
+        if (user)
+          a.btn.btn-large(href="/#{user.slug}/playlists/new") Create New &raquo;
+          a.btn.btn-large(href="/sets/import") Import
+          a.btn.btn-large.dropdown-toggle(data-toggle="dropdown", href="#")
+            span.caret
+          ul.dropdown-menu
+            li
+              a(href="/sets/import?sourceName=youtube") From YouTube &raquo;
+            li
+              a(href="/sets/import?sourceName=spotify") From Spotify &raquo;
+
+      | Public Sets
+      if (user)
+        small  or, 
+          a(href="/#{user.slug}/sets") your sets &raquo;
+
+    table.table.tablesorter
+      thead
+        tr
+          th DJ
+          th Name
+          th Tracks
+          th Length
+          th Updated
+          th Controls
+      tbody
+        for playlist in sets.sort(function(a, b) { return b.updated - a.updated })
+          - var person = playlist._creator
+          tr(data-updated="#{playlist.updated}")
+            td
+              a(href="/#{person.slug}") #{person.username}
+            td
+              a(href="/#{person.slug}/#{playlist.slug}") #{playlist.name}
+            td #{playlist._tracks.length}
+            td
+              if (playlist.length)
+                | #{playlist.length.toHHMMSS()}
+              else
+                | 00:00
+            td #{moment(playlist.updated).fromNow()}
+            td
+              .btn-group
+                a.btn.btn-mini(href="#", data-action="queue-set", data-set-slug="#{playlist._creator.slug}/#{playlist.slug}") &#9835; queue &raquo;

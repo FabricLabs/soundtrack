@@ -2,15 +2,23 @@ extends layout
 
 block content
   .well.content-well
-    h1 Register
+    h1 Creating a new account
 
-    form(action="/register", method="post")
+    form.span4(action="/register", method="post")
 
       label(for="username") Username
-      input(type="text", name="username", placeholder="e.g., yourname")
+      input.span4(type="text", name="username", placeholder="e.g., yourname")
+      label(for="email") Email (<abbr class="tooltipped" title="Without an email, you will be unable to reset your password.">optional</abbr>)
+      input.span4(type="text", name="email", placeholder="you@yourdomain.com")
       label(for="password") Password
-      input(type="password", name="password")
+      input.span4(type="password", name="password")
       label(for="passwordAgain") Password (again)
-      input(type="password", name="passwordAgain")
+      input.span4(type="password", name="passwordAgain")
 
-      input.btn.btn-primary(type="submit", value="Le Register")
+      .clearfix
+
+      button.btn.btn-large.btn-primary.input-block-level(type="submit") Create Account &amp; Log In &raquo;
+      
+      .clearfix
+
+    .clearfix
