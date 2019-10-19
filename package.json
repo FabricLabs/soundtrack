@@ -1,6 +1,6 @@
 {
   "name": "soundtrack.io",
-  "version": "0.0.0",
+  "version": "0.2.0-develop",
   "description": "soundtrack.io is a collaborative online jukebox.",
   "main": "soundtrack.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "author": "Eric Martindale",
   "license": "MIT",
   "dependencies": {
+    "@fabric/core": "FabricLabs/fabric#fabric-0.1.0-develop",
     "async": "~0.2.9",
     "body-parser": "^1.11.0",
     "connect-redis": "^2.2.0",

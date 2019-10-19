@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Making beautiful apps a breeze. &middot; @fabric/maki</title>
+  <!-- <link rel="manifest" href="/manifest.json"> -->
+  <link rel="stylesheet" type="text/css" href="/styles/screen.css" />
+  <link rel="stylesheet" type="text/css" href="/styles/semantic.css" />
+</head>
+<body data-bind="0b219505986b4d33160747d645986a71b463ff0efd91118b86b34dec5bbb5d06">
+  <fabric-application route="/" integrity="sha256-x3baoVHFQyDyD3GXXTA/QNIrAdx1g+ln2figIDMPxyY=" class="window">
+    <header>
+      <fabric-grid-row id="details" class="ui grid">
+        <div class="wide column">
+          <div class="ui inverted header">
+            <a href="/"><img src="/images/brand.png" class="ui small image" /></a>
+            <h1 class="content"><a href="/">@fabric/maki</a></h1>
+            <p class="sub header">Making beautiful apps a breeze.</p>
+          </div>
+        </div>
+      </fabric-grid-row>
+    </header>
+    <fabric-grid-row id="browser">
+      <fabric-browser address="/">
+        <fabric-grid rows="3" columns="3">
+          <div class="ui grid">
+            <div class="twelve wide column">
+              <div class="browser">
+                <fabric-browser-content id="browser-content" class="ui container">
+                  <div class="ui segment loading">
+                    <h1 class="header">Preparing content...</h1>
+                    <p>The application is compiling your document. Unless you've enabled JavaScript or are using the Fabric Browser, this message should not remain visible for long.</p>
+                  </div>
+                </fabric-browser-content>
+              </div>
+            </div>
+            <div class="four wide column">
+              <maki-sidebar integrity="sha256-pohl+ZcFgvVHlHk0fGz2GrAW71+S1oNOUqPXt5NZA0o=">
+                <div class="ui right fixed vertical inverted menu">
+                  <div class="item">
+                    <maki-identity-card />
+                  </div>
+                  <div class="item"><strong>Resources</strong>
+                    <div class="menu"></div>
+                  </div>
+                </div>
+              </maki-sidebar>
+            </div>
+          </div>
+        </fabric-grid>
+      </fabric-browser>
+    </fabric-grid-row>
+    <footer>
+      <fabric-debug></fabric-debug>
+    </footer>
+    <div id="ephemeral-content"></div>
+    <!-- TODO: rollup semantic into build process -->
+    <script type="text/javascript" src="/scripts/semantic.min.js"></script>
+    <!-- <script type="text/javascript" src="/scripts/index.min.js"></script> -->
+    <script type="text/javascript" src="/scripts/rpg.min.js"></script>
+  </fabric-application>
+</body>
+</html>
