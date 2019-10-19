@@ -123,7 +123,9 @@ html(lang="en-US", ng-app="soundtrack-io")
 
     .container.module
       .messages
-        .alert.alert-info Please <a href="chrome://flags/#disable-gesture-requirement-for-media-playback">disable gesture requirement for media playback</a>!  This service will not play audio in the background until you do.
+        if (room)
+          .alert.alert-info #{room.description}
+
         if (typeof(flash) != 'undefined')
           if (typeof(flash.error) != 'undefined')
             for error in flash.error
