@@ -1,13 +1,13 @@
-soundtrack.io
+🎧️ [soundtrack.io][soundtrack]
 =============
-collaborative music streaming
+collaborative music streaming on a peer-to-peer network
 
-[![Build Status](https://img.shields.io/travis/FabricLabs/soundtrack.svg?branch=mastere&style=flat-square)](https://travis-ci.org/FabricLabs/soundtrack)
-[![Coverage Status](https://img.shields.io/codecov/c/gh/FabricLabs/soundtrack?style=flat-square)](https://codecov.io/gh/FabricLabs/soundtrack)
-[![GitHub contributors](https://img.shields.io/github/contributors/FabricLabs/soundtrack.svg?style=flat-square)](https://github.com/FabricLabs/soundtrack/graphs/contributors)
-[![Community](https://img.shields.io/matrix/soundtrack:fabric.pub.svg?style=flat-square)](https://chat.fabric.pub/#/room/#soundtrack:fabric.pub)
+[![Build Status][badge-build-status]][test-home]
+[![Coverage Status][badge-build-status]][coverage-home]
+[![GitHub contributors][badge-contributors]][contributor-list]
+[![Community][badge-community]][chat]
 
-soundtrack.io is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
+[soundtrack.io][soundtrack] is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
 
 ## Quick Start
 1. `npm install -g FabricLabs/soundtrack`
@@ -32,6 +32,14 @@ Be sure to back up your keys — we are not responsble for any losses!
 `TODO: npm run make:api`
 
 ## Contributing
-Want to help?  Claim something in [the "ready" column on our Waffle.io](https://waffle.io/martindale/soundtrack.io) by assigning it to yourself.
-
 [Fork. Commit. Pull request.](https://help.github.com/articles/fork-a-repo)
+
+[soundtrack]: https://soundtrack.io
+[badge-build-status]: https://img.shields.io/travis/FabricLabs/soundtrack.svg?branch=mastere&style=flat-square
+[badge-coverage-status]: https://img.shields.io/codecov/c/gh/FabricLabs/soundtrack?style=flat-square
+[badge-contributors]: https://img.shields.io/github/contributors/FabricLabs/soundtrack.svg?style=flat-square
+[badge-community]: https://img.shields.io/matrix/soundtrack:fabric.pub.svg?style=flat-square
+[test-home]: https://travis-ci.org/FabricLabs/soundtrack
+[coverage-home]: https://codecov.io/gh/FabricLabs/soundtrack
+[contributor-list]: https://github.com/FabricLabs/soundtrack/graphs/contributors
+[chat]: https://chat.fabric.pub/#/room/#soundtrack:fabric.pub
