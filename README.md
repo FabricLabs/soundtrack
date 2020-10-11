@@ -4,6 +4,8 @@ collaborative music streaming
 
 [![Build Status](https://img.shields.io/travis/FabricLabs/soundtrack.svg?branch=mastere&style=flat-square)](https://travis-ci.org/FabricLabs/soundtrack)
 [![Coverage Status](https://img.shields.io/codecov/c/gh/FabricLabs/soundtrack?style=flat-square)](https://codecov.io/gh/FabricLabs/soundtrack)
+[![GitHub contributors](https://img.shields.io/github/contributors/FabricLabs/soundtrack.svg?style=flat-square)](https://github.com/FabricLabs/soundtrack/graphs/contributors)
+[![Community](https://img.shields.io/matrix/soundtrack:fabric.pub.svg?style=flat-square)](https://chat.fabric.pub/#/room/#soundtrack:fabric.pub)
 
 soundtrack.io is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
 
