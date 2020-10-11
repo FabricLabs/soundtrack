@@ -2,9 +2,10 @@
   "name": "@fabric/soundtrack",
   "version": "0.2.0",
   "description": "experimental music streaming",
-  "preferGlobal": true,
+  "repository": "git@github.com:FabricLabs/soundtrack.git",
   "main": "scripts/cli.js",
   "entry": "types/soundtrack.js",
+  "preferGlobal": true,
   "engines": {
     "node": "~12.16"
   },
