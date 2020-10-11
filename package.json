@@ -28,8 +28,7 @@
   "dependencies": {
     "@fabric/core": "martindale/fabric#peering-wallet",
     "@suldashi/lame": "^1.2.5",
-    "blessed": "^0.1.81",
-    "speaker": "^0.5.2"
+    "blessed": "^0.1.81"
   },
   "devDependencies": {
     "codecov": "^3.8.0",
