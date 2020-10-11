@@ -1,13 +1,22 @@
 🎧️ [soundtrack.io][soundtrack]
 =============
-collaborative music streaming on a peer-to-peer network
+collaborative music streaming over a peer-to-peer network
 
 [![Build Status][badge-build-status]][test-home]
 [![Coverage Status][badge-build-status]][coverage-home]
 [![GitHub contributors][badge-contributors]][contributor-list]
 [![Community][badge-community]][chat]
 
-[soundtrack.io][soundtrack] is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
+[soundtrack.io][soundtrack] is a collaborative online radio, almost like a jukebox for the Internet.
+
+### Vote on what plays next, like Reddit for music.
+The "Queue" shows all requested tracks, ordered by oldest first.  Upvote or downvote a track to add your vote, pushing it to the top or the bottom as per your preference.
+
+### Reliable Streams
+Soundtrack aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
+
+### Earn Bitcoin
+Help others with reliability by hosting streams, earning Bitcoin in exchange for your node's work.  Deposit and withdraw using normal Bitcoin addresses, compatible with all major wallets.
 
 ## Quick Start
 1. `npm install -g FabricLabs/soundtrack`
