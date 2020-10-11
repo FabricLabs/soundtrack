@@ -3,7 +3,7 @@
 collaborative music streaming over a peer-to-peer network
 
 [![Build Status][badge-build-status]][test-home]
-[![Coverage Status][badge-build-status]][coverage-home]
+[![Coverage Status][badge-coverage-status]][coverage-home]
 [![GitHub contributors][badge-contributors]][contributor-list]
 [![Community][badge-community]][chat]
 
