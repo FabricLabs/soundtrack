@@ -14,7 +14,7 @@ const settings = {
 
 describe('@fabric/soundtrack', function () {
   describe('@services/audio', function () {
-    it('can play a sound', function (done) {
+    xit('can play a sound', function (done) {
       const handle = fs.createReadStream('./assets/audio/ring.mp3');
       const decoder = new lame.Decoder({
         // input
