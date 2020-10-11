@@ -2,9 +2,10 @@
   "name": "@fabric/soundtrack",
   "version": "0.2.0",
   "description": "experimental music streaming",
-  "preferGlobal": true,
+  "repository": "git@github.com:FabricLabs/soundtrack.git",
   "main": "scripts/cli.js",
   "entry": "types/soundtrack.js",
+  "preferGlobal": true,
   "engines": {
     "node": "~12.16"
   },
@@ -12,6 +13,7 @@
     "soundtrack": "./scripts/cli.js"
   },
   "scripts": {
+    "cli": "node scripts/cli.js",
     "coverage": "nyc npm test",
     "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && codecov",
     "start": "node scripts/cli.js",
