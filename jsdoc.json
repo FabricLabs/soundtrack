@@ -1,0 +1,10 @@
+{
+  "name": "@fabric/soundtrack",
+  "chat": "https://chat.fabric.pub/#/room/#soundtrack:fabric.pub",
+  "source": "https://github.com/FabricLabs/soundtrack",
+  "templates": {
+    "default": {
+      "layoutFile": "assets/docs.tmpl"
+    }
+  }
+}

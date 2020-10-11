@@ -15,7 +15,13 @@
   "scripts": {
     "cli": "node scripts/cli.js",
     "coverage": "nyc npm test",
-    "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && codecov",
+    "docs": "npm run make:docs && ecstatic docs",
+    "make:coverage": "nyc report --reporter html",
+    "make:coverage:raw": "nyc report --reporter=text-lcov > reports/coverage.lcov",
+    "make:api": "jsdoc2md --configure jsdoc.json --files types/** README.md > API.md",
+    "make:docs": "npm run make:api && node_modules/.bin/jsdoc -c jsdoc.json types API.md -d docs/ && glob-run js-beautify --indent-size 2 -r docs/*.html",
+    "report:coverage": "nmp run make:coverage:raw && codecov",
+    "review:coverage": "npm run make:coverage && ecstatic reports/coverage",
     "start": "node scripts/cli.js",
     "test": "mocha tests"
   },
@@ -32,7 +38,19 @@
   },
   "devDependencies": {
     "codecov": "^3.8.0",
+    "ecstatic": "^4.1.4",
+    "glob-run": "^0.1.7",
+    "js-beautify": "^1.13.0",
+    "jsdoc": "FabricLabs/jsdoc#fabric",
+    "jsdoc-to-markdown": "^6.0.1",
     "mocha": "^8.1.3",
     "nyc": "^15.1.0"
+  },
+  "nyc": {
+    "exclude": [
+      "tests"
+    ],
+    "report-dir": "./reports/coverage",
+    "temp-dir": "./reports/nyc"
   }
 }
