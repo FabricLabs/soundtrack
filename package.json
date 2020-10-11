@@ -12,6 +12,7 @@
     "soundtrack": "./scripts/cli.js"
   },
   "scripts": {
+    "cli": "node scripts/cli.js",
     "coverage": "nyc npm test",
     "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && codecov",
     "start": "node scripts/cli.js",
