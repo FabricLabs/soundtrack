@@ -1,47 +1,45 @@
-soundtrack.io
+🎧️ [soundtrack.io][soundtrack]
 =============
-[![Build Status](https://img.shields.io/travis/martindale/soundtrack.io.svg?branch=soundtrack.io&style=flat-square)](https://travis-ci.org/martindale/soundtrack.io)
-[![Coverage Status](https://img.shields.io/coveralls/martindale/soundtrack.io/soundtrack.io.svg?style=flat-square)](https://coveralls.io/r/martindale/soundtrack.io)
+collaborative music streaming over a peer-to-peer network
 
-soundtrack.io is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
+[![Build Status][badge-build-status]][test-home]
+[![Coverage Status][badge-build-status]][coverage-home]
+[![GitHub contributors][badge-contributors]][contributor-list]
+[![Community][badge-community]][chat]
 
-## Getting Started
+[soundtrack.io][soundtrack] is a collaborative online jukebox.  It is an experimental Internet radio platform.  Vote on what plays next, like Reddit for music.  Aggregates streams from sources like YouTube and SoundCloud, so when a song is queued, it has multiple locations to play from if any one source fails for any particular reason.
 
-Before you begin you will need to have nodejs, redis, and mongodb installed.
-Homebrew is recommended for OS X users.
+## Quick Start
+1. `npm install -g FabricLabs/soundtrack`
+2. `soundtrack`
 
-```
-brew install nodejs mongodb redis
-```
+## Configuration
+Supply environment variables `FABRIC_PORT` and/or `FABRIC_SEED` for Fabric
+peer-to-peer communication and persistent storage, respectively.
 
-In the logged output, you'll find some instructions for starting both mongodb and redis – you can follow those instructions, or execute once with `redis-server & mongod &`
+## Earning Bitcoin
+Income can only be generated for online nodes, through an opt-in program.
 
-Once you have them installed (and running!), go ahead and clone the repository.
-
-    git clone git@github.com:martindale/soundtrack.io.git
-    cd soundtrack.io
-
-You will need to fetch the dependencies and then you can start up the server.
-
-    npm install
-    node soundtrack.js
-    
-### Testing Rooms
-Now that soundtrack has multiple rooms, you'll need to configure your local hostname lookups to point at the appropriate locations.  In `/etc/hosts` (or equivalent for your OS):
+To enable earning, be sure to provide `FABRIC_SEED` with a mnemonic and use:
 
 ```
-127.0.0.1 localhost.localdomain
-127.0.0.1 test.localhost.localdomain
+$ soundtrack --earn
 ```
 
-You'll need to add an entry for each subdomain you want to test.  Also, the `.localdomain` component is important for sessions, as some browsers expect a top level domain for cookies to work correctly!
+Be sure to back up your keys — we are not responsble for any losses!
 
 ## API
-
-Deleting tracks:
-`$.ajax('/playlist/520e6bda3cb680003700049c', { type: 'DELETE', data: { index: 1 } });`
+`TODO: npm run make:api`
 
 ## Contributing
-Want to help?  Claim something in [the "ready" column on our Waffle.io](https://waffle.io/martindale/soundtrack.io) by assigning it to yourself.
-
 [Fork. Commit. Pull request.](https://help.github.com/articles/fork-a-repo)
+
+[soundtrack]: https://soundtrack.io
+[badge-build-status]: https://img.shields.io/travis/FabricLabs/soundtrack.svg?branch=mastere&style=flat-square
+[badge-coverage-status]: https://img.shields.io/codecov/c/gh/FabricLabs/soundtrack?style=flat-square
+[badge-contributors]: https://img.shields.io/github/contributors/FabricLabs/soundtrack.svg?style=flat-square
+[badge-community]: https://img.shields.io/matrix/soundtrack:fabric.pub.svg?style=flat-square
+[test-home]: https://travis-ci.org/FabricLabs/soundtrack
+[coverage-home]: https://codecov.io/gh/FabricLabs/soundtrack
+[contributor-list]: https://github.com/FabricLabs/soundtrack/graphs/contributors
+[chat]: https://chat.fabric.pub/#/room/#soundtrack:fabric.pub
