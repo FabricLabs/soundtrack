@@ -1,16 +1,18 @@
 {
-  "name": "soundtrack.io",
-  "description": "soundtrack.io is a collaborative online jukebox.",
+  "name": "@fabric/soundtrack",
   "version": "0.2.0",
+  "description": "experimental music streaming",
   "preferGlobal": true,
-  "main": "types/soundtrack.js",
+  "main": "scripts/cli.js",
+  "entry": "types/soundtrack.js",
   "bin": {
     "soundtrack": "./scripts/cli.js"
   },
   "scripts": {
-    "test": "mocha",
-    "coverage": "NODE_ENV=test istanbul cover _mocha -- --recursive",
-    "start": "node ./soundtrack.js"
+    "coverage": "nyc npm test",
+    "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && codecov",
+    "start": "node scripts/cli.js",
+    "test": "mocha tests"
   },
   "keywords": [
     "fabric",
@@ -20,10 +22,12 @@
   "author": "Fabric Labs",
   "license": "MIT",
   "dependencies": {
-    "@fabric/core": "github:martindale/fabric#peering-wallet",
+    "@fabric/core": "martindale/fabric#peering-wallet",
     "blessed": "^0.1.81"
   },
   "devDependencies": {
-    "mocha": "^8.1.3"
+    "codecov": "^3.8.0",
+    "mocha": "^8.1.3",
+    "nyc": "^15.1.0"
   }
 }
