@@ -14,8 +14,9 @@
   "scripts": {
     "coverage": "nyc npm test",
     "report:coverage": "nyc report --reporter=text-lcov > reports/coverage.lcov && codecov",
+    "review:syntax": "semistandard types",
     "start": "node scripts/cli.js",
-    "test": "mocha tests"
+    "test": "npm run review:syntax && mocha tests"
   },
   "keywords": [
     "fabric",
@@ -26,11 +27,14 @@
   "license": "MIT",
   "dependencies": {
     "@fabric/core": "martindale/fabric#peering-wallet",
-    "blessed": "^0.1.81"
+    "@suldashi/lame": "^1.2.5",
+    "blessed": "^0.1.81",
+    "speaker": "^0.5.2"
   },
   "devDependencies": {
     "codecov": "^3.8.0",
     "mocha": "^8.1.3",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "semistandard": "^14.2.3"
   }
 }
