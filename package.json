@@ -5,6 +5,9 @@
   "preferGlobal": true,
   "main": "scripts/cli.js",
   "entry": "types/soundtrack.js",
+  "engines": {
+    "node": "~12.16"
+  },
   "bin": {
     "soundtrack": "./scripts/cli.js"
   },
