@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Class: Soundtrack &middot; Docs</title>
+  <title>Class: Interface &middot; Docs</title>
   <script src="scripts/prettify/prettify.js"> </script>
   <script src="scripts/prettify/lang-css.js"> </script>
   <!--[if lt IE 9]>
@@ -15,7 +15,7 @@
 
 <body>
   <div id="main">
-    <h1 class="page-title">Class: Soundtrack</h1>
+    <h1 class="page-title">Class: Interface</h1>
 
 
 
@@ -24,9 +24,9 @@
 
       <header>
 
-        <h2><span class="attribs"><span class="type-signature"></span></span>Soundtrack<span class="signature">(settings<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>Interface<span class="signature">(settings)</span><span class="type-signature"> &rarr; {<a href="Interface.html">Interface</a>}</span></h2>
 
-        <div class="class-description">Implements the Soundtrack type.</div>
+        <div class="class-description">Interfaces compile abstract contract code into <a href="Chain.html">Chain</a>-executable transactions, or "chaincode". For example, the "Bitcoin" interface might compile a Swap contract into Script, preparing a valid Bitcoin transaction for broadcast which executes the swap contract.</div>
 
 
       </header>
@@ -41,7 +41,7 @@
 
 
 
-          <h4 class="name" id="Soundtrack"><span class="type-signature"></span>new Soundtrack<span class="signature">(settings<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+          <h4 class="name" id="Interface"><span class="type-signature"></span>new Interface<span class="signature">(settings)</span><span class="type-signature"> &rarr; {<a href="Interface.html">Interface</a>}</span></h4>
 
 
 
@@ -49,7 +49,7 @@
 
 
           <div class="description">
-            Create an instance of <a href="Soundtrack.html">Soundtrack</a>.
+            Define an <a href="Interface.html">Interface</a> by creating an instance of this class.
           </div>
 
 
@@ -72,8 +72,6 @@
 
                 <th>Type</th>
 
-
-                <th>Attributes</th>
 
 
 
@@ -100,11 +98,54 @@
                 </td>
 
 
-                <td class="attributes">
-
-                  &lt;optional><br>
 
 
+
+                <td class="description last">Configuration values.</td>
+              </tr>
+
+
+            </tbody>
+          </table>
+
+
+
+
+
+
+          <h5 class="subsection-title">Properties:</h5>
+
+
+
+          <table class="props">
+            <thead>
+              <tr>
+
+                <th>Name</th>
+
+
+                <th>Type</th>
+
+
+
+
+
+                <th class="last">Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+
+              <tr>
+
+                <td class="name"><code>status</code></td>
+
+
+                <td class="type">
+
+
+                  <span class="param-type">String</span>
 
 
 
@@ -113,14 +154,13 @@
 
 
 
-                <td class="description last">List of options.</td>
+
+                <td class="description last">Human-friendly value representing the Interface's current <a href="State.html">State</a>.</td>
               </tr>
 
 
             </tbody>
           </table>
-
-
 
 
 
@@ -156,7 +196,7 @@
             <dd class="tag-source">
               <ul class="dummy">
                 <li>
-                  <a href="types_soundtrack.js.html">types/soundtrack.js</a>, <a href="types_soundtrack.js.html#line15">line 15</a>
+                  <a href="node_modules_@fabric_core_types_interface.js.html">node_modules/@fabric/core/types/interface.js</a>, <a href="node_modules_@fabric_core_types_interface.js.html#line26">line 26</a>
                 </li>
               </ul>
             </dd>
@@ -183,6 +223,28 @@
 
 
 
+          <h5>Returns:</h5>
+
+
+          <div class="param-desc">
+            Instance of the <a href="Interface.html">Interface</a>.
+          </div>
+
+
+
+          <dl>
+            <dt>
+              Type
+            </dt>
+            <dd>
+
+              <span class="param-type"><a href="Interface.html">Interface</a></span>
+
+
+            </dd>
+          </dl>
+
+
 
 
 
@@ -198,7 +260,7 @@
 
 
         <ul>
-          <li><a href="Interface.html">Interface</a></li>
+          <li>EventEmitter</li>
         </ul>
 
 
@@ -242,15 +304,6 @@
 
 
 
-
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#state">Interface#state</a>
-              </li>
-            </ul>
-          </dd>
 
 
 
@@ -384,15 +437,6 @@
 
 
 
-
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#cycle">Interface#cycle</a>
-              </li>
-            </ul>
-          </dd>
 
 
 
@@ -547,15 +591,6 @@
 
 
 
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#log">Interface#log</a>
-              </li>
-            </ul>
-          </dd>
-
 
 
 
@@ -647,15 +682,6 @@
 
 
 
-
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#now">Interface#now</a>
-              </li>
-            </ul>
-          </dd>
 
 
 
@@ -767,15 +793,6 @@
 
 
 
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#start">Interface#start</a>
-              </li>
-            </ul>
-          </dd>
-
 
 
 
@@ -868,15 +885,6 @@
 
 
 
-          <dt class="tag-overrides">Overrides:</dt>
-          <dd class="tag-overrides">
-            <ul class="dummy">
-              <li>
-                <a href="Interface.html#stop">Interface#stop</a>
-              </li>
-            </ul>
-          </dd>
-
 
 
 
@@ -946,11 +954,15 @@
   </div>
   <nav>
     <h2><a href="index.html">Home</a></h2>
+    <h3>Modules</h3>
+    <ul>
+      <li><a href="module-@services_soundtrack.html">@services/soundtrack</a></li>
+    </ul>
     <h3>Classes</h3>
     <ul>
       <li><a href="Chain.html">Chain</a></li>
       <li><a href="Interface.html">Interface</a></li>
-      <li><a href="Soundtrack.html">Soundtrack</a></li>
+      <li><a href="module-@services_soundtrack-Soundtrack.html">Soundtrack</a></li>
       <li><a href="State.html">State</a></li>
     </ul>
   </nav>

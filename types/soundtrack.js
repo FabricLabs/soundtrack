@@ -5,10 +5,12 @@ const Remote = require('@fabric/core/types/remote');
 
 /**
  * Implements the Soundtrack type.
+ * @module @services/soundtrack
  */
 class Soundtrack extends Interface {
   /**
    * Create an instance of {@link Soundtrack}.
+   * @augments Interface
    * @param {Object} [settings] List of options.
    */
   constructor (settings = {}) {

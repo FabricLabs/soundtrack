@@ -40,14 +40,71 @@
 
     <section>
       <article>
-        <p><a name="Soundtrack"></a></p>
-        <h2>Soundtrack</h2>
+        <h2>Modules</h2>
+        <dl>
+          <dt><a href="#module_@services/soundtrack">@services/soundtrack</a></dt>
+          <dd>
+            <p>Implements the Soundtrack type.</p>
+          </dd>
+        </dl>
+        <h2>Classes</h2>
+        <dl>
+          <dt><a href="#Interface">Interface</a> ⇐ <code>EventEmitter</code></dt>
+          <dd>
+            <p>Interfaces compile abstract contract code into <a href="#Chain">Chain</a>-executable transactions, or &quot;chaincode&quot;. For example, the &quot;Bitcoin&quot; interface might compile a Swap contract into Script, preparing a valid Bitcoin transaction for broadcast which executes the swap contract.</p>
+          </dd>
+          <dt><a href="#Chain">Chain</a></dt>
+          <dd>
+            <p>Chain.</p>
+          </dd>
+          <dt><a href="#State">State</a></dt>
+          <dd>
+            <p>The <a href="#State">State</a> is the core of most <a href="User">User</a>-facing interactions. To
+              interact with the <a href="User">User</a>, simply propose a change in the state by
+              committing to the outcome. This workflow keeps app design quite simple!</p>
+          </dd>
+        </dl>
+        <p><a name="module_@services/soundtrack"></a></p>
+        <h2>@services/soundtrack</h2>
         <p>Implements the Soundtrack type.</p>
-        <p><strong>Kind</strong>: global class<br>
-          <a name="new_Soundtrack_new"></a>
+        <ul>
+          <li><a href="#module_@services/soundtrack">@services/soundtrack</a>
+            <ul>
+              <li><a href="#module_@services/soundtrack..Soundtrack">~Soundtrack</a> ⇐ <a href="#Interface"><code>Interface</code></a>
+                <ul>
+                  <li><a href="#new_module_@services/soundtrack..Soundtrack_new">new Soundtrack([settings])</a></li>
+                  <li><a href="#Interface+state">.state</a></li>
+                  <li><a href="#Interface+start">.start()</a></li>
+                  <li><a href="#Interface+stop">.stop()</a></li>
+                  <li><a href="#Interface+cycle">.cycle(val)</a></li>
+                  <li><a href="#Interface+log">.log(...inputs)</a></li>
+                  <li><a href="#Interface+now">.now()</a> ⇒ <code>Number</code></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <p><a name="module_@services/soundtrack..Soundtrack"></a></p>
+        <h3>@services/soundtrack~Soundtrack ⇐ <a href="#Interface"><code>Interface</code></a></h3>
+        <p><strong>Kind</strong>: inner class of <a href="#module_@services/soundtrack"><code>@services/soundtrack</code></a><br>
+          <strong>Extends</strong>: <a href="#Interface"><code>Interface</code></a>
         </p>
-        <h3>new Soundtrack([settings])</h3>
-        <p>Create an instance of <a href="#Soundtrack">Soundtrack</a>.</p>
+        <ul>
+          <li><a href="#module_@services/soundtrack..Soundtrack">~Soundtrack</a> ⇐ <a href="#Interface"><code>Interface</code></a>
+            <ul>
+              <li><a href="#new_module_@services/soundtrack..Soundtrack_new">new Soundtrack([settings])</a></li>
+              <li><a href="#Interface+state">.state</a></li>
+              <li><a href="#Interface+start">.start()</a></li>
+              <li><a href="#Interface+stop">.stop()</a></li>
+              <li><a href="#Interface+cycle">.cycle(val)</a></li>
+              <li><a href="#Interface+log">.log(...inputs)</a></li>
+              <li><a href="#Interface+now">.now()</a> ⇒ <code>Number</code></li>
+            </ul>
+          </li>
+        </ul>
+        <p><a name="new_module_@services/soundtrack..Soundtrack_new"></a></p>
+        <h4>new Soundtrack([settings])</h4>
+        <p>Create an instance of <a href="Soundtrack">Soundtrack</a>.</p>
         <table>
           <thead>
             <tr>
@@ -64,6 +121,456 @@
             </tr>
           </tbody>
         </table>
+        <p><a name="Interface+state"></a></p>
+        <h4>soundtrack.state</h4>
+        <p>Getter for <a href="#State">State</a>.</p>
+        <p><strong>Kind</strong>: instance property of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a><br>
+          <a name="Interface+start"></a>
+        </p>
+        <h4>soundtrack.start()</h4>
+        <p>Start the <a href="#Interface">Interface</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a><br>
+          <a name="Interface+stop"></a>
+        </p>
+        <h4>soundtrack.stop()</h4>
+        <p>Stop the Interface.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a><br>
+          <a name="Interface+cycle"></a>
+        </p>
+        <h4>soundtrack.cycle(val)</h4>
+        <p>Ticks the clock with a named <a href="Cycle">Cycle</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>val</td>
+              <td><code>String</code></td>
+              <td>Name of cycle to scribe.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="Interface+log"></a></p>
+        <h4>soundtrack.log(...inputs)</h4>
+        <p>Log some output to the console.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>...inputs</td>
+              <td><code>any</code></td>
+              <td>Components of the message to long. Can be a single {@link} String, many <a href="String">String</a> objects, or anything else.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="Interface+now"></a></p>
+        <h4>soundtrack.now() ⇒ <code>Number</code></h4>
+        <p>Returns current timestamp.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#module_@services/soundtrack..Soundtrack"><code>Soundtrack</code></a><br>
+          <a name="Interface"></a>
+        </p>
+        <h2>Interface ⇐ <code>EventEmitter</code></h2>
+        <p>Interfaces compile abstract contract code into <a href="#Chain">Chain</a>-executable transactions, or &quot;chaincode&quot;. For example, the &quot;Bitcoin&quot; interface might compile a Swap contract into Script, preparing a valid Bitcoin transaction for broadcast which executes the swap contract.</p>
+        <p><strong>Kind</strong>: global class<br>
+          <strong>Extends</strong>: <code>EventEmitter</code><br>
+          <strong>Properties</strong>
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>status</td>
+              <td><code>String</code></td>
+              <td>Human-friendly value representing the Interface's current <a href="#State">State</a>.</td>
+            </tr>
+          </tbody>
+        </table>
+        <ul>
+          <li><a href="#Interface">Interface</a> ⇐ <code>EventEmitter</code>
+            <ul>
+              <li><a href="#new_Interface_new">new Interface(settings)</a></li>
+              <li><a href="#Interface+state">.state</a></li>
+              <li><a href="#Interface+start">.start()</a></li>
+              <li><a href="#Interface+stop">.stop()</a></li>
+              <li><a href="#Interface+cycle">.cycle(val)</a></li>
+              <li><a href="#Interface+log">.log(...inputs)</a></li>
+              <li><a href="#Interface+now">.now()</a> ⇒ <code>Number</code></li>
+            </ul>
+          </li>
+        </ul>
+        <p><a name="new_Interface_new"></a></p>
+        <h3>new Interface(settings)</h3>
+        <p>Define an <a href="#Interface">Interface</a> by creating an instance of this class.</p>
+        <p><strong>Returns</strong>: <a href="#Interface"><code>Interface</code></a> - Instance of the <a href="#Interface">Interface</a>.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>settings</td>
+              <td><code>Object</code></td>
+              <td>Configuration values.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="Interface+state"></a></p>
+        <h3>interface.state</h3>
+        <p>Getter for <a href="#State">State</a>.</p>
+        <p><strong>Kind</strong>: instance property of <a href="#Interface"><code>Interface</code></a><br>
+          <a name="Interface+start"></a>
+        </p>
+        <h3>interface.start()</h3>
+        <p>Start the <a href="#Interface">Interface</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#Interface"><code>Interface</code></a><br>
+          <a name="Interface+stop"></a>
+        </p>
+        <h3>interface.stop()</h3>
+        <p>Stop the Interface.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#Interface"><code>Interface</code></a><br>
+          <a name="Interface+cycle"></a>
+        </p>
+        <h3>interface.cycle(val)</h3>
+        <p>Ticks the clock with a named <a href="Cycle">Cycle</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#Interface"><code>Interface</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>val</td>
+              <td><code>String</code></td>
+              <td>Name of cycle to scribe.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="Interface+log"></a></p>
+        <h3>interface.log(...inputs)</h3>
+        <p>Log some output to the console.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#Interface"><code>Interface</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>...inputs</td>
+              <td><code>any</code></td>
+              <td>Components of the message to long. Can be a single {@link} String, many <a href="String">String</a> objects, or anything else.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="Interface+now"></a></p>
+        <h3>interface.now() ⇒ <code>Number</code></h3>
+        <p>Returns current timestamp.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#Interface"><code>Interface</code></a><br>
+          <a name="Chain"></a>
+        </p>
+        <h2>Chain</h2>
+        <p>Chain.</p>
+        <p><strong>Kind</strong>: global class<br>
+          <strong>Properties</strong>
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>name</td>
+              <td><code>String</code></td>
+              <td>Current name.</td>
+            </tr>
+            <tr>
+              <td>indices</td>
+              <td><code>Map</code></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>ledger</td>
+              <td><code>Ledger</code></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>storage</td>
+              <td><code>Storage</code></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="new_Chain_new"></a></p>
+        <h3>new Chain(genesis)</h3>
+        <p>Holds an immutable chain of events.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>genesis</td>
+              <td><code>Vector</code></td>
+              <td>Initial state for the chain of events.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State"></a></p>
+        <h2>State</h2>
+        <p>The <a href="#State">State</a> is the core of most <a href="User">User</a>-facing interactions. To
+          interact with the <a href="User">User</a>, simply propose a change in the state by
+          committing to the outcome. This workflow keeps app design quite simple!</p>
+        <p><strong>Kind</strong>: global class<br>
+          <strong>Properties</strong>
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>size</td>
+              <td><code>Number</code></td>
+              <td>Size of state in bytes.</td>
+            </tr>
+            <tr>
+              <td>@buffer</td>
+              <td><code>Buffer</code></td>
+              <td>Byte-for-byte memory representation of state.</td>
+            </tr>
+            <tr>
+              <td>@type</td>
+              <td><code>String</code></td>
+              <td>Named type.</td>
+            </tr>
+            <tr>
+              <td>@data</td>
+              <td><code>Mixed</code></td>
+              <td>Local instance of the state.</td>
+            </tr>
+            <tr>
+              <td>@id</td>
+              <td><code>String</code></td>
+              <td>Unique identifier for this data.</td>
+            </tr>
+          </tbody>
+        </table>
+        <ul>
+          <li><a href="#State">State</a>
+            <ul>
+              <li><a href="#new_State_new">new State(data)</a></li>
+              <li><em>instance</em>
+                <ul>
+                  <li><a href="#State+toString">.toString()</a> ⇒ <code>String</code></li>
+                  <li><a href="#State+serialize">.serialize([input])</a> ⇒ <code>Buffer</code></li>
+                  <li><a href="#State+deserialize">.deserialize(input)</a> ⇒ <a href="#State"><code>State</code></a></li>
+                  <li><a href="#State+fork">.fork()</a> ⇒ <a href="#State"><code>State</code></a></li>
+                  <li><a href="#State+get">.get(path)</a> ⇒ <code>Mixed</code></li>
+                  <li><a href="#State+set">.set(path)</a> ⇒ <code>Mixed</code></li>
+                  <li><a href="#State+commit">.commit()</a></li>
+                  <li><a href="#State+render">.render()</a> ⇒ <code>String</code></li>
+                </ul>
+              </li>
+              <li><em>static</em>
+                <ul>
+                  <li><a href="#State.fromJSON">.fromJSON(input)</a> ⇒ <a href="#State"><code>State</code></a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <p><a name="new_State_new"></a></p>
+        <h3>new State(data)</h3>
+        <p>Creates a snapshot of some information.</p>
+        <p><strong>Returns</strong>: <a href="#State"><code>State</code></a> - Resulting state.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>data</td>
+              <td><code>Mixed</code></td>
+              <td>Input data.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State+toString"></a></p>
+        <h3>state.toString() ⇒ <code>String</code></h3>
+        <p>Unmarshall an existing state to an instance of a <a href="Blob">Blob</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <strong>Returns</strong>: <code>String</code> - Serialized <a href="Blob">Blob</a>.<br>
+          <a name="State+serialize"></a>
+        </p>
+        <h3>state.serialize([input]) ⇒ <code>Buffer</code></h3>
+        <p>Convert to <a href="Buffer">Buffer</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <strong>Returns</strong>: <code>Buffer</code> - <a href="Store">Store</a>-able blob.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>[input]</td>
+              <td><code>Mixed</code></td>
+              <td>Input to serialize.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State+deserialize"></a></p>
+        <h3>state.deserialize(input) ⇒ <a href="#State"><code>State</code></a></h3>
+        <p>Take a hex-encoded input and convert to a <a href="#State">State</a> object.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <strong>Returns</strong>: <a href="#State"><code>State</code></a> - [description]
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>input</td>
+              <td><code>String</code></td>
+              <td>[description]</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State+fork"></a></p>
+        <h3>state.fork() ⇒ <a href="#State"><code>State</code></a></h3>
+        <p>Creates a new child <a href="#State">State</a>, with <code>@parent</code> set to
+          the current <a href="#State">State</a> by immutable identifier.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <a name="State+get"></a>
+        </p>
+        <h3>state.get(path) ⇒ <code>Mixed</code></h3>
+        <p>Retrieve a key from the <a href="#State">State</a>.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>path</td>
+              <td><code>Path</code></td>
+              <td>Key to retrieve.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State+set"></a></p>
+        <h3>state.set(path) ⇒ <code>Mixed</code></h3>
+        <p>Set a key in the <a href="#State">State</a> to a particular value.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>path</td>
+              <td><code>Path</code></td>
+              <td>Key to retrieve.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><a name="State+commit"></a></p>
+        <h3>state.commit()</h3>
+        <p>Increment the vector clock, broadcast all changes as a transaction.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <a name="State+render"></a>
+        </p>
+        <h3>state.render() ⇒ <code>String</code></h3>
+        <p>Compose a JSON string for network consumption.</p>
+        <p><strong>Kind</strong>: instance method of <a href="#State"><code>State</code></a><br>
+          <strong>Returns</strong>: <code>String</code> - JSON-encoded <a href="String">String</a>.<br>
+          <a name="State.fromJSON"></a>
+        </p>
+        <h3>State.fromJSON(input) ⇒ <a href="#State"><code>State</code></a></h3>
+        <p>Marshall an input into an instance of a <a href="#State">State</a>. States have
+          absolute authority over their own domain, so choose your States wisely.</p>
+        <p><strong>Kind</strong>: static method of <a href="#State"><code>State</code></a><br>
+          <strong>Returns</strong>: <a href="#State"><code>State</code></a> - Resulting instance of the <a href="#State">State</a>.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>input</td>
+              <td><code>String</code></td>
+              <td>Arbitrary input.</td>
+            </tr>
+          </tbody>
+        </table>
       </article>
     </section>
 
@@ -74,9 +581,16 @@
   </div>
   <nav>
     <h2><a href="index.html">Home</a></h2>
+    <h3>Modules</h3>
+    <ul>
+      <li><a href="module-@services_soundtrack.html">@services/soundtrack</a></li>
+    </ul>
     <h3>Classes</h3>
     <ul>
-      <li><a href="Soundtrack.html">Soundtrack</a></li>
+      <li><a href="Chain.html">Chain</a></li>
+      <li><a href="Interface.html">Interface</a></li>
+      <li><a href="module-@services_soundtrack-Soundtrack.html">Soundtrack</a></li>
+      <li><a href="State.html">State</a></li>
     </ul>
   </nav>
   <br class="clear" />
