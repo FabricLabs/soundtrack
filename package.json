@@ -4,7 +4,6 @@
   "description": "experimental music streaming",
   "repository": "git@github.com:FabricLabs/soundtrack.git",
   "main": "scripts/cli.js",
-  "entry": "types/soundtrack.js",
   "preferGlobal": true,
   "engines": {
     "node": "~12.16"
@@ -16,12 +15,14 @@
     "cli": "node scripts/cli.js",
     "coverage": "nyc npm test",
     "docs": "npm run make:docs && ecstatic docs",
+    "edge": "node scripts/http.js",
     "make:coverage": "nyc report --reporter html",
     "make:coverage:raw": "nyc report --reporter=text-lcov > reports/coverage.lcov",
     "make:api": "jsdoc2md --configure jsdoc.json --files types/** node_modules/@fabric/core/types/{interface,chain,state}.js README.md > API.md",
     "make:docs": "npm run make:api && node_modules/.bin/jsdoc -c jsdoc.json types API.md node_modules/@fabric/core/types/{interface,chain,state}.js -d docs/ && glob-run js-beautify --indent-size 2 -r docs/*.html",
     "report:coverage": "nmp run make:coverage:raw && codecov",
     "review:coverage": "npm run make:coverage && ecstatic reports/coverage",
+    "server": "node scripts/server.js",
     "start": "node scripts/cli.js",
     "test": "mocha tests"
   },
@@ -34,7 +35,10 @@
   "license": "MIT",
   "dependencies": {
     "@fabric/core": "martindale/fabric#peering-wallet",
-    "blessed": "^0.1.81"
+    "@fabric/http": "martindale/web#forge-demo-develop",
+    "blessed": "^0.1.81",
+    "canvas": "^2.6.1",
+    "commander": "^6.1.0"
   },
   "devDependencies": {
     "codecov": "^3.8.0",

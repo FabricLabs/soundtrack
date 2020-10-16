@@ -43,6 +43,16 @@ Be sure to back up your keys — we are not responsble for any losses!
 ## Contributing
 [Fork. Commit. Pull request.](https://help.github.com/articles/fork-a-repo)
 
+## Special Thanks
+Based on ideas from @chrisinajar's `hivemind` project on the original turntable.fm, we've assembled a developer-friendly API that is free for everyone to use (that's free as is freedom, not as in free beer).  Credit to @gordonwritescode for solving most of the distributed systems problems, @chjj for authoring `blessed`, and @melnx for endless testing & debugging.
+
+## Credits
+- @martindale primary application design
+- @chrisinajar hivemind and design review
+- @gordonowritescode distributed systems
+- @chjj bytecode
+- @melnx testing & debugging
+
 [soundtrack]: https://soundtrack.io
 [badge-build-status]: https://img.shields.io/travis/FabricLabs/soundtrack.svg?branch=mastere&style=flat-square
 [badge-coverage-status]: https://img.shields.io/codecov/c/gh/FabricLabs/soundtrack?style=flat-square
