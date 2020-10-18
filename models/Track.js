@@ -31,6 +31,11 @@ var TrackSchema = new Schema({
         duration: { type: Number },
         data: {}
       })],
+      magnet: [ new Schema({
+        id: { type: String , required: true , index: true },
+        duration: { type: Number },
+        data: {}
+      })],
       lastfm: [ new Schema({
           id: { type: String , required: true , index: true }
         , duration: { type: Number }
@@ -83,10 +88,11 @@ TrackSchema.pre('save', function(next) {
     });
   }
 
-  ['direct', 'youtube', 'soundcloud'].forEach(function(source) {
+  ['direct', 'magnet', 'youtube', 'soundcloud'].forEach(function(source) {
 
     switch (source) {
       case 'direct':     var type = 'video/mp4';     break;
+      case 'magnet':     var type = 'video/mp4';     break;
       case 'youtube':    var type = 'video/youtube'; break;
       case 'soundcloud': var type = 'audio/mp3';     break;
     }

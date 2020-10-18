@@ -27,6 +27,7 @@
     "mongoose": "~3.6.14",
     "mongoose-agency": "0.0.0",
     "mongoose-slug": "~1.3.0",
+    "musicmetadata": "^2.0.2",
     "passport": "~0.1.17",
     "passport-changetip": "0.0.1",
     "passport-google-oauth": "^0.2.0",
