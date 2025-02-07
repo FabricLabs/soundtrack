@@ -56,7 +56,7 @@ Artists which have been recognized by the soundtrack server.
 Chat messages for a specific room.
 
 `:roomSlug\.yourdomain\.tld/chat`
-`GET` retrives a list of the most recent messages, `POST` to create a message.
+`GET` retrieves a list of the most recent messages, `POST` to create a message.
 
 ## Play
 Moments when a track has been "played" in a Room; there are special rules for when it's considered a play, following last.fm's scrobbling rules.  Only if more than 30s of a track has been listened to, and counting as a play when 2 minutes or half the track has been played, whichever happens first.
@@ -89,4 +89,4 @@ Tracks which have been recognized by the soundtrack server.
 `GET` to retrieve a list of tracks, `POST` to create a track.
 
 `/tracks/:trackID`
-`GET` to retrive a specific track by its `_id`, `PATCH` to update specific components of that track (e.g., editing the title)
+`GET` to retrieve a specific track by its `_id`, `PATCH` to update specific components of that track (e.g., editing the title)
