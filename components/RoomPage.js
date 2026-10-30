@@ -1,0 +1,269 @@
+'use strict';
+
+// One room's stage, as in the original (`views/index.jade`): the track well
+// with the queue on the left, the screen and chat in the middle, and who is
+// listening on the right.
+function styles () {
+  return `
+    .row-fluid [class*="span"].unpadded {
+      padding: 0;
+      width: 541px;
+      margin: 0 12px;
+    }
+    .row-fluid [class*="span"].padded-left {
+      padding-left: 12px;
+      width: 302px;
+    }
+    .row-fluid [class*="span"].padded-right {
+      padding-right: 12px;
+      margin-left: 0;
+      width: 302px;
+    }
+    #track-info a:hover { text-decoration: none; }
+    #track-title, #attribution {
+      text-transform: uppercase;
+      font-weight: bold;
+      display: block;
+      height: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #current-track #track-title {
+      height: 1.5em;
+      font-size: 1.5em;
+      line-height: 1.5em;
+    }
+    #track-curator { font-weight: normal; text-transform: none; }
+    #track-progress { position: relative; }
+    #time {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      display: block;
+    }
+    .progress { margin-bottom: 10px; }
+    .track-controls { margin-bottom: 10px; }
+    .track-controls input[type="range"] { width: 100%; margin: 4px 0 0; accent-color: #08c; }
+    .btn-group.sound-controls { margin: 0 0 10px; float: none; }
+    .btn-group.sound-controls .btn {
+      min-height: 0;
+      padding: 0.5em;
+      width: 50%;
+      box-sizing: border-box;
+    }
+    #messages, #playlist, #userlist {
+      height: 262px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-color: rgb(51,51,51) transparent;
+      scrollbar-width: thin;
+    }
+    #messages { padding-bottom: 0.2em; }
+    #playlist {
+      height: 382px;
+      clear: both;
+    }
+    #userlist { height: 508px; }
+    #userlist li.current-curator { font-weight: bold; }
+    #userlist .guests { padding: 3px 15px 3px 22px; color: rgb(140,140,140); }
+    .playlist-controls {
+      float: left;
+      margin-right: 5px;
+    }
+    .playlist-controls .score {
+      float: right;
+      margin: 7px 0 0 15px;
+    }
+    .playlist-controls i {
+      display: block;
+      cursor: pointer;
+      opacity: 0.5;
+    }
+    .playlist-controls i:hover, .playlist-controls i.on { opacity: 1; }
+    #playlist-list li {
+      clear: both;
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 0.8em;
+      padding-left: 0.2em;
+    }
+    #playlist-list .track-details { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #playlist-list .remove { cursor: pointer; }
+    .thumbnail-medium {
+      max-height: 2.4em;
+      margin-right: 0.2em;
+    }
+    #search-form .input-block-level { width: 227px; }
+    #add-status { font-size: 0.85em; min-height: 1.2em; margin: 0.3em 0 0; }
+    #screen-one {
+      margin-left: auto;
+      margin-right: auto;
+      height: 295px;
+      background: black;
+      position: relative;
+      overflow: hidden;
+    }
+    #screen-one iframe, #screen-one img {
+      width: 100%;
+      height: 295px;
+      border: 0;
+      display: block;
+      object-fit: cover;
+    }
+    #player-note {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      padding: 0.5em;
+      background: rgba(0,0,0,0.7);
+      text-align: center;
+    }
+    #player-note:empty { display: none; }
+    .chat-container { margin-left: auto; margin-right: auto; }
+    .message { clear: both; }
+    .message abbr.timestamp { font-size: 0.75em; }
+    .message strong[data-role="author"] { cursor: default; }
+    .fadeout-top { box-shadow: inset 0 20px 20px -20px #000000; }
+    #chat-form .input-block-level { width: 464px; }
+    @media (max-width: 1199px) {
+      #chat-form .input-block-level { width: 382px; }
+      .row-fluid [class*="span"].unpadded { width: 614px; }
+      .row-fluid .span3.padded-right {
+        margin-left: 1em;
+        width: calc(100% - 1em);
+      }
+      .row-fluid .span3.padded-right .nav-list { border: 0; }
+      .row-fluid .span3.padded-right .nav-list > li {
+        display: inline-block;
+        margin: 1.5em;
+        border: 0;
+      }
+      .row-fluid .span3.padded-right .nav-list > li a { padding: 0.5em; }
+      .row-fluid .span3.padded-right #userlist { height: auto; }
+    }
+    @media (max-width: 1199px) and (min-width: 980px) {
+      #chat-form .input-block-level { width: 536px; }
+    }
+    @media (max-width: 979px) and (min-width: 768px) {
+      #chat-form .input-block-level { width: 85%; }
+    }
+    @media (max-width: 979px) and (min-width: 945px) {
+      .row-fluid [class*="span"].padded-left {
+        padding-left: 0;
+        width: 290px;
+      }
+    }
+    @media (max-width: 944px) {
+      .row-fluid [class*="span"].padded-left {
+        width: 100%;
+        padding-left: 12px;
+        padding-right: 12px;
+        box-sizing: border-box;
+      }
+      #playlist {
+        height: auto;
+        max-height: 200px;
+      }
+      .row-fluid [class*="span"].unpadded {
+        width: 100%;
+        padding: 0 12px;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      #search-form .input-block-level { width: 90%; }
+    }
+    @media (max-width: 781px) {
+      #chat-form .input-block-level { width: 100%; }
+      #chat-form button {
+        display: block;
+        width: 100%;
+      }
+    }`;
+}
+
+/** @returns {string} */
+function render () {
+  return `<main id="room" hidden>
+        <div id="stage">
+          <div class="row-fluid">
+            <div class="span3 padded-left">
+              <div class="well">
+                <div id="current-track">
+                  <div id="track-info">
+                    <div id="attribution">
+                      <span id="track-curator" class="pull-right"></span>
+                      <a id="track-artist" href="#" target="_blank" rel="noopener noreferrer"></a>
+                    </div>
+                    <a id="track-title" href="#" target="_blank" rel="noopener noreferrer">Nothing is playing</a>
+                  </div>
+                  <div id="track-progress" class="progress active">
+                    <div class="bar" id="track-bar" style="width: 0%;"></div>
+                    <span id="time">00:00</span>
+                  </div>
+                </div>
+
+                <div class="row-fluid track-controls">
+                  <div class="span2">
+                    <a class="btn btn-mini" href="#" id="volume-toggle" title="mute"><i class="icon-white icon-volume-up" id="volume-icon"></i></a>
+                  </div>
+                  <div class="span10">
+                    <input type="range" id="volume" min="0" max="100" value="80" aria-label="Volume">
+                  </div>
+                </div>
+
+                <div class="btn-group sound-controls">
+                  <a class="btn btn-mini" href="#" id="listen"><i class="icon-white icon-play" id="listen-icon"></i> <span id="listen-label">listen</span></a>
+                  <a class="btn btn-mini" href="#" id="skip" hidden><i class="icon-white icon-step-forward"></i> skip</a>
+                </div>
+
+                <div id="playlist">
+                  <h5 style="text-transform: uppercase; margin: 0; margin-top: 5px;">Coming Up Next...</h5>
+                  <ul id="playlist-list" class="nav nav-list"></ul>
+                </div>
+
+                <h5><span class="pull-right" id="queue-length" title="Length of all tracks in the playlist">00:00</span>Add Track</h5>
+                <form id="search-form" class="input-append" style="display: block;">
+                  <input class="input-block-level" type="text" id="search-query" name="song" autocomplete="off" disabled placeholder="sign in to add a track">
+                  <button class="btn" type="submit" id="search-submit" disabled><i class="icon-share-alt"></i></button>
+                </form>
+                <p id="add-status" role="status"></p>
+              </div>
+            </div>
+
+            <div class="span6 unpadded">
+              <div id="screen-one">
+                <div id="player"></div>
+                <p id="player-note"></p>
+              </div>
+              <div class="chat-container">
+                <div id="messages" class="fadeout-top"></div>
+                <form id="chat-form" class="input-append" style="display: block;">
+                  <input class="input-block-level" type="text" id="chat-input" name="text" maxlength="500" autocomplete="off" disabled placeholder="sign in to join the conversation">
+                  <button class="btn" type="submit" id="chat-submit" disabled><i class="icon-share-alt"></i></button>
+                </form>
+              </div>
+            </div>
+
+            <div class="span3 padded-right">
+              <div class="well">
+                <div id="audience">
+                  <h3><small class="pull-right user-count" id="user-count"></small>Users</h3>
+                  <ul class="nav nav-list" id="userlist"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>`;
+}
+
+module.exports = {
+  id: 'room-page',
+  styles,
+  render
+};

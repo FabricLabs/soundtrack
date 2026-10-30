@@ -1,32 +1,472 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>soundtrack.io &bull; music for everyone</title>
-    <link rel="stylesheet" href="tufte.css"/>
-    <link rel="stylesheet" href="latex.css"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta property="og:url" content="https://soundtrack.io" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="soundtrack.io &middot; music for everyone" />
-    <meta property="og:description" content="An experimental collaborative radio." />
-    <meta property="og:image" content="https://soundtrack.io/images/soundtrack.png" />
-  </head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>soundtrack.io | music for all.</title>
+  <meta name="description" content="Listen to music with your friends: rooms with a voted queue, on the web and in Discord voice channels.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="soundtrack.io">
+  <meta property="og:title" content="soundtrack.io | music for all.">
+  <meta property="og:description" content="Listen to music with your friends: rooms with a voted queue, on the web and in Discord voice channels.">
+  <meta property="og:url" content="https://soundtrack.io/">
+  <meta property="og:image" content="https://soundtrack.io/img/soundtrack.png">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/darkstrap-v0.9.0.css">
+  <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+  <style>
+    body {
+      padding-top: 41px;
+      padding-bottom: 40px;
+      background: url('/img/binding_dark.png') rgb(22,22,22);
+      color: rgb(208,208,208);
+    }
+    textarea, input[type="text"], input[type="password"], input[type="number"], input[type="search"], input[type="url"], .uneditable-input {
+      background: rgb(33,33,33);
+      border-radius: 0;
+      border: 0;
+      color: rgb(208,208,208);
+    }
+    input[disabled], input[readonly] { background: rgb(28,28,28); }
+    [hidden] { display: none !important; }
+    .btn { text-shadow: none; }
+    .nav-list { padding: 0; }
+    .nav-list>li {
+      border-top: 1px solid rgb(33,33,33);
+      border-bottom: 1px solid black;
+    }
+    .nav-list>li:hover {
+      border-bottom: 1px solid rgb(22,22,22);
+      background: rgb(33,33,33);
+    }
+    .nav-list>li>a {
+      text-shadow: none;
+      padding: 3px 15px 3px 22px;
+    }
+    .module {
+      background: rgb(22,22,22);
+      padding-top: 19px;
+    }
+    .container.module {
+      box-shadow: rgba(0, 0, 0, 0.8) 0 1px 7px 0px;
+      border-bottom-right-radius: 3px;
+      border-bottom-left-radius: 3px;
+    }
+    .well { padding: 12px; }
+    .content-well { margin: 0 12px 12px; }
+    .messages { margin: 0 12px; }
+    .navbar .brand { padding: 10px 0px 10px; }
+    .navbar a.brand {
+      padding-left: 12px;
+      margin-left: 0;
+    }
+    .navbar a.brand img {
+      max-height: 1em;
+      margin-bottom: -0.2em;
+      vertical-align: top;
+    }
+    .navbar a.brand img:hover {
+      animation: spin 1300ms linear infinite;
+    }
+    .navbar .navbar-text.pull-right { margin-left: 10px; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .user-avatar-small {
+      max-height: 1.2em;
+      margin-right: 0.2em;
+    }
+    .highlight { background: rgb(33,33,33); }
+    .tooltip { pointer-events: none; }
+    footer {
+      font-size: 0.9em;
+      box-shadow: 0px -1px 10px rgba(0, 0, 0, 0.75);
+      border-top: 1px solid rgb(44,44,44);
+      padding: 24px;
+      background: url('/img/txture.png') rgb(22,22,22);
+      border-bottom-right-radius: 3px;
+      border-bottom-left-radius: 3px;
+      margin: -5px;
+    }
+    footer .container { width: auto; }
+    @media (max-width: 979px) {
+      body { padding: 0; }
+      .container {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      footer { margin: 0; }
+    }
+    @media (max-width: 767px) {
+      .navbar-fixed-top, .navbar-fixed-bottom, .navbar-static-top {
+        margin-right: 0;
+        margin-left: 0;
+      }
+    }
 
-  <body>
-    <article>
-      <h1>soundtrack</h1>
-      <p class="subtitle">collaborative music streaming</p>
+    .super-soundtrack {
+      margin-top: -1em;
+      padding: 2em;
+    }
+    .super-soundtrack p {
+      font-size: 1.2em;
+      line-height: 1.75em;
+      max-width: 30em;
+    }
+    .super-soundtrack .hero {
+      max-height: 20em;
+      max-width: 50%;
+      margin-left: 1em;
+    }
+    #room-creation-form { margin: 0 0 1em; }
+    #room-creation-form textarea { width: 100%; box-sizing: border-box; }
+    #rooms-table h3 { line-height: 1.1em; margin: 0; }
+    #rooms-table h5 { margin: 0; }
+    #rooms-table p { margin: 0.6em 0 0; }
+    #rooms-table td:first-child { width: 60%; }
+    @media (max-width: 767px) {
+      .super-soundtrack .hero { display: none; }
+    }
 
-      <section>
-        <h2>Coming Soon&hellip;</h2>
-        <p>We've been working on something we think you'll like.  Come back soon for updates.</p>
-        <p style="text-align: right;">&mdash; <a href="https://www.codingsoundtrack.org">Coding Soundtrack</a></p>
-      </section>
-      
-      <!-- <section>
-        <p>P.S.; curious adventurers are <a href="https://www.roleplaygateway.com/introducing-ink-the-writer-currency-t105820.html#p2164936">always rewarded</a>.
-      </section> -->
-    </article>
-  </body>
+    .row-fluid [class*="span"].unpadded {
+      padding: 0;
+      width: 541px;
+      margin: 0 12px;
+    }
+    .row-fluid [class*="span"].padded-left {
+      padding-left: 12px;
+      width: 302px;
+    }
+    .row-fluid [class*="span"].padded-right {
+      padding-right: 12px;
+      margin-left: 0;
+      width: 302px;
+    }
+    #track-info a:hover { text-decoration: none; }
+    #track-title, #attribution {
+      text-transform: uppercase;
+      font-weight: bold;
+      display: block;
+      height: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #current-track #track-title {
+      height: 1.5em;
+      font-size: 1.5em;
+      line-height: 1.5em;
+    }
+    #track-curator { font-weight: normal; text-transform: none; }
+    #track-progress { position: relative; }
+    #time {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      display: block;
+    }
+    .progress { margin-bottom: 10px; }
+    .track-controls { margin-bottom: 10px; }
+    .track-controls input[type="range"] { width: 100%; margin: 4px 0 0; accent-color: #08c; }
+    .btn-group.sound-controls { margin: 0 0 10px; float: none; }
+    .btn-group.sound-controls .btn {
+      min-height: 0;
+      padding: 0.5em;
+      width: 50%;
+      box-sizing: border-box;
+    }
+    #messages, #playlist, #userlist {
+      height: 262px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-color: rgb(51,51,51) transparent;
+      scrollbar-width: thin;
+    }
+    #messages { padding-bottom: 0.2em; }
+    #playlist {
+      height: 382px;
+      clear: both;
+    }
+    #userlist { height: 508px; }
+    #userlist li.current-curator { font-weight: bold; }
+    #userlist .guests { padding: 3px 15px 3px 22px; color: rgb(140,140,140); }
+    .playlist-controls {
+      float: left;
+      margin-right: 5px;
+    }
+    .playlist-controls .score {
+      float: right;
+      margin: 7px 0 0 15px;
+    }
+    .playlist-controls i {
+      display: block;
+      cursor: pointer;
+      opacity: 0.5;
+    }
+    .playlist-controls i:hover, .playlist-controls i.on { opacity: 1; }
+    #playlist-list li {
+      clear: both;
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 0.8em;
+      padding-left: 0.2em;
+    }
+    #playlist-list .track-details { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #playlist-list .remove { cursor: pointer; }
+    .thumbnail-medium {
+      max-height: 2.4em;
+      margin-right: 0.2em;
+    }
+    #search-form .input-block-level { width: 227px; }
+    #add-status { font-size: 0.85em; min-height: 1.2em; margin: 0.3em 0 0; }
+    #screen-one {
+      margin-left: auto;
+      margin-right: auto;
+      height: 295px;
+      background: black;
+      position: relative;
+      overflow: hidden;
+    }
+    #screen-one iframe, #screen-one img {
+      width: 100%;
+      height: 295px;
+      border: 0;
+      display: block;
+      object-fit: cover;
+    }
+    #player-note {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      padding: 0.5em;
+      background: rgba(0,0,0,0.7);
+      text-align: center;
+    }
+    #player-note:empty { display: none; }
+    .chat-container { margin-left: auto; margin-right: auto; }
+    .message { clear: both; }
+    .message abbr.timestamp { font-size: 0.75em; }
+    .message strong[data-role="author"] { cursor: default; }
+    .fadeout-top { box-shadow: inset 0 20px 20px -20px #000000; }
+    #chat-form .input-block-level { width: 464px; }
+    @media (max-width: 1199px) {
+      #chat-form .input-block-level { width: 382px; }
+      .row-fluid [class*="span"].unpadded { width: 614px; }
+      .row-fluid .span3.padded-right {
+        margin-left: 1em;
+        width: calc(100% - 1em);
+      }
+      .row-fluid .span3.padded-right .nav-list { border: 0; }
+      .row-fluid .span3.padded-right .nav-list > li {
+        display: inline-block;
+        margin: 1.5em;
+        border: 0;
+      }
+      .row-fluid .span3.padded-right .nav-list > li a { padding: 0.5em; }
+      .row-fluid .span3.padded-right #userlist { height: auto; }
+    }
+    @media (max-width: 1199px) and (min-width: 980px) {
+      #chat-form .input-block-level { width: 536px; }
+    }
+    @media (max-width: 979px) and (min-width: 768px) {
+      #chat-form .input-block-level { width: 85%; }
+    }
+    @media (max-width: 979px) and (min-width: 945px) {
+      .row-fluid [class*="span"].padded-left {
+        padding-left: 0;
+        width: 290px;
+      }
+    }
+    @media (max-width: 944px) {
+      .row-fluid [class*="span"].padded-left {
+        width: 100%;
+        padding-left: 12px;
+        padding-right: 12px;
+        box-sizing: border-box;
+      }
+      #playlist {
+        height: auto;
+        max-height: 200px;
+      }
+      .row-fluid [class*="span"].unpadded {
+        width: 100%;
+        padding: 0 12px;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      #search-form .input-block-level { width: 90%; }
+    }
+    @media (max-width: 781px) {
+      #chat-form .input-block-level { width: 100%; }
+      #chat-form button {
+        display: block;
+        width: 100%;
+      }
+    }
+  </style>
+  <script src="/scripts/soundtrack.js?v=538cc96e132c" defer></script>
+</head>
+<body>
+  <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" id="nav-toggle" aria-label="Menu">
+            <i class="icon-bar"></i>
+            <i class="icon-bar"></i>
+            <i class="icon-bar"></i>
+          </button>
+          <a class="brand" href="/" title="browse all rooms"><img src="/favicon.ico" alt=""></a>
+          <a class="brand" href="/" id="brand-name">soundtrack.io</a>
+          <div class="nav-collapse collapse" id="nav-collapse">
+            <ul class="nav">
+              <li id="nav-rooms"><a href="/" title="browse all rooms">Rooms</a></li>
+            </ul>
+            <ul class="nav pull-right" id="session"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container module">
+      <div class="messages" id="flash"></div>
+
+      <main id="home" hidden>
+        <div class="well content-well">
+          <img class="pull-right hero" src="/img/soundtrack.gif" alt="">
+          <div class="super-soundtrack">
+            <h1>Music for everyone.</h1>
+            <h2>Listen to music with your friends.</h2>
+            <p><strong>soundtrack.io</strong> is an <em>experimental</em> Internet radio platform. Vote on what plays next, like Reddit for music. We aggregate streams from sources like YouTube and SoundCloud, so when you pick a song, <em>it just plays</em> &mdash; on this page, and in your Discord voice channels.</p>
+            <p>We&rsquo;re also <a href="https://github.com/FabricLabs/soundtrack">completely open-source</a> and non-commercial.</p>
+            <p><a class="btn btn-large" id="get-started" href="#" hidden>Get Started &raquo;</a></p>
+            <div class="clearfix"></div>
+          </div>
+
+          <hr>
+
+          <form id="room-creation-form" hidden>
+            <label for="new-room-name">Name</label>
+            <input type="text" id="new-room-name" name="name" maxlength="64" required>
+            <label for="new-room-description">Description</label>
+            <textarea id="new-room-description" name="description" maxlength="280" rows="3"></textarea>
+            <div><input class="btn" type="submit" value="create &raquo;"> <span id="room-status"></span></div>
+          </form>
+
+          <a class="btn pull-right" href="#" id="create-room" hidden>create your own &raquo;</a>
+          <h3><span id="room-count">0 Rooms</span> <small>with <strong id="listener-total">0</strong> active listeners</small></h3>
+
+          <table class="table" id="rooms-table">
+            <thead>
+              <tr>
+                <td>Room</td>
+                <td>Currently</td>
+                <td>Listeners</td>
+              </tr>
+            </thead>
+            <tbody id="rooms"></tbody>
+          </table>
+        </div>
+      </main>
+
+      <main id="missing" hidden>
+        <div class="well content-well">
+          <h1>No such room!</h1>
+          <p>We couldn&rsquo;t find that room. <a href="/">Browse every room &raquo;</a></p>
+        </div>
+      </main>
+<main id="room" hidden>
+        <div id="stage">
+          <div class="row-fluid">
+            <div class="span3 padded-left">
+              <div class="well">
+                <div id="current-track">
+                  <div id="track-info">
+                    <div id="attribution">
+                      <span id="track-curator" class="pull-right"></span>
+                      <a id="track-artist" href="#" target="_blank" rel="noopener noreferrer"></a>
+                    </div>
+                    <a id="track-title" href="#" target="_blank" rel="noopener noreferrer">Nothing is playing</a>
+                  </div>
+                  <div id="track-progress" class="progress active">
+                    <div class="bar" id="track-bar" style="width: 0%;"></div>
+                    <span id="time">00:00</span>
+                  </div>
+                </div>
+
+                <div class="row-fluid track-controls">
+                  <div class="span2">
+                    <a class="btn btn-mini" href="#" id="volume-toggle" title="mute"><i class="icon-white icon-volume-up" id="volume-icon"></i></a>
+                  </div>
+                  <div class="span10">
+                    <input type="range" id="volume" min="0" max="100" value="80" aria-label="Volume">
+                  </div>
+                </div>
+
+                <div class="btn-group sound-controls">
+                  <a class="btn btn-mini" href="#" id="listen"><i class="icon-white icon-play" id="listen-icon"></i> <span id="listen-label">listen</span></a>
+                  <a class="btn btn-mini" href="#" id="skip" hidden><i class="icon-white icon-step-forward"></i> skip</a>
+                </div>
+
+                <div id="playlist">
+                  <h5 style="text-transform: uppercase; margin: 0; margin-top: 5px;">Coming Up Next...</h5>
+                  <ul id="playlist-list" class="nav nav-list"></ul>
+                </div>
+
+                <h5><span class="pull-right" id="queue-length" title="Length of all tracks in the playlist">00:00</span>Add Track</h5>
+                <form id="search-form" class="input-append" style="display: block;">
+                  <input class="input-block-level" type="text" id="search-query" name="song" autocomplete="off" disabled placeholder="sign in to add a track">
+                  <button class="btn" type="submit" id="search-submit" disabled><i class="icon-share-alt"></i></button>
+                </form>
+                <p id="add-status" role="status"></p>
+              </div>
+            </div>
+
+            <div class="span6 unpadded">
+              <div id="screen-one">
+                <div id="player"></div>
+                <p id="player-note"></p>
+              </div>
+              <div class="chat-container">
+                <div id="messages" class="fadeout-top"></div>
+                <form id="chat-form" class="input-append" style="display: block;">
+                  <input class="input-block-level" type="text" id="chat-input" name="text" maxlength="500" autocomplete="off" disabled placeholder="sign in to join the conversation">
+                  <button class="btn" type="submit" id="chat-submit" disabled><i class="icon-share-alt"></i></button>
+                </form>
+              </div>
+            </div>
+
+            <div class="span3 padded-right">
+              <div class="well">
+                <div id="audience">
+                  <h3><small class="pull-right user-count" id="user-count"></small>Users</h3>
+                  <ul class="nav nav-list" id="userlist"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <div class="container">
+          <p>&#9835; soundtrack.io is a collaborative online jukebox. It&rsquo;s a way to listen to music with your friends, here or in a Discord voice channel. It&rsquo;s also <a href="https://github.com/FabricLabs/soundtrack">open-source</a>.</p>
+          <div class="row-fluid">
+            <div class="span6">
+              <a class="btn btn-default" href="/">Browse Rooms &raquo;</a>
+            </div>
+            <div class="span6">
+              <a href="https://github.com/FabricLabs/soundtrack">Source</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+</body>
 </html>

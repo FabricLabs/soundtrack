@@ -1,60 +1,69 @@
 {
   "name": "@fabric/soundtrack",
-  "version": "0.2.0",
-  "description": "experimental music streaming",
-  "repository": "git@github.com:FabricLabs/soundtrack.git",
-  "main": "scripts/cli.js",
-  "preferGlobal": true,
-  "engines": {
-    "node": "~12.16"
+  "version": "0.3.0",
+  "description": "Listen to music together: rooms with a voted queue, on the web and in Discord voice channels.",
+  "main": "scripts/node.js",
+  "exports": {
+    ".": "./scripts/node.js",
+    "./services/*": "./services/*.js",
+    "./functions/*": "./functions/*.js",
+    "./package.json": "./package.json"
   },
   "bin": {
-    "soundtrack": "./scripts/cli.js"
+    "soundtrack": "./scripts/node.js"
+  },
+  "engines": {
+    "node": "26.12.1",
+    "npm": ">=12"
   },
   "scripts": {
-    "cli": "node scripts/cli.js",
-    "coverage": "nyc npm test",
-    "docs": "npm run make:docs && ecstatic docs",
-    "edge": "node scripts/http.js",
-    "make:coverage": "nyc report --reporter html",
-    "make:coverage:raw": "nyc report --reporter=text-lcov > reports/coverage.lcov",
-    "make:api": "jsdoc2md --configure jsdoc.json --files types/** node_modules/@fabric/core/types/{interface,chain,state}.js README.md > API.md",
-    "make:docs": "npm run make:api && node_modules/.bin/jsdoc -c jsdoc.json types API.md node_modules/@fabric/core/types/{interface,chain,state}.js -d docs/ && glob-run js-beautify --indent-size 2 -r docs/*.html",
-    "report:coverage": "nmp run make:coverage:raw && codecov",
-    "review:coverage": "npm run make:coverage && ecstatic reports/coverage",
-    "server": "node scripts/server.js",
-    "start": "node scripts/cli.js",
-    "test": "mocha tests"
+    "start": "node scripts/node.js",
+    "build": "node scripts/build.js",
+    "test": "NODE_ENV=test mocha --timeout 20000 tests",
+    "coverage": "NODE_ENV=test c8 npm test",
+    "lint": "eslint .",
+    "link:fabric": "node scripts/link-fabric.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FabricLabs/soundtrack.git"
   },
   "keywords": [
+    "discord",
     "fabric",
-    "bitcoin",
+    "jukebox",
+    "music",
     "soundtrack"
   ],
-  "author": "Fabric Labs",
+  "author": "Fabric Labs <labs@fabric.pub> (https://labs.fabric.pub)",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FabricLabs/soundtrack/issues"
+  },
+  "homepage": "https://github.com/FabricLabs/soundtrack#readme",
   "dependencies": {
-    "@fabric/core": "martindale/fabric#peering-wallet",
-    "@fabric/http": "martindale/web#forge-demo-develop",
-    "blessed": "^0.1.81",
-    "canvas": "^2.6.1",
-    "commander": "^6.1.0"
+    "@fabric/core": "FabricLabs/fabric#feature/passport-v2",
+    "@fabric/discord": "FabricLabs/fabric-discord#feature/channels",
+    "@fabric/doorman": "FabricLabs/doorman#feature/channels",
+    "@fabric/http": "FabricLabs/fabric-http#feature/passport-v2"
   },
   "devDependencies": {
-    "codecov": "^3.8.0",
-    "ecstatic": "^4.1.4",
-    "glob-run": "^0.1.7",
-    "js-beautify": "^1.13.0",
-    "jsdoc": "FabricLabs/jsdoc#fabric",
-    "jsdoc-to-markdown": "^6.0.1",
-    "mocha": "^8.1.3",
-    "nyc": "^15.1.0"
+    "c8": "12.0.0",
+    "eslint": "10.13.0",
+    "mocha": "12.0.3",
+    "neostandard": "0.14.1"
   },
-  "nyc": {
-    "exclude": [
-      "tests"
+  "allowScripts": {
+    "classic-level": true,
+    "classic-level@3.0.0": true,
+    "zeromq": true,
+    "zeromq@6.8.0": true
+  },
+  "c8": {
+    "include": [
+      "functions",
+      "services"
     ],
-    "report-dir": "./reports/coverage",
-    "temp-dir": "./reports/nyc"
+    "report-dir": "./reports/coverage"
   }
 }

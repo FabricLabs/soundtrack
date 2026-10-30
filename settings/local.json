@@ -1,7 +1,0 @@
-{
-  "earn": false,
-  "port": 15005,
-  "services": [
-    "matrix"
-  ]
-}
