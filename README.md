@@ -19,6 +19,31 @@ Through [Doorman][doorman], the bot joins a Discord voice channel and plays the
 room there, with slash commands to add, vote, and skip, and a now-playing post
 in the channel you choose.
 
+### A room never goes quiet
+When the queue runs out and someone is listening (on the page, in Discord
+voice, or on the room's stream), the auto-DJ plays a song people chose in that
+room before, at random, skipping anything played there in the last three hours
+and anything banned. Its picks are labelled as such and credit nobody.
+
+### Rooms with owners and moderators
+Whoever makes a room owns it: they set its description, its rules (who may
+add songs, who may skip, who may take songs out), whether the auto-DJ plays,
+and its moderators. Moderators ban songs (out of the queue and the auto-DJ,
+skipped if playing) and listeners (their waiting songs go; they can't add,
+vote, or chat there). Accounts in `SOUNDTRACK_ADMINS` moderate every room.
+
+### Listener pages and sets
+Every listener has a page: the songs they chose most, what they played lately,
+their sets, and the rooms they run. A set is a named list of songs to queue in
+any room, one at a time or all at once; any song in a room's history can be
+saved to a set or queued again.
+
+### Listen anywhere, scrobble to Last.fm
+Each room is also an endless MP3 stream for any player, radio app, or speaker
+that takes a URL, following the room's clock and silent while it is idle.
+Listeners who link Last.fm see each song as now playing there while they have
+the room open, and it is scrobbled once they have heard enough of it.
+
 ## Quick Start
 Requires Node.js 26.12.1 (`.nvmrc`), [yt-dlp][yt-dlp], and ffmpeg (with
 ffprobe) on the `PATH`.
@@ -57,7 +82,11 @@ overrides them when present. Secrets come from the environment:
 | `SOUNDTRACK_PORT` / `SOUNDTRACK_INTERFACE` | HTTP port (15005) and bind address (`127.0.0.1`). |
 | `SOUNDTRACK_STORE` | Fabric Store directory (`stores/soundtrack`). |
 | `SOUNDTRACK_ROOM` / `SOUNDTRACK_ROOM_NAME` | Room made on start, which Discord servers play until someone picks another (`lobby`). |
-| `SOUNDTRACK_YTDLP` / `SOUNDTRACK_FFPROBE` / `SOUNDTRACK_FFMPEG` | Paths to the tools. |
+| `SOUNDTRACK_YTDLP` / `SOUNDTRACK_FFPROBE` / `SOUNDTRACK_FFMPEG` | Paths to the tools (ffmpeg plays Discord voice and the room streams). |
+| `SOUNDTRACK_ADMINS` | Comma list of account keys (`fabric:<pubkey>`, `discord:<id>`) that moderate every room. |
+| `SOUNDTRACK_AUTOPLAY` | `0` turns the auto-DJ off everywhere (owners can also turn it off per room). |
+| `SOUNDTRACK_STREAM` / `SOUNDTRACK_STREAM_MAX` | `0` turns the room streams off; most stream listeners across every room (200). |
+| `LASTFM_API_KEY` / `LASTFM_API_SECRET` | A [Last.fm API account][lastfm-api]; turns on scrobbling. Its callback is `<SOUNDTRACK_URL>/services/soundtrack/lastfm/callback`. |
 
 ## Discord
 Invite the bot with the `bot applications.commands` scopes and the View
@@ -72,7 +101,7 @@ application can be shared with other bots.
 | `/queue` | What is playing and the next ten (only you see it). |
 | `/np` | What is playing now. |
 | `/vote song up\|down\|clear` | Vote on an upcoming song (the song autocompletes). |
-| `/skip` | Whoever added the song, or anyone who can manage channels, skips it. Listeners in the bot's voice channel vote to skip; more than half skips. |
+| `/skip` | Whoever the room's rules allow (by default whoever added the song, and its moderators), or anyone who can manage channels, skips it. Listeners in the bot's voice channel vote to skip; more than half skips. |
 | `/join [channel] [room]` | Play in your voice channel (or the one named) and post songs in this text channel; pick another room. Moving the bot away from listeners needs Manage Channels. |
 | `/leave` | Stop playing in voice. Others still listening need someone who can manage channels. |
 
@@ -81,25 +110,35 @@ marked down and the room moves on.
 
 ## API
 JSON under `/services/soundtrack`. Writes need a Passport session, a JSON body,
-and no foreign `Origin`. Responses carry display names only, never keys or
-Discord ids.
+and no foreign `Origin`. Responses carry display names and listener ids (16
+hex characters, not derived from any key without the server's secret) only,
+never keys or Discord ids.
 
 | Route | |
 |-------|--|
 | `GET /services/soundtrack` | Rooms and what each plays. |
-| `GET /services/soundtrack/session` | `{ user, passport }` (`passport`: sign-in is available). |
+| `GET /services/soundtrack/session` | `{ user: { id, name, person }, passport, lastfm }` (`passport`: sign-in is available; `lastfm`: null when scrobbling is off, else `{ linked }`). |
 | `POST /services/soundtrack/passport/challenges` | A Passport challenge for this origin; sets the HttpOnly binding cookie. |
 | `POST /services/soundtrack/passport { assertion }` | Redeem the signed assertion (once, with that cookie): `{ user, named }`. |
 | `PATCH /services/soundtrack/session { name }`, `POST …/logout` | Change your display name; sign out. |
-| `POST /services/soundtrack/rooms { name, description? }` | Make a room. |
-| `GET /services/soundtrack/rooms/<slug>` | The room: current song and position, the queue in play order (with your votes and entries). |
-| `GET /services/soundtrack/rooms/<slug>/events` | Server-Sent Events: `queue`, `play`, `idle`, `chat`, `listeners` (`{ count, names }`: signed-in display names, guests counted). |
-| `POST /services/soundtrack/rooms/<slug>/queue { song }` | Add a song. |
+| `POST /services/soundtrack/rooms { name, description? }` | Make a room (you own it). |
+| `GET /services/soundtrack/rooms/<slug>` | The room: current song and position, the queue in play order, owner, moderators, rules, `stream`, and `you` (`role`, `canAdd`, `canSkip`); moderators also get its `bans`. |
+| `PATCH /services/soundtrack/rooms/<slug> { name?, description?, permissions?, autoplay? }` | Owner or moderator. `permissions`: `add` `everyone \| moderators`, `skip` `curator \| everyone \| moderators`, `remove` `curator \| moderators` (defaults `everyone`, `curator`, `curator`). |
+| `POST …/moderators { person }`, `DELETE …/moderators/<person>` | Owner: choose moderators by listener id. |
+| `POST …/bans { track \| person }`, `DELETE …/bans/tracks/<id>`, `DELETE …/bans/people/<person>` | Moderators: ban and unban songs and listeners. |
+| `GET /services/soundtrack/rooms/<slug>/events` | Server-Sent Events: `queue`, `play`, `idle`, `chat`, `room`, `listeners` (`{ count, names, people }`: signed-in display names and listener ids, guests and stream listeners counted). |
+| `GET /services/soundtrack/rooms/<slug>/stream` | The room as `audio/mpeg` (404 when streams are off). |
+| `POST /services/soundtrack/rooms/<slug>/queue { song \| track \| set }` | Add a link or search, a known song by id, or every song of a set (`{ added, skipped }`). |
 | `POST …/queue/<entry>/votes { vote: 1 \| -1 \| 0 }` | Vote. |
-| `DELETE …/queue/<entry>` | Take out your own song. |
-| `POST …/skip` | Skip the current song, if you added it. |
+| `DELETE …/queue/<entry>` | Take a song out, as the room's rules allow. |
+| `POST …/skip` | Skip the current song, as the room's rules allow. |
 | `GET\|POST …/chat`, `GET …/plays` | Chat and play history. |
 | `GET /services/soundtrack/tracks/<id>` | A track and how often it played. |
+| `GET /services/soundtrack/people/<person>` | A listener's page: name, top songs, recent plays, sets, rooms they run; on your own, `you` and `lastfm`. |
+| `POST /services/soundtrack/sets { name, description? }` | Make a set. |
+| `GET\|PATCH\|DELETE /services/soundtrack/sets/<id>` | A set and its songs; its owner renames or deletes it. |
+| `POST …/sets/<id>/tracks { song \| track }`, `DELETE …/sets/<id>/tracks/<track>` | Its owner adds and removes songs. |
+| `GET /services/soundtrack/lastfm/connect`, `GET …/lastfm/callback`, `DELETE …/lastfm` | Link Last.fm (a state cookie ties the callback to your session) and unlink it. |
 
 ## Development
 ```
@@ -110,9 +149,11 @@ npm run link:fabric        # use ../fabric-clean, ../fabric-http, ../fabric-disc
 npm run link:fabric -- doorman
 ```
 
-Code lives in `functions/` (pure: sources, queue order, ids), `services/`
-(`soundtrack.js` rooms and the room clock in a Fabric Store, `resolver.js`
-yt-dlp, `discord.js` the Doorman plugin, `web.js` the HTTP API), and
+Code lives in `functions/` (pure: sources, queue order, ids, Last.fm
+signatures), `services/` (`soundtrack.js` rooms, the room clock, the auto-DJ,
+listeners, and sets in a Fabric Store, `resolver.js` yt-dlp, `discord.js` the
+Doorman plugin, `broadcast.js` the room streams, `lastfm.js` scrobbling,
+`web.js` the HTTP API), and
 `components/` (the web UI). `scripts/node.js` wires them to an `@fabric/http`
 server and, with a bot token, a Doorman host.
 
@@ -146,6 +187,7 @@ Based on ideas from @chrisinajar's `hivemind` project on the original turntable.
 [doorman]: https://github.com/FabricLabs/doorman
 [passport]: https://github.com/FabricLabs/fabric-browser-extension
 [yt-dlp]: https://github.com/yt-dlp/yt-dlp
+[lastfm-api]: https://www.last.fm/api/account/create
 [badge-contributors]: https://img.shields.io/github/contributors/FabricLabs/soundtrack.svg?style=flat-square
 [badge-community]: https://img.shields.io/matrix/soundtrack:fabric.pub.svg?style=flat-square
 [contributor-list]: https://github.com/FabricLabs/soundtrack/graphs/contributors

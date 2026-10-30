@@ -26,6 +26,8 @@ async function main (settings = loadSettings()) {
   const Resolver = require('../services/resolver');
   const Soundtrack = require('../services/soundtrack');
   const SoundtrackWeb = require('../services/web');
+  const Broadcast = require('../services/broadcast');
+  const LastFM = require('../services/lastfm');
   const SoundtrackApp = require('../components/SoundtrackApp');
   const assetCache = require('../functions/assetCache');
 
@@ -36,12 +38,23 @@ async function main (settings = loadSettings()) {
     path: path.resolve(ROOT, settings.store.path),
     room: settings.room,
     queue: settings.queue,
+    admins: settings.admins,
+    autoplay: settings.autoplay,
     resolver: new Resolver(settings.resolver)
   });
   soundtrack.on('error', (error) => warn(error && error.message ? error.message : error));
   await soundtrack.start();
 
-  const web = new SoundtrackWeb({ soundtrack, siteUrl: settings.siteUrl, passport: settings.passport });
+  const ffmpeg = settings.ffmpeg || 'ffmpeg';
+  const stream = settings.stream || {};
+  const broadcast = stream.enabled === false
+    ? null
+    : new Broadcast({ soundtrack, ffmpeg, bitrate: stream.bitrate, maxListeners: stream.maxListeners }).start();
+  let web = null;
+  const lastfm = new LastFM({ soundtrack, ...settings.lastfm, present: (room) => (web ? web.present(room) : []) }).start();
+  if (lastfm.enabled) log('Last.fm scrobbling enabled');
+
+  web = new SoundtrackWeb({ soundtrack, siteUrl: settings.siteUrl, passport: settings.passport, broadcast, lastfm });
   web.start();
 
   const http = new HTTPServer({
@@ -75,7 +88,7 @@ async function main (settings = loadSettings()) {
       discord: {
         token: settings.discord.token,
         intents: DISCORD_INTENTS,
-        ffmpeg: settings.discord.ffmpeg,
+        ffmpeg,
         voiceIdleMs: settings.discord.voiceIdleMs
       }
     });
@@ -91,6 +104,8 @@ async function main (settings = loadSettings()) {
   const stop = async () => {
     if (doorman) await doorman.stop().catch((error) => warn(error.message));
     web.stop();
+    if (broadcast) broadcast.stop();
+    lastfm.stop();
     await http.stop().catch((error) => warn(error.message));
     await soundtrack.stop();
   };

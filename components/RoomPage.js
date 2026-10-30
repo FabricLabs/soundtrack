@@ -68,6 +68,18 @@ function styles () {
     }
     #userlist { height: 508px; }
     #userlist li.current-curator { font-weight: bold; }
+    #userlist .user-actions { float: right; margin: 3px 8px 0 0; }
+    #userlist .user-actions i, #playlist-list .mod i { cursor: pointer; opacity: 0.5; }
+    #userlist .user-actions i:hover, #playlist-list .mod i:hover { opacity: 1; }
+    .room-description { margin: 0 12px 12px; }
+    #room-settings { margin-bottom: 12px; }
+    #room-settings textarea, #room-settings input[type="text"] { width: 100%; box-sizing: border-box; }
+    #room-settings ul li { padding: 2px 0; }
+    #room-settings ul a { margin-left: 0.5em; }
+    .save-controls { margin: 0 0 10px; }
+    .save-controls select { width: 140px; margin: 0; }
+    .room-links { font-size: 0.85em; margin: 0 0 10px; }
+    .muted-row { opacity: 0.6; }
     #userlist .guests { padding: 3px 15px 3px 22px; color: rgb(140,140,140); }
     .playlist-controls {
       float: left;
@@ -189,6 +201,48 @@ function styles () {
 /** @returns {string} */
 function render () {
   return `<main id="room" hidden>
+        <div class="alert alert-info room-description" id="room-description" hidden></div>
+        <form class="well content-well" id="room-settings" hidden>
+          <h3><a class="close" href="#" id="room-settings-close" title="close">&times;</a>Room settings</h3>
+          <div class="row-fluid">
+            <div class="span6">
+              <label for="room-settings-name">Name</label>
+              <input type="text" id="room-settings-name" name="name" maxlength="64" required>
+              <label for="room-settings-description">Description</label>
+              <textarea id="room-settings-description" name="description" maxlength="280" rows="3"></textarea>
+              <div id="room-rules">
+                <label for="room-rule-add">Who may add songs</label>
+                <select id="room-rule-add" name="add">
+                  <option value="everyone">everyone</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label for="room-rule-skip">Who may skip</label>
+                <select id="room-rule-skip" name="skip">
+                  <option value="curator">whoever added it</option>
+                  <option value="everyone">everyone</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label for="room-rule-remove">Who may take songs out of the queue</label>
+                <select id="room-rule-remove" name="remove">
+                  <option value="curator">whoever added it</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label class="checkbox"><input type="checkbox" id="room-autoplay" name="autoplay"> Auto-DJ: when the queue runs out, play songs people chose here before</label>
+              </div>
+              <div><input class="btn btn-primary" type="submit" value="save &raquo;"> <span id="room-settings-status"></span></div>
+            </div>
+            <div class="span6">
+              <h4>Owner</h4>
+              <p id="room-owner"></p>
+              <h4>Moderators</h4>
+              <ul class="unstyled" id="room-moderators"></ul>
+              <h4>Banned songs</h4>
+              <ul class="unstyled" id="room-banned-tracks"></ul>
+              <h4>Banned listeners</h4>
+              <ul class="unstyled" id="room-banned-people"></ul>
+            </div>
+          </div>
+        </form>
         <div id="stage">
           <div class="row-fluid">
             <div class="span3 padded-left">
@@ -220,6 +274,18 @@ function render () {
                   <a class="btn btn-mini" href="#" id="listen"><i class="icon-white icon-play" id="listen-icon"></i> <span id="listen-label">listen</span></a>
                   <a class="btn btn-mini" href="#" id="skip" hidden><i class="icon-white icon-step-forward"></i> skip</a>
                 </div>
+
+                <form class="form-inline save-controls" id="save-form" hidden>
+                  <select id="save-set" aria-label="Set to save the song to"></select>
+                  <button class="btn btn-mini" type="submit" title="save what is playing to a set"><i class="icon-white icon-plus"></i> save</button>
+                  <a class="btn btn-mini btn-danger" href="#" id="ban-current" title="ban this song from the room" hidden><i class="icon-white icon-ban-circle"></i> ban</a>
+                </form>
+
+                <p class="room-links">
+                  <a href="#" id="room-history">history</a>
+                  <span id="room-stream-link" hidden>&middot; <a href="#" id="room-stream" title="this room as an MP3 stream, for any player">stream</a></span>
+                  <span id="room-settings-link" hidden>&middot; <a href="#" id="room-settings-open">settings</a></span>
+                </p>
 
                 <div id="playlist">
                   <h5 style="text-transform: uppercase; margin: 0; margin-top: 5px;">Coming Up Next...</h5>

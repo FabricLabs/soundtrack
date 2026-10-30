@@ -30,6 +30,12 @@ function describe (track) {
   return `${title}${track.artist ? ` by ${escape(track.artist)}` : ''} (${clock(track.duration)})`;
 }
 
+// Who chose a song: a name, or the auto-DJ.
+function credit (curator, auto) {
+  if (auto) return ', picked by the auto-DJ';
+  return curator ? `, added by ${escape(curator)}` : '';
+}
+
 function errorReply (error) {
   return { content: error && error.status ? error.message : 'That did not work.', ephemeral: true };
 }
@@ -60,6 +66,7 @@ class SoundtrackDiscord extends EventEmitter {
     this.present = new Map();
     this.skipVotes = new Map();
     this._listeners = [];
+    this._removeAudience = null;
 
     const song = { name: 'song', type: 'string', description: 'An upcoming song', required: true, autocomplete: true };
     this.chatCommands = {
@@ -119,6 +126,7 @@ class SoundtrackDiscord extends EventEmitter {
       emitter.on(event, fn);
       this._listeners.push([emitter, event, fn]);
     };
+    if (this.soundtrack) this._removeAudience = this.soundtrack.addAudience((room) => this._audience(room));
     on(doorman, 'join', (event) => this._enter(event.user, event.channel));
     on(doorman, 'part', (event) => this._exit(event.user, event.channel));
     on(doorman, 'presence', (event) => {
@@ -149,6 +157,8 @@ class SoundtrackDiscord extends EventEmitter {
   async stop () {
     for (const [emitter, event, fn] of this._listeners) emitter.removeListener(event, fn);
     this._listeners = [];
+    if (this._removeAudience) this._removeAudience();
+    this._removeAudience = null;
     return this;
   }
 
@@ -162,6 +172,18 @@ class SoundtrackDiscord extends EventEmitter {
     for (const [other, users] of this.present) if (other !== channel) users.delete(user);
     if (!this.present.has(channel)) this.present.set(channel, new Set());
     this.present.get(channel).add(user);
+    for (const binding of this.bindings.values()) {
+      if (binding.voice === channel) this.soundtrack.wake(binding.room).catch((error) => this._error(error));
+    }
+  }
+
+  // How many hear a room in the voice channels it plays in.
+  _audience (room) {
+    let count = 0;
+    for (const binding of this.bindings.values()) {
+      if (binding.room === room && binding.voice) count += this.listeners(binding.voice).length;
+    }
+    return count;
   }
 
   _exit (user, channel) {
@@ -210,7 +232,7 @@ class SoundtrackDiscord extends EventEmitter {
     const jobs = [];
     for (const binding of this.bindings.values()) {
       if (binding.room !== event.room) continue;
-      if (binding.text) this._post(binding.text, `Now playing ${describe(event.track)}${event.entry.curator ? `, added by ${escape(event.entry.curator.name)}` : ''}`);
+      if (binding.text) this._post(binding.text, `Now playing ${describe(event.track)}${credit(event.entry.curator && event.entry.curator.name, event.entry.auto)}`);
       if (binding.voice) jobs.push(this._playIn(binding, event.room, event.entry.id, event.track, event.startedAt));
     }
     await Promise.all(jobs);
@@ -334,7 +356,7 @@ class SoundtrackDiscord extends EventEmitter {
       const current = view.current;
       return {
         content: `Now playing ${describe(current.track)}, ${clock(current.position)} in` +
-          `${current.curator ? `, added by ${escape(current.curator)}` : ''}.${this._link(room)}`
+          `${credit(current.curator, current.auto)}.${this._link(room)}`
       };
     } catch (error) {
       return errorReply(error);
@@ -374,11 +396,11 @@ class SoundtrackDiscord extends EventEmitter {
       const view = await this.soundtrack.room(room, caller);
       if (!view.current) return { content: 'Nothing is playing.', ephemeral: true };
       const binding = this.binding(invocation.guild);
-      let allowed = view.current.mine || this._canManage(invocation);
+      let allowed = (view.you && view.you.canSkip) || this._canManage(invocation);
       let tally = '';
       if (!allowed) {
         if (!binding || !binding.voice || invocation.voice !== binding.voice) {
-          return { content: 'Only whoever added this song or someone who can manage channels can skip it; listeners in the voice channel can vote to.', ephemeral: true };
+          return { content: 'Only whoever added this song, the room\'s moderators, or someone who can manage channels can skip it; listeners in the voice channel can vote to.', ephemeral: true };
         }
         const listeners = this.listeners(binding.voice);
         let votes = this.skipVotes.get(room);
@@ -442,6 +464,7 @@ class SoundtrackDiscord extends EventEmitter {
       return { content: `Could not join that channel: ${error.message}`, ephemeral: true };
     }
     if (view.current) await this._playIn(binding, room, view.current.id, view.current.track, view.current.startedAt);
+    else if (await this.soundtrack.wake(room).catch(() => false)) view = await this.soundtrack.room(room);
     const playing = view.current ? ` Playing ${describe(view.current.track)}.` : ' The queue is empty; add something with /play.';
     return { content: `Playing **${escape(view.name)}** in <#${voice.split('/')[2]}>, songs posted here.${playing}` };
   }

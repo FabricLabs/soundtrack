@@ -7,6 +7,9 @@ const BASE = '/services/soundtrack';
 const SESSION_COOKIE = 'soundtrack.session';
 const PASSPORT_COOKIE = 'soundtrack.passport';
 const PASSPORT_PATH = `${BASE}/passport`;
+const LASTFM_COOKIE = 'soundtrack.lastfm';
+const LASTFM_PATH = `${BASE}/lastfm`;
+const LASTFM_STATE_MS = 10 * 60 * 1000;
 const PASSPORT_PURPOSE = 'Sign in to add songs, vote, and chat.';
 const CHALLENGE_MS = 2 * 60 * 1000;
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -87,7 +90,11 @@ async function readBody (req) {
  * they pick here. Challenges are issued only for pinned origins, and the
  * binding secret that redeems one lives in an HttpOnly cookie. Sessions are
  * random tokens in an HttpOnly cookie, kept (hashed) in the Soundtrack Store.
- * Responses carry display names only.
+ * Responses carry display names and listener ids only, never account keys.
+ *
+ * Also serves listener pages, sets, room moderation, each room's MP3 stream
+ * (with `broadcast`), and Last.fm linking (with `lastfm`). Pages with a room
+ * open count as its audience, so the auto-DJ plays for them.
  */
 class SoundtrackWeb {
   /**
@@ -97,6 +104,8 @@ class SoundtrackWeb {
    * @param {Object} [settings.passport]
    * @param {string[]} [settings.passport.origins] Origins Passport sign-in is offered on (default `siteUrl`; any loopback origin while developing on one).
    * @param {boolean} [settings.production] Default `NODE_ENV === 'production'`.
+   * @param {Object} [settings.broadcast] Broadcast service (rooms as MP3 streams).
+   * @param {Object} [settings.lastfm] LastFM service.
    * @param {Function} [settings.now] Clock (tests).
    */
   constructor (settings = {}) {
@@ -105,20 +114,28 @@ class SoundtrackWeb {
       siteUrl: 'http://localhost:15005',
       passport: {},
       production: process.env.NODE_ENV === 'production',
+      broadcast: null,
+      lastfm: null,
       now: () => Date.now()
     }, settings);
     this.soundtrack = this.settings.soundtrack;
+    this.broadcast = this.settings.broadcast;
+    this.lastfm = this.settings.lastfm && this.settings.lastfm.enabled ? this.settings.lastfm : null;
     this.passport = this._createPassport();
     this._taking = Promise.resolve();
     this.streams = new Map();
     this._streamCount = 0;
     this._heartbeat = null;
+    this._removeAudience = null;
     this._forward = {
       queue: (event) => this._publish(event.room, 'queue', {}),
       play: (event) => this._publish(event.room, 'play', { entry: event.entry.id, startedAt: event.startedAt }),
       idle: (event) => this._publish(event.room, 'idle', {}),
       chat: (event) => this._publish(event.room, 'chat', event.message),
-      room: () => this._publishAll('rooms', {})
+      room: (event) => {
+        this._publishAll('rooms', {});
+        if (event && event.room) this._publish(event.room, 'room', {});
+      }
     };
   }
 
@@ -176,6 +193,10 @@ class SoundtrackWeb {
 
   start () {
     for (const [event, fn] of Object.entries(this._forward)) this.soundtrack.on(event, fn);
+    this._removeAudience = this.soundtrack.addAudience((room) => {
+      const clients = this.streams.get(room);
+      return clients ? clients.size : 0;
+    });
     this._heartbeat = setInterval(() => this._publishAll(null), HEARTBEAT_MS);
     this._heartbeat.unref();
     return this;
@@ -183,6 +204,7 @@ class SoundtrackWeb {
 
   stop () {
     for (const [event, fn] of Object.entries(this._forward)) this.soundtrack.removeListener(event, fn);
+    if (this._removeAudience) this._removeAudience();
     clearInterval(this._heartbeat);
     for (const clients of this.streams.values()) for (const res of clients.keys()) res.end();
     this.streams.clear();
@@ -205,21 +227,37 @@ class SoundtrackWeb {
   }
 
   /**
-   * Who has a room open: signed-in people by display name (once each, in
-   * the order they arrived) and a count that adds one per signed-out page.
+   * Who has a room open: signed-in people by display name and listener id
+   * (once each, in the order they arrived) and a count that adds one per
+   * signed-out page and one per listener of the room's MP3 stream.
    * @param {string} room
-   * @returns {{ count: number, names: string[] }}
+   * @returns {{ count: number, names: string[], people: Array<{ id: string, name: string }> }}
    */
   listeners (room) {
     const clients = this.streams.get(room);
-    if (!clients) return { count: 0, names: [] };
+    const radio = this.broadcast ? this.broadcast.listeners(room) : 0;
+    if (!clients) return { count: radio, names: [], people: [] };
     const people = new Map();
     let guests = 0;
     for (const user of clients.values()) {
       if (user) people.set(user.id, user.name);
       else guests++;
     }
-    return { count: people.size + guests, names: [...people.values()] };
+    return {
+      count: people.size + guests + radio,
+      names: [...people.values()],
+      people: [...people].map(([id, name]) => ({ id: this.soundtrack.personId(id), name }))
+    };
+  }
+
+  /**
+   * Account keys of the signed-in people with a room open (never served).
+   * @param {string} room
+   * @returns {string[]}
+   */
+  present (room) {
+    const clients = this.streams.get(room);
+    return clients ? [...new Set([...clients.values()].filter(Boolean).map((user) => user.id))] : [];
   }
 
   _subscribe (req, res, room, user = null) {
@@ -235,6 +273,7 @@ class SoundtrackWeb {
     this.streams.get(room).set(res, user ? { id: user.id, name: user.name } : null);
     this._streamCount++;
     this._publish(room, 'listeners', this.listeners(room));
+    this.soundtrack.wake(room).catch(() => {});
     req.on('close', () => {
       const clients = this.streams.get(room);
       if (clients && clients.delete(res)) this._streamCount--;
@@ -329,7 +368,9 @@ class SoundtrackWeb {
     });
     res.setHeader('Set-Cookie', [clear, this._cookie(SESSION_COOKIE, token, SESSION_MS)]);
     const named = !!await this.soundtrack.record('web', `profile-${id.slice('fabric:'.length)}`);
-    sendJson(res, 200, { user: { id, name: await this._name(id) }, named });
+    const name = await this._name(id);
+    await this.soundtrack.remember({ id, name });
+    sendJson(res, 200, { user: { id, name }, named });
   }
 
   async _rename (req, res) {
@@ -338,6 +379,7 @@ class SoundtrackWeb {
     const name = cleanName((await readBody(req)).name);
     if (!name) return sendJson(res, 400, { error: 'Pick a name.' });
     await this.soundtrack.saveRecord('web', `profile-${user.id.slice('fabric:'.length)}`, { name, updatedAt: this.settings.now() });
+    await this.soundtrack.remember({ id: user.id, name });
     sendJson(res, 200, { user: { id: user.id, name } });
   }
 
@@ -348,6 +390,49 @@ class SoundtrackWeb {
     }
     res.setHeader('Set-Cookie', this._cookie(SESSION_COOKIE, '', 0));
     sendJson(res, 200, { user: null });
+  }
+
+  // Last.fm: a state cookie ties Last.fm's callback to the session that asked.
+
+  _lastfmCookie (value, maxAgeMs) {
+    return `${LASTFM_COOKIE}=${value}; Path=${LASTFM_PATH}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAgeMs / 1000)}${this.secure ? '; Secure' : ''}`;
+  }
+
+  _redirect (res, location, cookie) {
+    res.statusCode = 302;
+    if (cookie) res.setHeader('Set-Cookie', cookie);
+    res.setHeader('Location', location);
+    res.setHeader('Cache-Control', 'no-store');
+    res.end();
+  }
+
+  async _lastfmConnect (req, res, user) {
+    if (!this.lastfm) return sendJson(res, 404, { error: 'Last.fm is not set up.' });
+    if (!user) return this._redirect(res, '/');
+    const state = crypto.randomBytes(32).toString('hex');
+    await this.soundtrack.saveRecord('lastfm', `state-${sha256(state)}`, { account: user.id, expiresAt: this.settings.now() + LASTFM_STATE_MS });
+    const callback = `${String(this.settings.siteUrl).replace(/\/+$/, '')}${LASTFM_PATH}/callback`;
+    this._redirect(res, this.lastfm.authorizeUrl(callback), this._lastfmCookie(state, LASTFM_STATE_MS));
+  }
+
+  async _lastfmCallback (req, res, url, user) {
+    if (!this.lastfm) return sendJson(res, 404, { error: 'Last.fm is not set up.' });
+    const clear = this._lastfmCookie('', 0);
+    if (!user) return this._redirect(res, '/', clear);
+    const page = `/people/${this.soundtrack.personId(user.id)}`;
+    const state = parseCookies(req.headers.cookie)[LASTFM_COOKIE] || '';
+    const key = /^[0-9a-f]{64}$/.test(state) ? `state-${sha256(state)}` : null;
+    const record = key ? await this.soundtrack.record('lastfm', key) : null;
+    if (key) await this.soundtrack.saveRecord('lastfm', key, { spentAt: this.settings.now() });
+    if (!record || record.account !== user.id || !(record.expiresAt > this.settings.now())) {
+      return this._redirect(res, `${page}?lastfm=expired`, clear);
+    }
+    try {
+      await this.lastfm.link(user.id, url.searchParams.get('token'));
+    } catch (_) {
+      return this._redirect(res, `${page}?lastfm=refused`, clear);
+    }
+    this._redirect(res, `${page}?lastfm=linked`, clear);
   }
 
   // Requests
@@ -386,7 +471,12 @@ class SoundtrackWeb {
 
     if (!parts.length && method === 'GET') return sendJson(res, 200, { rooms: await this._rooms(), defaultRoom: st.defaultRoom });
     if (parts[0] === 'session' && parts.length === 1 && method === 'GET') {
-      return sendJson(res, 200, { user: await this.session(req), passport: this.loginEnabled });
+      const user = await this.session(req);
+      return sendJson(res, 200, {
+        user: user ? { ...user, person: st.personId(user.id) } : null,
+        passport: this.loginEnabled,
+        lastfm: this.lastfm ? { linked: user ? await this.lastfm.linked(user.id) : null } : null
+      });
     }
     if (parts[0] === 'tracks' && parts.length === 2 && method === 'GET') {
       const track = await st.track(parts[1]);
@@ -400,9 +490,31 @@ class SoundtrackWeb {
     if (parts[0] === 'session' && parts.length === 1 && method === 'PATCH') return this._rename(req, res);
     if (parts[0] === 'logout' && parts.length === 1 && method === 'POST') return this._logout(req, res);
 
-    if (parts[0] !== 'rooms') return sendJson(res, 404, { error: 'Not found.' });
     const user = await this.session(req);
     const viewer = user ? user.id : null;
+
+    if (parts[0] === 'lastfm') {
+      if (parts[1] === 'connect' && parts.length === 2 && method === 'GET') return this._lastfmConnect(req, res, user);
+      if (parts[1] === 'callback' && parts.length === 2 && method === 'GET') return this._lastfmCallback(req, res, url, user);
+      if (parts.length === 1 && method === 'DELETE') {
+        if (!this.lastfm) return sendJson(res, 404, { error: 'Last.fm is not set up.' });
+        if (!user) return sendJson(res, 401, { error: 'Sign in first.' });
+        await this.lastfm.unlink(user.id);
+        return sendJson(res, 200, { linked: null });
+      }
+      return sendJson(res, 404, { error: 'Not found.' });
+    }
+
+    if (parts[0] === 'people' && parts.length === 2 && method === 'GET') {
+      const person = await st.person(parts[1], viewer);
+      if (!person) return sendJson(res, 404, { error: 'No such listener.' });
+      if (person.you && this.lastfm) person.lastfm = { linked: await this.lastfm.linked(viewer) };
+      return sendJson(res, 200, person);
+    }
+
+    if (parts[0] === 'sets') return this._sets(req, res, parts, user);
+
+    if (parts[0] !== 'rooms') return sendJson(res, 404, { error: 'Not found.' });
 
     if (parts.length === 1) {
       if (method === 'GET') return sendJson(res, 200, { rooms: await this._rooms() });
@@ -415,7 +527,42 @@ class SoundtrackWeb {
 
     const slug = parts[1];
     if (parts.length === 2 && method === 'GET') {
-      return sendJson(res, 200, { ...await st.room(slug, viewer), listeners: this.listeners(slug) });
+      const stream = this.broadcast ? `${BASE}/rooms/${encodeURIComponent(slug)}/stream` : null;
+      return sendJson(res, 200, { ...await st.room(slug, viewer), listeners: this.listeners(slug), stream });
+    }
+    if (parts.length === 2 && method === 'PATCH') {
+      if (!user) return sendJson(res, 401, { error: 'Sign in first.' });
+      const body = await readBody(req);
+      const changes = {};
+      for (const key of ['name', 'description', 'permissions', 'autoplay']) if (body[key] !== undefined) changes[key] = body[key];
+      return sendJson(res, 200, await st.updateRoom(slug, changes, viewer));
+    }
+    if (parts.length === 3 && parts[2] === 'stream' && method === 'GET') {
+      if (!this.broadcast) return sendJson(res, 404, { error: 'Streams are off here.' });
+      await st.room(slug);
+      return this.broadcast.attach(req, res, slug);
+    }
+    if (parts[2] === 'moderators' && (method === 'POST' || method === 'DELETE')) {
+      if (!user) return sendJson(res, 401, { error: 'Sign in first.' });
+      if (method === 'POST' && parts.length === 3) {
+        const body = await readBody(req);
+        return sendJson(res, 200, { moderators: await st.setModerator(slug, String(body.person || ''), true, viewer) });
+      }
+      if (method === 'DELETE' && parts.length === 4) {
+        return sendJson(res, 200, { moderators: await st.setModerator(slug, parts[3], false, viewer) });
+      }
+    }
+    if (parts[2] === 'bans' && (method === 'POST' || method === 'DELETE')) {
+      if (!user) return sendJson(res, 401, { error: 'Sign in first.' });
+      if (method === 'POST' && parts.length === 3) {
+        const body = await readBody(req);
+        const target = body.track ? { track: String(body.track) } : body.person ? { person: String(body.person) } : {};
+        return sendJson(res, 200, { bans: await st.ban(slug, target, user) });
+      }
+      if (method === 'DELETE' && parts.length === 5 && (parts[3] === 'tracks' || parts[3] === 'people')) {
+        const target = parts[3] === 'tracks' ? { track: parts[4] } : { person: parts[4] };
+        return sendJson(res, 200, { bans: await st.unban(slug, target, viewer) });
+      }
     }
     if (parts.length === 3 && parts[2] === 'events' && method === 'GET') {
       await st.room(slug);
@@ -433,6 +580,8 @@ class SoundtrackWeb {
     }
     if (parts.length === 3 && parts[2] === 'queue' && method === 'POST') {
       const body = await readBody(req);
+      if (body.set) return sendJson(res, 201, await st.enqueueSet(slug, String(body.set), user));
+      if (body.track) return sendJson(res, 201, await st.enqueueTrack(slug, String(body.track), user));
       return sendJson(res, 201, await st.enqueue(slug, String(body.song || ''), user));
     }
     if (parts.length === 5 && parts[2] === 'queue' && parts[4] === 'votes' && method === 'POST') {
@@ -448,8 +597,44 @@ class SoundtrackWeb {
       if (!user) return sendJson(res, 401, { error: 'Sign in first.' });
       const room = await st.room(slug, viewer);
       if (!room.current) return sendJson(res, 409, { error: 'Nothing is playing.' });
-      if (!room.current.mine) return sendJson(res, 403, { error: 'Only whoever added this song can skip it here.' });
+      if (!room.you.canSkip) {
+        return sendJson(res, 403, { error: room.permissions.skip === 'moderators' ? 'Only this room\'s moderators can skip.' : 'Only whoever added this song can skip it here.' });
+      }
       return sendJson(res, 200, { next: await st.skip(slug, user) });
+    }
+    return sendJson(res, 404, { error: 'Not found.' });
+  }
+
+  async _sets (req, res, parts, user) {
+    const st = this.soundtrack;
+    const method = req.method;
+    const viewer = user ? user.id : null;
+    if (method !== 'GET' && !user) return sendJson(res, 401, { error: 'Sign in first.' });
+    if (parts.length === 1 && method === 'POST') {
+      const body = await readBody(req);
+      return sendJson(res, 201, await st.createSet(user, { name: body.name, description: body.description }));
+    }
+    const id = parts[1];
+    if (parts.length === 2) {
+      if (method === 'GET') return sendJson(res, 200, await st.set(id, viewer));
+      if (method === 'PATCH') {
+        const body = await readBody(req);
+        const changes = {};
+        for (const key of ['name', 'description']) if (body[key] !== undefined) changes[key] = body[key];
+        return sendJson(res, 200, await st.updateSet(id, changes, viewer));
+      }
+      if (method === 'DELETE') {
+        await st.deleteSet(id, viewer);
+        return sendJson(res, 200, { deleted: id });
+      }
+    }
+    if (parts[2] === 'tracks') {
+      if (parts.length === 3 && method === 'POST') {
+        const body = await readBody(req);
+        const what = body.track ? { track: String(body.track) } : { song: String(body.song || '') };
+        return sendJson(res, 200, await st.addToSet(id, what, viewer));
+      }
+      if (parts.length === 4 && method === 'DELETE') return sendJson(res, 200, await st.removeFromSet(id, parts[3], viewer));
     }
     return sendJson(res, 404, { error: 'Not found.' });
   }

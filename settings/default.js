@@ -32,6 +32,27 @@ module.exports = {
     maxDuration: 20 * 60, // seconds per track
     maxPerCurator: 10 // upcoming entries one person may hold
   },
+  // Account keys (`fabric:<x-only pubkey>`, `discord:<id>`) that moderate every room.
+  admins: (env.SOUNDTRACK_ADMINS || '').split(',').map((account) => account.trim()).filter(Boolean),
+  // When a queue runs out and someone is listening, play a song people chose
+  // in that room before, not one played there in the last `recentMs`.
+  autoplay: {
+    enabled: env.SOUNDTRACK_AUTOPLAY !== '0',
+    recentMs: 3 * 60 * 60 * 1000
+  },
+  ffmpeg: env.SOUNDTRACK_FFMPEG || 'ffmpeg',
+  // Each room as an MP3 stream at /services/soundtrack/rooms/<slug>/stream.
+  stream: {
+    enabled: env.SOUNDTRACK_STREAM !== '0',
+    bitrate: 128, // kbit/s
+    maxListeners: Number(env.SOUNDTRACK_STREAM_MAX || 200) // across every room
+  },
+  // Scrobbling: an API account from https://www.last.fm/api/account/create
+  // (callback `<siteUrl>/services/soundtrack/lastfm/callback`).
+  lastfm: {
+    apiKey: env.LASTFM_API_KEY || null,
+    apiSecret: env.LASTFM_API_SECRET || null
+  },
   resolver: {
     ytdlp: env.SOUNDTRACK_YTDLP || 'yt-dlp',
     ffprobe: env.SOUNDTRACK_FFPROBE || 'ffprobe',
@@ -44,7 +65,6 @@ module.exports = {
   },
   discord: {
     token: env.DISCORD_BOT_TOKEN || null,
-    ffmpeg: env.SOUNDTRACK_FFMPEG || 'ffmpeg',
     voiceIdleMs: 5 * 60 * 1000
   }
 };

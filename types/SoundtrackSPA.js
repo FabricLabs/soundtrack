@@ -6,6 +6,9 @@ const escapeHtml = require('../functions/escapeHtml');
 const SiteLayout = require('../components/SiteLayout');
 const RoomsPage = require('../components/RoomsPage');
 const RoomPage = require('../components/RoomPage');
+const HistoryPage = require('../components/HistoryPage');
+const PersonPage = require('../components/PersonPage');
+const SetPage = require('../components/SetPage');
 const SoundtrackApp = require('../components/SoundtrackApp');
 
 const DEFAULTS = {
@@ -14,6 +17,10 @@ const DEFAULTS = {
   sourceUrl: 'https://github.com/FabricLabs/soundtrack',
   description: 'Listen to music with your friends: rooms with a voted queue, on the web and in Discord voice channels.'
 };
+
+// The views in the page, in order; every route shows one of them.
+const VIEWS = [RoomsPage, RoomPage, HistoryPage, PersonPage, SetPage];
+const PAGES = [SiteLayout, ...VIEWS];
 
 // Bootstrap 2 and Darkstrap, as the original site loaded them.
 const STYLESHEETS = [
@@ -43,7 +50,7 @@ class SoundtrackSPA extends FabricSPA {
    * @returns {string} Every component's CSS.
    */
   styles () {
-    return [SiteLayout, RoomsPage, RoomPage].map((component) => component.styles()).join('\n');
+    return PAGES.map((component) => component.styles()).join('\n');
   }
 
   /**
@@ -57,7 +64,7 @@ class SoundtrackSPA extends FabricSPA {
     const title = `${name} | music for all.`;
     const props = { name, sourceUrl: this._site('sourceUrl') };
     const body = SiteLayout.render(Object.assign({}, props, {
-      body: [RoomsPage.render(props), RoomPage.render(props)].join('\n')
+      body: VIEWS.map((component) => component.render(props)).join('\n')
     }));
     return `<!DOCTYPE html>
 <html lang="en">

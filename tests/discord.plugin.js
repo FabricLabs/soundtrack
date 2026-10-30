@@ -209,4 +209,22 @@ describe('Soundtrack Discord plugin', function () {
     assert.strictEqual(handle.plays.length, before + 1);
     assert.strictEqual(handle.plays[handle.plays.length - 1].meta.entry, room.current.id);
   });
+
+  it('plays the auto-DJ\'s picks for people in voice, and says so', async function () {
+    await run(plugin, invocation('join', { voice: 'discord/channels/60' }));
+    await run(plugin, invocation('play', { options: { song: 'song a' } }));
+    doorman.emit('join', { user: 'discord/users/1', channel: 'discord/channels/60' });
+    await clock.advance(61 * 1000);
+    assert.strictEqual((await soundtrack.room('lobby')).current, null, 'just played: not picked again');
+
+    doorman.emit('part', { user: 'discord/users/1', channel: 'discord/channels/60' });
+    await clock.advance(4 * 60 * 60 * 1000);
+    assert.strictEqual((await soundtrack.room('lobby')).current, null);
+    posts.length = 0;
+    doorman.emit('join', { user: 'discord/users/1', channel: 'discord/channels/60' });
+    await until(() => posts.length);
+    assert.match(posts[0].object.content, /^Now playing \[Song A\].*, picked by the auto-DJ$/);
+    const np = await run(plugin, invocation('np'));
+    assert.match(np.content, /picked by the auto-DJ\./);
+  });
 });

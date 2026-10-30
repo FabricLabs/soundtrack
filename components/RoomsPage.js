@@ -77,8 +77,8 @@ function render (props) {
 
       <main id="missing" hidden>
         <div class="well content-well">
-          <h1>No such room!</h1>
-          <p>We couldn&rsquo;t find that room. <a href="/">Browse every room &raquo;</a></p>
+          <h1>Nothing here!</h1>
+          <p>We couldn&rsquo;t find that room, listener, or set. <a href="/">Browse every room &raquo;</a></p>
         </div>
       </main>`;
 }

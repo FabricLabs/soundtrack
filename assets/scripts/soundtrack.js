@@ -7,6 +7,9 @@
   const state = {
     user: null,
     passport: false,
+    lastfm: null, // null when Last.fm is off here
+    mySets: null,
+    set: null, // the set page's set
     signingIn: false,
     siteName: '',
     slug: null,
@@ -113,6 +116,60 @@
     return el('a', attrs);
   }
 
+  // A listener's name, linked to their page when there is one.
+  function personLink (id, name) {
+    return id ? el('a', { href: '/people/' + id, text: name || 'someone' }) : document.createTextNode(name || 'someone');
+  }
+
+  function when (at) {
+    const date = new Date(at);
+    return el('abbr', { title: date.toISOString(), text: date.toLocaleString() });
+  }
+
+  function button (label, title, onclick) {
+    return el('a', {
+      class: 'btn btn-mini',
+      href: '#',
+      title,
+      onclick: function (event) {
+        event.preventDefault();
+        onclick();
+      }
+    }, label);
+  }
+
+  function mine () {
+    return state.user && state.user.person;
+  }
+
+  // Rooms to queue songs in from listener and set pages: the last room
+  // opened here first.
+  function fillRoomPicker (select) {
+    return api('').then(function (body) {
+      let last = null;
+      try { last = window.localStorage.getItem('soundtrack.room'); } catch (_) { /* private mode */ }
+      const pick = body.rooms.some(function (item) { return item.slug === last; }) ? last : body.defaultRoom;
+      clear(select);
+      body.rooms.forEach(function (item) {
+        const option = el('option', { value: item.slug, text: item.name });
+        if (item.slug === pick) option.selected = true;
+        select.appendChild(option);
+      });
+    });
+  }
+
+  function queueIn (slug, body, status) {
+    status.textContent = 'Queueing\u2026';
+    return api('/rooms/' + slug + '/queue', { method: 'POST', body }).then(function (result) {
+      if (result.added) {
+        status.textContent = 'Queued ' + result.added.length + (result.added.length === 1 ? ' song' : ' songs') +
+          (result.skipped ? ' (' + result.skipped + ' passed over)' : '') + '.';
+      } else {
+        status.textContent = 'Queued ' + result.track.title + '.';
+      }
+    }).catch(function (error) { status.textContent = error.message; });
+  }
+
   // Sign-in with Fabric Passport (v2). Passport answers only on the
   // MessagePort handed over with each message, so nothing else on the page
   // can read or forge its answer.
@@ -215,12 +272,8 @@
     const box = clear($('session'));
     if (state.user) {
       box.appendChild(el('li', null, el('a', {
-        href: '#',
-        title: 'signed in with Fabric Passport; click to change your name',
-        onclick: function (event) {
-          event.preventDefault();
-          rename().catch(function (error) { flash('error', error.message); });
-        }
+        href: '/people/' + state.user.person,
+        title: 'signed in with Fabric Passport; your page'
       }, el('img', { class: 'user-avatar-small', src: '/img/user-avatar.png', alt: '' }), state.user.name)));
       box.appendChild(el('li', null, el('a', {
         href: '#',
@@ -248,14 +301,29 @@
   // Views
 
   function route () {
-    const match = window.location.pathname.match(/^\/rooms\/([a-z0-9-]+)\/?$/);
-    ['home', 'room', 'missing'].forEach(function (id) { $(id).hidden = true; });
+    const path = window.location.pathname;
+    const roomMatch = path.match(/^\/rooms\/([a-z0-9-]+)\/?$/);
+    const historyMatch = path.match(/^\/rooms\/([a-z0-9-]+)\/history\/?$/);
+    const personMatch = path.match(/^\/people\/([0-9a-f]{16})\/?$/);
+    const setMatch = path.match(/^\/sets\/([0-9a-f]{12})\/?$/);
+    ['home', 'room', 'history', 'person', 'set', 'missing'].forEach(function (id) { $(id).hidden = true; });
     $('nav-rooms').className = '';
     $('brand-name').textContent = state.siteName;
-    if (window.location.pathname === '/') return home();
-    if (match) return room(match[1]);
-    document.title = 'No such room | ' + state.siteName;
+    let done = null;
+    if (path === '/') done = home();
+    else if (roomMatch) done = room(roomMatch[1]);
+    else if (historyMatch) done = history(historyMatch[1]);
+    else if (personMatch) done = person(personMatch[1]);
+    else if (setMatch) done = set(setMatch[1]);
+    else done = Promise.reject(new Error('not found'));
+    return done.catch(missing);
+  }
+
+  function missing (error) {
+    ['home', 'room', 'history', 'person', 'set'].forEach(function (id) { $(id).hidden = true; });
+    document.title = 'Not found | ' + state.siteName;
     $('missing').hidden = false;
+    if (error) window.console.warn(error);
   }
 
   function home () {
@@ -285,10 +353,12 @@
   function room (slug) {
     state.slug = slug;
     $('room').hidden = false;
+    try { window.localStorage.setItem('soundtrack.room', slug); } catch (_) { /* private mode */ }
+    if (mine()) loadMySets();
     return Promise.all([refresh(), refreshChat()]).then(function () {
       if (state.events) state.events.close();
       state.events = new window.EventSource(API + '/rooms/' + slug + '/events');
-      ['queue', 'play', 'idle'].forEach(function (name) {
+      ['queue', 'play', 'idle', 'room'].forEach(function (name) {
         state.events.addEventListener(name, scheduleRefresh);
       });
       state.events.addEventListener('chat', function (event) {
@@ -300,11 +370,14 @@
         if (state.view) state.view.listeners = listeners;
         renderListeners(listeners);
       });
-    }).catch(function (error) {
-      $('room').hidden = true;
-      $('missing').hidden = false;
-      window.console.warn(error);
     });
+  }
+
+  function loadMySets () {
+    return api('/people/' + state.user.person).then(function (me) {
+      state.mySets = me.sets;
+      renderSaveForm();
+    }).catch(function () { state.mySets = []; });
   }
 
   function scheduleRefresh () {
@@ -338,21 +411,48 @@
     list.appendChild(el('div', { class: 'message', 'data-message-id': message.id },
       el('abbr', { class: 'timestamp pull-right', title: at.toISOString(), text: pad(at.getHours()) + ':' + pad(at.getMinutes()) + ':' + pad(at.getSeconds()) }),
       el('img', { class: 'user-avatar-small', src: '/img/user-avatar.png', alt: '' }),
-      el('strong', { 'data-role': 'author', text: me ? message.author + ' ' : message.author + ':' }),
+      el('strong', { 'data-role': 'author' }, personLink(message.authorId, message.author), me ? ' ' : ':'),
       el('span', { class: 'message-content', text: ' ' + (me ? text.slice(4) : text) })));
     list.scrollTop = list.scrollHeight;
   }
 
   function renderListeners (listeners) {
-    listeners = listeners || { count: 0, names: [] };
+    listeners = listeners || { count: 0, names: [], people: [] };
     const list = clear($('userlist'));
-    const curator = state.view && state.view.current ? state.view.current.curator : null;
-    listeners.names.forEach(function (name) {
-      list.appendChild(el('li', { class: name === curator ? 'current-curator' : '' },
-        el('a', { href: '#' }, el('img', { class: 'user-avatar-small pull-left', src: '/img/user-avatar.png', alt: '' }), name)));
+    const view = state.view;
+    const curator = view && view.current ? view.current.curatorId : null;
+    const role = view && view.you ? view.you.role : null;
+    const staff = {};
+    if (view && view.owner) staff[view.owner.id] = 'owner';
+    ((view && view.moderators) || []).forEach(function (item) { staff[item.id] = 'moderator'; });
+    (listeners.people || []).forEach(function (item) {
+      const actions = el('span', { class: 'user-actions' });
+      if (role && item.id !== mine() && !staff[item.id]) {
+        actions.appendChild(el('i', {
+          class: 'icon-ban-circle icon-white',
+          title: 'ban ' + item.name + ' from this room',
+          onclick: function () {
+            if (window.confirm('Ban ' + item.name + ' from this room? Their waiting songs go too.')) act('POST', '/rooms/' + state.slug + '/bans', { person: item.id });
+          }
+        }));
+      }
+      if ((role === 'owner' || role === 'admin') && item.id !== mine() && staff[item.id] !== 'owner') {
+        const on = staff[item.id] === 'moderator';
+        actions.appendChild(el('i', {
+          class: (on ? 'icon-star' : 'icon-star-empty') + ' icon-white',
+          title: on ? 'take ' + item.name + ' off the moderators' : 'make ' + item.name + ' a moderator',
+          onclick: function () {
+            if (on) act('DELETE', '/rooms/' + state.slug + '/moderators/' + item.id);
+            else act('POST', '/rooms/' + state.slug + '/moderators', { person: item.id });
+          }
+        }));
+      }
+      list.appendChild(el('li', { class: item.id === curator ? 'current-curator' : '' }, actions,
+        el('a', { href: '/people/' + item.id, title: staff[item.id] || '' },
+          el('img', { class: 'user-avatar-small pull-left', src: '/img/user-avatar.png', alt: '' }), item.name)));
     });
-    const guests = listeners.count - listeners.names.length;
-    if (guests > 0) list.appendChild(el('li', { class: 'guests', text: guests === 1 ? '1 guest' : guests + ' guests' }));
+    const guests = listeners.count - (listeners.people || listeners.names).length;
+    if (guests > 0) list.appendChild(el('li', { class: 'guests', text: guests === 1 ? '1 guest or stream' : guests + ' guests and streams' }));
     clear($('user-count')).appendChild(el('strong', { text: String(listeners.count) }));
     $('user-count').appendChild(document.createTextNode(' online'));
   }
@@ -375,8 +475,34 @@
       artist.textContent = '';
       artist.removeAttribute('href');
     }
-    $('track-curator').textContent = current && current.curator ? 'from ' + current.curator : '';
-    $('skip').hidden = !(current && current.mine);
+    const curator = clear($('track-curator'));
+    if (current && current.auto) curator.appendChild(document.createTextNode('auto-DJ'));
+    else if (current && current.curator) curator.appendChild(el('span', null, 'from ', personLink(current.curatorId, current.curator)));
+    const you = view.you || {};
+    $('skip').hidden = !(current && you.canSkip);
+    $('ban-current').hidden = !(current && you.role);
+    renderSaveForm();
+
+    const description = $('room-description');
+    description.textContent = view.description || '';
+    description.hidden = !view.description;
+    $('room-history').href = '/rooms/' + view.slug + '/history';
+    $('room-stream-link').hidden = !view.stream;
+    if (view.stream) $('room-stream').href = view.stream;
+    $('room-settings-link').hidden = !you.role;
+    if (!you.role) $('room-settings').hidden = true;
+    if (!$('room-settings').hidden) renderSettings();
+
+    if (state.user) {
+      const canAdd = !!you.canAdd;
+      $('search-query').disabled = !canAdd;
+      $('search-submit').disabled = !canAdd;
+      $('search-query').placeholder = canAdd
+        ? 'type here and press [ENTER] to add a track'
+        : you.banned ? 'you are banned from this room' : 'only this room\u2019s moderators add tracks';
+      $('chat-input').disabled = !!you.banned;
+      $('chat-submit').disabled = !!you.banned;
+    }
     $('listen-label').textContent = state.listening ? 'stop' : 'listen';
     $('listen-icon').className = 'icon-white ' + (state.listening ? 'icon-stop' : 'icon-play');
 
@@ -398,7 +524,7 @@
       el('div', { class: 'score badge', text: String(entry.score) }),
       voteIcon(entry, 1, 'icon-chevron-up'),
       voteIcon(entry, -1, 'icon-chevron-down'));
-    const remove = entry.mine
+    const remove = entry.removable
       ? el('a', {
         class: 'remove',
         title: 'take it out',
@@ -408,9 +534,18 @@
         }
       }, el('i', { class: 'icon-remove icon-white' }))
       : null;
+    const ban = state.view.you && state.view.you.role
+      ? el('span', { class: 'mod' }, el('i', {
+        class: 'icon-ban-circle icon-white',
+        title: 'ban this song from the room',
+        onclick: function () {
+          if (window.confirm('Ban \u201c' + entry.track.title + '\u201d from this room?')) act('POST', '/rooms/' + state.slug + '/bans', { track: entry.track.id });
+        }
+      }))
+      : null;
     const who = el('div', { style: 'font-size: 0.75em;' },
       el('span', { class: 'pull-right', text: hhmmss(entry.track.duration) }),
-      (entry.curator || 'someone') + ' wants to play ', remove);
+      personLink(entry.curatorId, entry.curator), ' wants to play ', remove, ' ', ban);
     const details = el('div', { class: 'track-details', style: 'font-size: 1.1em;' },
       entry.track.thumbnail ? el('img', { class: 'thumbnail-medium pull-left', src: entry.track.thumbnail, alt: '' }) : null,
       trackLink(entry.track));
@@ -435,6 +570,264 @@
     return api(path, { method, body: body === undefined ? (method === 'POST' ? {} : undefined) : body })
       .then(scheduleRefresh)
       .catch(function (error) { $('add-status').textContent = error.message; });
+  }
+
+  // Save what is playing to one of your sets (or a new one).
+  function renderSaveForm () {
+    const form = $('save-form');
+    const current = state.view && state.view.current;
+    form.hidden = !(state.user && current);
+    const select = $('save-set');
+    const chosen = select.value;
+    clear(select);
+    (state.mySets || []).forEach(function (item) {
+      select.appendChild(el('option', { value: item.id, text: item.name }));
+    });
+    select.appendChild(el('option', { value: '', text: 'new set\u2026' }));
+    if (chosen && (state.mySets || []).some(function (item) { return item.id === chosen; })) select.value = chosen;
+  }
+
+  function saveCurrent (event) {
+    event.preventDefault();
+    const current = state.view && state.view.current;
+    if (!current) return;
+    const status = $('add-status');
+    let target = $('save-set').value;
+    const made = target
+      ? Promise.resolve(target)
+      : Promise.resolve(window.prompt('Name the new set:', '')).then(function (name) {
+        if (!name || !name.trim()) return null;
+        return api('/sets', { method: 'POST', body: { name } }).then(function (created) {
+          state.mySets = (state.mySets || []).concat([{ id: created.id, name: created.name, size: 0 }]);
+          return created.id;
+        });
+      });
+    made.then(function (id) {
+      if (!id) return;
+      target = id;
+      return api('/sets/' + id + '/tracks', { method: 'POST', body: { track: current.track.id } }).then(function (saved) {
+        status.textContent = 'Saved to ' + saved.name + '.';
+        renderSaveForm();
+        $('save-set').value = target;
+      });
+    }).catch(function (error) { status.textContent = error.message; });
+  }
+
+  // Room settings, for its moderators (rules and the auto-DJ for its owner).
+  function renderSettings () {
+    const view = state.view;
+    const you = view.you || {};
+    const owner = you.role === 'owner' || you.role === 'admin';
+    const form = $('room-settings');
+    if (!form.dataset.dirty) {
+      $('room-settings-name').value = view.name;
+      $('room-settings-description').value = view.description || '';
+      $('room-rule-add').value = view.permissions.add;
+      $('room-rule-skip').value = view.permissions.skip;
+      $('room-rule-remove').value = view.permissions.remove;
+      $('room-autoplay').checked = !!view.autoplay;
+    }
+    $('room-rules').hidden = !owner;
+    clear($('room-owner')).appendChild(view.owner ? personLink(view.owner.id, view.owner.name) : document.createTextNode('nobody (made by the site)'));
+    const moderators = clear($('room-moderators'));
+    view.moderators.forEach(function (item) {
+      moderators.appendChild(el('li', null, personLink(item.id, item.name), owner
+        ? button('remove', 'take them off the moderators', function () {
+          act('DELETE', '/rooms/' + state.slug + '/moderators/' + item.id);
+        })
+        : null));
+    });
+    if (!view.moderators.length) moderators.appendChild(el('li', { class: 'muted', text: owner ? 'none yet; make listeners moderators with the \u2606 beside their names' : 'none' }));
+    const bans = view.bans || { tracks: [], people: [] };
+    const tracks = clear($('room-banned-tracks'));
+    bans.tracks.forEach(function (track) {
+      tracks.appendChild(el('li', null, trackLink(track), button('unban', 'let this song play here again', function () {
+        act('DELETE', '/rooms/' + state.slug + '/bans/tracks/' + track.id);
+      })));
+    });
+    if (!bans.tracks.length) tracks.appendChild(el('li', { class: 'muted', text: 'none' }));
+    const people = clear($('room-banned-people'));
+    bans.people.forEach(function (item) {
+      people.appendChild(el('li', null, personLink(item.id, item.name), button('unban', 'let them back in', function () {
+        act('DELETE', '/rooms/' + state.slug + '/bans/people/' + item.id);
+      })));
+    });
+    if (!bans.people.length) people.appendChild(el('li', { class: 'muted', text: 'none' }));
+  }
+
+  function saveSettings (event) {
+    event.preventDefault();
+    const you = state.view.you || {};
+    const body = { name: $('room-settings-name').value, description: $('room-settings-description').value };
+    if (you.role === 'owner' || you.role === 'admin') {
+      body.permissions = { add: $('room-rule-add').value, skip: $('room-rule-skip').value, remove: $('room-rule-remove').value };
+      body.autoplay = $('room-autoplay').checked;
+    }
+    const status = $('room-settings-status');
+    status.textContent = 'Saving\u2026';
+    api('/rooms/' + state.slug, { method: 'PATCH', body }).then(function () {
+      delete $('room-settings').dataset.dirty;
+      status.textContent = 'Saved.';
+      scheduleRefresh();
+    }).catch(function (error) { status.textContent = error.message; });
+  }
+
+  // A room's history
+
+  function history (slug) {
+    $('history').hidden = false;
+    $('history-back').href = '/rooms/' + slug;
+    return Promise.all([api('/rooms/' + slug), api('/rooms/' + slug + '/plays?limit=100')]).then(function (results) {
+      const view = results[0];
+      document.title = 'History | ' + view.name + ' | ' + state.siteName;
+      $('brand-name').textContent = view.name;
+      $('history-room').textContent = view.name;
+      const canAdd = view.you && view.you.canAdd;
+      const list = clear($('history-list'));
+      results[1].plays.forEach(function (play) {
+        const who = play.auto ? el('em', { text: 'auto-DJ' }) : personLink(play.curatorId, play.curator);
+        const note = play.skipped
+          ? el('div', { class: 'skipped muted', text: 'skipped' + (play.skipped.by ? ' by ' + play.skipped.by : '') })
+          : play.down ? el('div', { class: 'skipped muted', text: 'could not play' }) : null;
+        list.appendChild(el('tr', { class: play.skipped || play.down ? 'muted-row' : '' },
+          el('td', null, who),
+          el('td', null, when(play.startedAt)),
+          el('td', { text: play.track.artist || '' }),
+          el('td', null, trackLink(play.track), note),
+          el('td', null, canAdd
+            ? button('\u266b queue again', 'add it to the queue', function () {
+              queueIn(slug, { track: play.track.id }, $('history-status'));
+            })
+            : null)));
+      });
+      if (!results[1].plays.length) list.appendChild(el('tr', null, el('td', { colspan: '5', text: 'Nothing has played here yet.' })));
+    });
+  }
+
+  // Listener pages
+
+  function showPane (tabs, pane) {
+    Array.prototype.forEach.call(tabs.querySelectorAll('a[data-pane]'), function (link) {
+      const on = link.getAttribute('data-pane') === pane;
+      link.parentNode.className = on ? 'active' : '';
+      $(link.getAttribute('data-pane')).className = 'tab-pane' + (on ? ' active' : '');
+    });
+  }
+
+  function person (id) {
+    $('person').hidden = false;
+    const params = new window.URLSearchParams(window.location.search);
+    const lastfm = params.get('lastfm');
+    if (lastfm === 'linked') flash('success', 'Last.fm is linked: songs you hear here will be scrobbled.');
+    else if (lastfm) flash('error', lastfm === 'expired' ? 'That Last.fm link took too long; try again.' : 'Last.fm did not allow the link.');
+    if (lastfm) window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+    const pane = { '#sets': 'person-sets', '#rooms': 'person-rooms', '#plays': 'person-plays' }[window.location.hash] || 'person-profile';
+    showPane($('person-tabs'), pane);
+    return Promise.all([api('/people/' + id), fillRoomPicker($('person-queue-room'))]).then(function (results) {
+      renderPerson(results[0]);
+    });
+  }
+
+  function renderPerson (who) {
+    const status = $('person-status');
+    const queue = function (body) {
+      return button('\u266b queue \u00bb', 'add to the queue in the room chosen above', function () {
+        queueIn($('person-queue-room').value, body, status);
+      });
+    };
+    document.title = who.name + ' | ' + state.siteName;
+    $('person-name').textContent = who.name;
+    $('person-since').textContent = 'Listening since ' + new Date(who.since).toLocaleDateString() + ', ' + who.plays + (who.plays === 1 ? ' play' : ' plays') + '.';
+    $('person-rename').hidden = !who.you;
+    const linked = who.lastfm && who.lastfm.linked;
+    $('lastfm-connect').hidden = !(who.you && who.lastfm && !linked);
+    $('lastfm-disconnect').hidden = !(who.you && linked);
+    const badge = clear($('person-lastfm'));
+    if (linked) badge.appendChild(el('a', { href: 'https://www.last.fm/user/' + encodeURIComponent(linked.name), target: '_blank', rel: 'noopener noreferrer', text: 'last.fm/' + linked.name }));
+    $('person-queue-room').parentNode.hidden = !state.user;
+
+    const top = clear($('person-top'));
+    who.top.forEach(function (item) {
+      top.appendChild(el('li', null, trackLink(item.track), item.track.artist ? ' by ' + item.track.artist : '', ' ',
+        el('strong', { text: String(item.plays) }), item.plays === 1 ? ' time ' : ' times ', state.user ? queue({ track: item.track.id }) : null));
+    });
+    if (!who.top.length) top.appendChild(el('li', { class: 'muted', text: 'Nothing yet.' }));
+
+    $('set-new').hidden = !who.you;
+    const sets = clear($('person-set-list'));
+    who.sets.forEach(function (item) {
+      sets.appendChild(el('tr', null,
+        el('td', null, el('a', { href: '/sets/' + item.id, text: item.name })),
+        el('td', { text: String(item.size) }),
+        el('td', null, state.user ? queue({ set: item.id }) : null)));
+    });
+    if (!who.sets.length) sets.appendChild(el('tr', null, el('td', { colspan: '3', text: who.you ? 'Save songs from a room, or add a set here.' : 'No sets yet.' })));
+
+    const rooms = clear($('person-room-list'));
+    who.rooms.forEach(function (item) {
+      rooms.appendChild(el('li', null, el('a', { href: '/rooms/' + item.slug, text: item.name }), ' (' + item.role + ')'));
+    });
+    if (!who.rooms.length) rooms.appendChild(el('li', { class: 'muted', text: 'Runs no rooms.' }));
+
+    const plays = clear($('person-play-list'));
+    who.recent.forEach(function (play) {
+      plays.appendChild(el('tr', null,
+        el('td', null, when(play.at)),
+        el('td', { text: play.track.artist || '' }),
+        el('td', null, trackLink(play.track)),
+        el('td', null, el('a', { href: '/rooms/' + play.room, text: play.roomName })),
+        el('td', null, state.user ? queue({ track: play.track.id }) : null)));
+    });
+    if (!who.recent.length) plays.appendChild(el('tr', null, el('td', { colspan: '5', text: 'Nothing played yet.' })));
+  }
+
+  // Sets
+
+  function set (id) {
+    $('set').hidden = false;
+    return Promise.all([api('/sets/' + id), fillRoomPicker($('set-queue-room'))]).then(function (results) {
+      state.set = results[0];
+      renderSet();
+    });
+  }
+
+  function renderSet () {
+    const current = state.set;
+    document.title = current.name + ' | ' + state.siteName;
+    $('set-name').textContent = current.name;
+    $('set-owner').textContent = current.owner.name;
+    $('set-owner').href = '/people/' + current.owner.id;
+    $('set-description').textContent = current.description || '';
+    $('set-owner-controls').hidden = !current.mine;
+    $('set-queue').parentNode.hidden = !state.user || !current.tracks.length;
+    const list = clear($('set-tracks'));
+    current.tracks.forEach(function (track) {
+      list.appendChild(el('tr', null,
+        el('td', { text: track.artist || '' }),
+        el('td', null, trackLink(track)),
+        el('td', { text: hhmmss(track.duration) }),
+        el('td', null,
+          state.user
+            ? button('\u266b queue \u00bb', 'add it to the queue', function () {
+              queueIn($('set-queue-room').value, { track: track.id }, $('set-status'));
+            })
+            : null,
+          current.mine
+            ? button('remove', 'take it out of this set', function () {
+              setAction('DELETE', '/sets/' + current.id + '/tracks/' + track.id);
+            })
+            : null)));
+    });
+    if (!current.tracks.length) list.appendChild(el('tr', null, el('td', { colspan: '4', text: current.mine ? 'Add songs above, or save them from a room.' : 'This set is empty.' })));
+  }
+
+  function setAction (method, path, body) {
+    const status = $('set-status');
+    return api(path, { method, body }).then(function (updated) {
+      state.set = updated;
+      status.textContent = '';
+      renderSet();
+    }).catch(function (error) { status.textContent = error.message; });
   }
 
   // Playback in the page
@@ -641,6 +1034,93 @@
       });
     });
 
+    $('save-form').addEventListener('submit', saveCurrent);
+    $('ban-current').addEventListener('click', function (event) {
+      event.preventDefault();
+      const current = state.view && state.view.current;
+      if (current && window.confirm('Ban \u201c' + current.track.title + '\u201d from this room? It stops now.')) {
+        act('POST', '/rooms/' + state.slug + '/bans', { track: current.track.id });
+      }
+    });
+    $('room-settings-open').addEventListener('click', function (event) {
+      event.preventDefault();
+      const form = $('room-settings');
+      form.hidden = !form.hidden;
+      delete form.dataset.dirty;
+      if (!form.hidden) renderSettings();
+    });
+    $('room-settings-close').addEventListener('click', function (event) {
+      event.preventDefault();
+      $('room-settings').hidden = true;
+    });
+    $('room-settings').addEventListener('input', function () { $('room-settings').dataset.dirty = '1'; });
+    $('room-settings').addEventListener('change', function () { $('room-settings').dataset.dirty = '1'; });
+    $('room-settings').addEventListener('submit', saveSettings);
+
+    $('person-tabs').addEventListener('click', function (event) {
+      const link = event.target.closest('a[data-pane]');
+      if (!link) return;
+      event.preventDefault();
+      showPane($('person-tabs'), link.getAttribute('data-pane'));
+      window.history.replaceState(null, '', window.location.pathname + link.getAttribute('href'));
+    });
+    $('person-rename').addEventListener('click', function (event) {
+      event.preventDefault();
+      rename().then(function (user) {
+        if (user) $('person-name').textContent = user.name;
+      }).catch(function (error) { flash('error', error.message); });
+    });
+    $('lastfm-disconnect').addEventListener('click', function (event) {
+      event.preventDefault();
+      api('/lastfm', { method: 'DELETE' }).then(function () { window.location.reload(); })
+        .catch(function (error) { flash('error', error.message); });
+    });
+    $('set-new').addEventListener('click', function (event) {
+      event.preventDefault();
+      $('set-creation-form').hidden = !$('set-creation-form').hidden;
+    });
+    $('set-creation-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const form = event.target;
+      api('/sets', { method: 'POST', body: { name: form.elements.name.value, description: form.elements.description.value } }).then(function (created) {
+        window.location.href = '/sets/' + created.id;
+      }).catch(function (error) { $('person-status').textContent = error.message; });
+    });
+
+    $('set-queue').addEventListener('click', function (event) {
+      event.preventDefault();
+      if (state.set) queueIn($('set-queue-room').value, { set: state.set.id }, $('set-status'));
+    });
+    $('set-add-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const input = $('set-add-query');
+      if (!input.value.trim() || !state.set) return;
+      $('set-status').textContent = 'Looking it up\u2026';
+      setAction('POST', '/sets/' + state.set.id + '/tracks', { song: input.value }).then(function () {
+        if (!$('set-status').textContent) input.value = '';
+      });
+    });
+    $('set-edit').addEventListener('click', function (event) {
+      event.preventDefault();
+      const form = $('set-edit-form');
+      form.hidden = !form.hidden;
+      $('set-edit-name').value = state.set.name;
+      $('set-edit-description').value = state.set.description || '';
+    });
+    $('set-edit-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      setAction('PATCH', '/sets/' + state.set.id, { name: $('set-edit-name').value, description: $('set-edit-description').value }).then(function () {
+        $('set-edit-form').hidden = true;
+      });
+    });
+    $('set-delete').addEventListener('click', function (event) {
+      event.preventDefault();
+      if (!window.confirm('Delete \u201c' + state.set.name + '\u201d?')) return;
+      api('/sets/' + state.set.id, { method: 'DELETE' }).then(function () {
+        window.location.href = '/people/' + state.user.person + '#sets';
+      }).catch(function (error) { $('set-status').textContent = error.message; });
+    });
+
     $('get-started').addEventListener('click', signIn);
 
     $('create-room').addEventListener('click', function (event) {
@@ -672,6 +1152,7 @@
     api('/session').then(function (session) {
       state.user = session.user;
       state.passport = session.passport;
+      state.lastfm = session.lastfm;
     }).catch(function () {}).then(function () {
       renderSession();
       route();

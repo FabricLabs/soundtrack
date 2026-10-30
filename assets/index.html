@@ -194,6 +194,18 @@
     }
     #userlist { height: 508px; }
     #userlist li.current-curator { font-weight: bold; }
+    #userlist .user-actions { float: right; margin: 3px 8px 0 0; }
+    #userlist .user-actions i, #playlist-list .mod i { cursor: pointer; opacity: 0.5; }
+    #userlist .user-actions i:hover, #playlist-list .mod i:hover { opacity: 1; }
+    .room-description { margin: 0 12px 12px; }
+    #room-settings { margin-bottom: 12px; }
+    #room-settings textarea, #room-settings input[type="text"] { width: 100%; box-sizing: border-box; }
+    #room-settings ul li { padding: 2px 0; }
+    #room-settings ul a { margin-left: 0.5em; }
+    .save-controls { margin: 0 0 10px; }
+    .save-controls select { width: 140px; margin: 0; }
+    .room-links { font-size: 0.85em; margin: 0 0 10px; }
+    .muted-row { opacity: 0.6; }
     #userlist .guests { padding: 3px 15px 3px 22px; color: rgb(140,140,140); }
     .playlist-controls {
       float: left;
@@ -310,8 +322,28 @@
         width: 100%;
       }
     }
+
+    #history-list .skipped { font-size: 0.8em; }
+
+    .avatar-large {
+      max-height: 4em;
+      margin: 0 0.6em 0.6em 0;
+    }
+    #person h1 { line-height: 1.2em; }
+    #person-lastfm a { font-size: 0.6em; }
+    #person .tab-content { clear: both; }
+    #person .queue-bar { margin: 0 0 0.6em; }
+    #person .queue-bar select { width: auto; margin: 0; }
+    #set-creation-form textarea, #set-creation-form input[type="text"] { width: 100%; box-sizing: border-box; }
+    #person-top li, #person-room-list li { padding: 2px 0; }
+
+    #set h1 { line-height: 1.2em; }
+    #set .queue-bar select { width: auto; margin: 0; }
+    #set-edit-form textarea, #set-edit-form input[type="text"] { width: 100%; box-sizing: border-box; }
+    #set-add-form .input-block-level { width: 300px; }
+    #set-tracks .remove { cursor: pointer; }
   </style>
-  <script src="/scripts/soundtrack.js?v=538cc96e132c" defer></script>
+  <script src="/scripts/soundtrack.js?v=183ddc6d1086" defer></script>
 </head>
 <body>
   <div class="navbar navbar-fixed-top">
@@ -377,11 +409,53 @@
 
       <main id="missing" hidden>
         <div class="well content-well">
-          <h1>No such room!</h1>
-          <p>We couldn&rsquo;t find that room. <a href="/">Browse every room &raquo;</a></p>
+          <h1>Nothing here!</h1>
+          <p>We couldn&rsquo;t find that room, listener, or set. <a href="/">Browse every room &raquo;</a></p>
         </div>
       </main>
 <main id="room" hidden>
+        <div class="alert alert-info room-description" id="room-description" hidden></div>
+        <form class="well content-well" id="room-settings" hidden>
+          <h3><a class="close" href="#" id="room-settings-close" title="close">&times;</a>Room settings</h3>
+          <div class="row-fluid">
+            <div class="span6">
+              <label for="room-settings-name">Name</label>
+              <input type="text" id="room-settings-name" name="name" maxlength="64" required>
+              <label for="room-settings-description">Description</label>
+              <textarea id="room-settings-description" name="description" maxlength="280" rows="3"></textarea>
+              <div id="room-rules">
+                <label for="room-rule-add">Who may add songs</label>
+                <select id="room-rule-add" name="add">
+                  <option value="everyone">everyone</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label for="room-rule-skip">Who may skip</label>
+                <select id="room-rule-skip" name="skip">
+                  <option value="curator">whoever added it</option>
+                  <option value="everyone">everyone</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label for="room-rule-remove">Who may take songs out of the queue</label>
+                <select id="room-rule-remove" name="remove">
+                  <option value="curator">whoever added it</option>
+                  <option value="moderators">moderators</option>
+                </select>
+                <label class="checkbox"><input type="checkbox" id="room-autoplay" name="autoplay"> Auto-DJ: when the queue runs out, play songs people chose here before</label>
+              </div>
+              <div><input class="btn btn-primary" type="submit" value="save &raquo;"> <span id="room-settings-status"></span></div>
+            </div>
+            <div class="span6">
+              <h4>Owner</h4>
+              <p id="room-owner"></p>
+              <h4>Moderators</h4>
+              <ul class="unstyled" id="room-moderators"></ul>
+              <h4>Banned songs</h4>
+              <ul class="unstyled" id="room-banned-tracks"></ul>
+              <h4>Banned listeners</h4>
+              <ul class="unstyled" id="room-banned-people"></ul>
+            </div>
+          </div>
+        </form>
         <div id="stage">
           <div class="row-fluid">
             <div class="span3 padded-left">
@@ -413,6 +487,18 @@
                   <a class="btn btn-mini" href="#" id="listen"><i class="icon-white icon-play" id="listen-icon"></i> <span id="listen-label">listen</span></a>
                   <a class="btn btn-mini" href="#" id="skip" hidden><i class="icon-white icon-step-forward"></i> skip</a>
                 </div>
+
+                <form class="form-inline save-controls" id="save-form" hidden>
+                  <select id="save-set" aria-label="Set to save the song to"></select>
+                  <button class="btn btn-mini" type="submit" title="save what is playing to a set"><i class="icon-white icon-plus"></i> save</button>
+                  <a class="btn btn-mini btn-danger" href="#" id="ban-current" title="ban this song from the room" hidden><i class="icon-white icon-ban-circle"></i> ban</a>
+                </form>
+
+                <p class="room-links">
+                  <a href="#" id="room-history">history</a>
+                  <span id="room-stream-link" hidden>&middot; <a href="#" id="room-stream" title="this room as an MP3 stream, for any player">stream</a></span>
+                  <span id="room-settings-link" hidden>&middot; <a href="#" id="room-settings-open">settings</a></span>
+                </p>
 
                 <div id="playlist">
                   <h5 style="text-transform: uppercase; margin: 0; margin-top: 5px;">Coming Up Next...</h5>
@@ -451,6 +537,137 @@
               </div>
             </div>
           </div>
+        </div>
+      </main>
+<main id="history" hidden>
+        <div class="well content-well">
+          <a class="btn pull-right" href="#" id="history-back">&laquo; back to the room</a>
+          <h1>Track History <small id="history-room"></small></h1>
+          <p id="history-status" role="status"></p>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Who</th>
+                <th>When</th>
+                <th>Artist</th>
+                <th>Title</th>
+                <th>Controls</th>
+              </tr>
+            </thead>
+            <tbody id="history-list"></tbody>
+          </table>
+        </div>
+      </main>
+<main id="person" hidden>
+        <div class="well content-well">
+          <div class="pull-right">
+            <div class="btn-group">
+              <a class="btn" href="#" id="person-rename" hidden><i class="icon-pencil"></i> edit name</a>
+              <a class="btn" href="/services/soundtrack/lastfm/connect" id="lastfm-connect" hidden>add last.fm &raquo;</a>
+              <a class="btn" href="#" id="lastfm-disconnect" hidden>remove last.fm</a>
+            </div>
+          </div>
+          <img class="avatar-large pull-left" src="/img/user-avatar.png" alt="">
+          <h1><span id="person-name"></span> <small id="person-lastfm"></small></h1>
+          <p class="muted" id="person-since"></p>
+
+          <p class="queue-bar form-inline">
+            <label for="person-queue-room">&#9835; queue songs from here in</label>
+            <select id="person-queue-room"></select>
+            <span id="person-status" role="status"></span>
+          </p>
+
+          <ul class="nav nav-tabs" id="person-tabs">
+            <li class="active"><a href="#profile" data-pane="person-profile">Profile</a></li>
+            <li><a href="#sets" data-pane="person-sets">Sets</a></li>
+            <li><a href="#rooms" data-pane="person-rooms">Rooms</a></li>
+            <li><a href="#plays" data-pane="person-plays">Plays</a></li>
+          </ul>
+
+          <div class="tab-content">
+            <div class="tab-pane active" id="person-profile">
+              <h3>Most Queued Tracks</h3>
+              <ol id="person-top"></ol>
+            </div>
+            <div class="tab-pane" id="person-sets">
+              <h3><a class="pull-right btn btn-default" href="#" id="set-new" hidden>Add New &raquo;</a>Sets</h3>
+              <form id="set-creation-form" hidden>
+                <label for="new-set-name">Name</label>
+                <input type="text" id="new-set-name" name="name" maxlength="64" required>
+                <label for="new-set-description">Description</label>
+                <textarea id="new-set-description" name="description" maxlength="280" rows="2"></textarea>
+                <div><input class="btn" type="submit" value="create &raquo;"></div>
+              </form>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Tracks</th>
+                    <th>Controls</th>
+                  </tr>
+                </thead>
+                <tbody id="person-set-list"></tbody>
+              </table>
+            </div>
+            <div class="tab-pane" id="person-rooms">
+              <h3>Rooms</h3>
+              <ul id="person-room-list"></ul>
+            </div>
+            <div class="tab-pane" id="person-plays">
+              <h3>Recent Plays</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Artist</th>
+                    <th>Title</th>
+                    <th>Room</th>
+                    <th>Controls</th>
+                  </tr>
+                </thead>
+                <tbody id="person-play-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+<main id="set" hidden>
+        <div class="well content-well">
+          <div class="pull-right queue-bar form-inline">
+            <select id="set-queue-room" aria-label="Room to queue the set in"></select>
+            <a class="btn" href="#" id="set-queue">&#9835; queue &raquo;</a>
+          </div>
+          <h1><span id="set-name"></span> <small>by <a id="set-owner" href="#"></a></small></h1>
+          <p id="set-description"></p>
+          <p id="set-status" role="status"></p>
+
+          <div id="set-owner-controls" hidden>
+            <form id="set-add-form" class="input-append">
+              <input class="input-block-level" type="text" id="set-add-query" name="song" autocomplete="off" placeholder="add a link or search">
+              <button class="btn" type="submit"><i class="icon-plus"></i> add</button>
+            </form>
+            <a class="btn btn-mini" href="#" id="set-edit"><i class="icon-pencil"></i> edit</a>
+            <a class="btn btn-mini btn-danger" href="#" id="set-delete"><i class="icon-white icon-remove"></i> delete set</a>
+            <form id="set-edit-form" hidden>
+              <label for="set-edit-name">Name</label>
+              <input type="text" id="set-edit-name" name="name" maxlength="64" required>
+              <label for="set-edit-description">Description</label>
+              <textarea id="set-edit-description" name="description" maxlength="280" rows="2"></textarea>
+              <div><input class="btn" type="submit" value="save &raquo;"></div>
+            </form>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Artist</th>
+                <th>Title</th>
+                <th>Length</th>
+                <th>Controls</th>
+              </tr>
+            </thead>
+            <tbody id="set-tracks"></tbody>
+          </table>
         </div>
       </main>
 
